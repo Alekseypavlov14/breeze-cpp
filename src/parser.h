@@ -264,7 +264,7 @@ namespace Parser {
       Parser();
 
       // parses vector of tokens (corresponds to source code module)
-      AST::BlockStatement parse(std::vector<Lexer::Token>);
+      AST::BlockStatement* parse(std::vector<Lexer::Token>);
   };
 
   class ParserException: public Base::Exception {

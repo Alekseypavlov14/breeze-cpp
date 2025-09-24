@@ -55,6 +55,19 @@ namespace Parser {
     this->position = 0;
   }
   
+  AST::BlockStatement* Parser::parse(std::vector<Lexer::Token> tokens) {
+    this->tokens = tokens;
+    this->position = 0;
+
+    std::vector<AST::Statement*> statements = {};
+    std::vector<Specification::TokenType> terminators = {};
+
+    while (!this->isEnd()) {
+      statements.push_back(this->parseStatement(terminators));
+    }
+
+    return new AST::BlockStatement(statements);
+  }
   AST::Statement* Parser::parseStatement(std::vector<Specification::TokenType> terminators) {
     this->skipMultilineSpaceTokens();
 
