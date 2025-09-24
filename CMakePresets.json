@@ -1,0 +1,16 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 15 },
+  "configurePresets": [
+    {
+      "name": "breeze",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "C:/LLVM/bin/clang++.exe",
+        "CMAKE_MAKE_PROGRAM": "C:/ninja/ninja.exe",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    }
+  ]
+}
