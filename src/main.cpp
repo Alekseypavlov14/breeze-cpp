@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "lexer.h"
-#include "specification.h"
+#include "lexer/lexer.h"
+#include "base/specification.h"
 
 int main() {
   Lexer::Lexer lexer;

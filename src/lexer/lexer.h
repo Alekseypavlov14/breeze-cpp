@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 
-#include "specification.h"
-#include "base.h"
-#include "shared.h"
+#include "base/specification.h"
+#include "base/base.h"
+#include "shared/shared.h"
 
 // this module contains lexer logic 
 // lexer parses source code to token list

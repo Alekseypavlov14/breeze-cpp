@@ -1,5 +1,5 @@
 #include "parser.h"
-#include "shared.h"
+#include "shared/shared.h"
 
 namespace Parser {
   // returns relative numerical value for operator precedence

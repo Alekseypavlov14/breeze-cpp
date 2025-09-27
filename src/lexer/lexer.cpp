@@ -1,7 +1,7 @@
 #include <regex>
 
 #include "lexer.h"
-#include "shared.h"
+#include "shared/shared.h"
 
 namespace Lexer {
   Token::Token(const Base::Position position, const Specification::TokenType type, const std::string code) {
