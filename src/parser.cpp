@@ -524,6 +524,7 @@ namespace Parser {
     AST::ReturnStatement* returnStatement = new AST::ReturnStatement(expression);
     return returnStatement;
   }
+  // TODO: implement class declaration statement
   // AST::ClassDeclarationStatement Parser::parseClassDeclarationStatement() {}
   AST::ImportStatement* Parser::parseImportStatement() {
     this->requireToken(Specification::TokenType::IMPORT_KEYWORD_TOKEN);

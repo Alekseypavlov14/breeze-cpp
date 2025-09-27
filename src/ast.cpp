@@ -309,6 +309,13 @@ namespace AST {
     return this->body;
   }
 
+  BreakStatement* BreakStatement::clone() const {
+    return new BreakStatement;
+  }
+  ContinueStatement* ContinueStatement::clone() const {
+    return new ContinueStatement;
+  }
+
   FunctionDeclarationStatement::FunctionDeclarationStatement(Lexer::Token name, std::vector<FunctionParameterExpression*> params, BlockStatement* body) : name(name) {
     this->name = name;
     this->params = params;
@@ -352,6 +359,7 @@ namespace AST {
     return this->returns;
   }
 
+  // TODO: implement class declaration statement
   ClassDeclarationStatement::ClassDeclarationStatement(Lexer::Token name): name(name) {
     this->name = name;
   }

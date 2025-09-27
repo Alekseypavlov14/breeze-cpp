@@ -8,6 +8,8 @@
 #include "specification.h"
 
 // this module declares hierarchy of classes for AST tree
+// because the structure is tree, parent nodes are responsible for children memory
+// destructors free memory for their children
 namespace AST {
   class Node {
     public:
@@ -323,6 +325,7 @@ namespace AST {
       Expression* getReturns() const;
   };
 
+  // TODO: implement class declaration statement
   class ClassDeclarationStatement: public Statement {
     private:
       Lexer::Token name;

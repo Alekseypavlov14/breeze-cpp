@@ -195,6 +195,7 @@ namespace Parser {
       AST::FunctionDeclarationStatement* parseFunctionDeclarationStatement();
       AST::FunctionParameterExpression* parseFunctionParameterExpression();
       AST::ReturnStatement* parseReturnStatement(std::vector<Specification::TokenType> terminators);
+      // TODO: implement class declaration statement
       AST::ClassDeclarationStatement* parseClassDeclarationStatement();
       AST::ImportStatement* parseImportStatement();
       AST::ExportStatement* parseExportStatement(std::vector<Specification::TokenType> terminators);
