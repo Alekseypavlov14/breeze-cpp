@@ -7,7 +7,7 @@
 // defines how language stores data in runtime
 // adds typing and classes
 // memory is freed by the stack and scope
-namespace Values
+namespace Runtime
 {
   // define all possible data types
   enum class DataType {

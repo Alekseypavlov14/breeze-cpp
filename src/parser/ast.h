@@ -4,8 +4,8 @@
 #include <map>
 #include <string>
 
-#include "lexer/lexer.h"
-#include "base/specification.h"
+#include "lexer/token.h"
+#include "specification/specification.h"
 
 // this module declares hierarchy of classes for AST tree
 // because the structure is tree, parent nodes are responsible for children memory

@@ -391,4 +391,13 @@ namespace Specification {
     { FALSE_KEYWORD, TokenType::FALSE_KEYWORD_TOKEN },
     { NULL_KEYWORD, TokenType::NULL_KEYWORD_TOKEN }
   };
+
+  // literal tokens
+  inline const std::vector<TokenType> LITERAL_TOKENS = {
+    TokenType::NUMBER_TOKEN,
+    TokenType::STRING_TOKEN,
+    TokenType::TRUE_KEYWORD_TOKEN,
+    TokenType::FALSE_KEYWORD_TOKEN,
+    TokenType::NULL_KEYWORD_TOKEN,
+  };
 }

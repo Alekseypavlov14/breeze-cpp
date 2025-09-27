@@ -3,34 +3,13 @@
 #include <string>
 #include <vector>
 
-#include "base/specification.h"
-#include "base/base.h"
-#include "shared/shared.h"
+#include "lexer/token.h"
+#include "base/position.h"
+#include "specification/specification.h"
 
 // this module contains lexer logic 
 // lexer parses source code to token list
 namespace Lexer {
-  class Token {
-    private:
-      // token position
-      Base::Position position;
-      // type of token by specification
-      Specification::TokenType type;
-      // slide of source code
-      std::string code;
-
-    public:
-      Token(const Base::Position, const Specification::TokenType, const std::string);
-      Token(const Token&);
-
-      Base::Position getPosition();
-      Specification::TokenType getType();
-      std::string getCode();
-
-      bool isOfType(Specification::TokenType);
-      bool isOfType(std::vector<Specification::TokenType>);
-  };
-
   class Lexer {
     private:
       // source code
@@ -51,10 +30,5 @@ namespace Lexer {
       Lexer();
     
       std::vector<Token> parse(std::string code);
-  };
-
-  class LexerException: public Base::Exception {
-    public:
-      LexerException(const Base::Position, const std::string);
   };
 }

@@ -1,4 +1,4 @@
-#include "base.h"
+#include "base/position.h"
 
 namespace Base {
   Position::Position() {
@@ -13,12 +13,14 @@ namespace Base {
     this->line = position.line;
     this->column = position.column;
   }
+
   int Position::getLine() {
     return this->line;
   }
   int Position::getColumn() {
     return this->column;
   }
+  
   std::string Position::serialize() {
     std::string serialized = "";
 
@@ -29,17 +31,5 @@ namespace Base {
     serialized += ")";
 
     return serialized;
-  }
-
-  // exception implementations
-  Exception::Exception(const Position position, const std::string message) {
-    this->position = position;
-    this->message = message;
-  }
-  Position Exception::getPosition() {
-    return this->position;
-  }
-  std::string Exception::getMessage() {
-    return this->message;
   }
 }

@@ -1,54 +1,10 @@
-#include "parser.h"
-#include "shared/shared.h"
+#include "parser/parser.h"
+#include "parser/exception.h"
+#include "parser/operators.h"
+#include "specification/specification.h"
+#include "shared/utils.h"
 
 namespace Parser {
-  // returns relative numerical value for operator precedence
-  int getOperatorPrecedence(Specification::TokenType type) {
-    for (int i = 0; i < OPERATION_PRECEDENCE.size(); i++) {
-      if (type == OPERATION_PRECEDENCE[i]) {
-        return i;
-      }
-    }
-
-    return BASE_PRECEDENCE;
-  }
-
-  // utilities for checking operator type
-  bool isPrefixOperator(Specification::TokenType type) {
-    return Shared::includes<Specification::TokenType>(PREFIX_UNARY_OPERATORS, type);
-  }
-  bool isSuffixOperator(Specification::TokenType type) {
-    return Shared::includes<Specification::TokenType>(SUFFIX_UNARY_OPERATORS, type);
-  }
-  bool isAffixUnaryOperator(Specification::TokenType type) {
-    return Shared::includes<Specification::TokenType>(AFFIX_UNARY_OPERATORS, type);
-  }
-  bool isUnaryOperator(Specification::TokenType type) {
-    return isPrefixOperator(type) || isSuffixOperator(type) || isAffixUnaryOperator(type);
-  }
-  bool isBinaryOperator(Specification::TokenType type) {
-    return Shared::includes<Specification::TokenType>(BINARY_OPERATORS, type);
-  }
-  bool isGroupingOperator(Specification::TokenType type) {
-    return Shared::includes<Specification::TokenType>(GROUPING_OPERATORS, type);
-  }
-  bool isAssociationOperator(Specification::TokenType type) {
-    return Shared::includes<Specification::TokenType>(ASSOCIATION_OPERATORS, type);
-  }
-
-  // gets the closing token for groupings
-  Specification::TokenType getGroupingClosingTokenType(Specification::TokenType tokenType) {
-    return GROUPING_OPERATOR_PAIRS.at(tokenType);
-  }
-
-  // checks if token is a literal
-  bool isLiteralToken(Specification::TokenType type) {
-    return Shared::includes<Specification::TokenType>(LITERAL_TOKENS, type);
-  }
-  bool isIdentifierToken(Specification::TokenType type) {
-    return type == Specification::TokenType::IDENTIFIER_TOKEN;
-  }
-
   // parser class implementation
   Parser::Parser() {
     this->tokens = {};
@@ -158,7 +114,7 @@ namespace Parser {
       // check if it is not NullExpression
       if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(initializer)) {
         Base::Position position = this->getCurrentToken().getPosition();
-        throw ParserException(position, "Invalid variable initialization");
+        throw Exception(position, "Invalid variable initialization");
       }
 
       this->requireNewlineForNextStatement();
@@ -170,7 +126,7 @@ namespace Parser {
 
     // if nothing matched then invalid case is obtained
     Base::Position position = this->getCurrentToken().getPosition();
-    throw ParserException(position, "Invalid variable initialization");
+    throw Exception(position, "Invalid variable initialization");
   }
   AST::ConstantDeclarationStatement* Parser::parseConstantDeclaration(std::vector<Specification::TokenType> terminators) {
     // require const keyword
@@ -188,7 +144,7 @@ namespace Parser {
     // check assignment
     if (!this->matchToken(Specification::TokenType::ASSIGN_TOKEN)) {
       Base::Position position = this->getCurrentToken().getPosition();
-      throw ParserException(position, "Constant declaration requires initialization");
+      throw Exception(position, "Constant declaration requires initialization");
     }
 
     // consume assign token
@@ -204,7 +160,7 @@ namespace Parser {
     // check if it is not NullExpression
     if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(initializer)) {
       Base::Position position = this->getCurrentToken().getPosition();
-      throw ParserException(position, "Invalid constant initialization");
+      throw Exception(position, "Invalid constant initialization");
     }
 
     this->requireNewlineForNextStatement();
@@ -235,7 +191,7 @@ namespace Parser {
     // check if is null expression
     if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(conditionExpression)) {
       Base::Position position = this->getCurrentToken().getPosition();
-      throw ParserException(position, "Invalid condition expression");
+      throw Exception(position, "Invalid condition expression");
     } 
 
     this->skipMultilineSpaceTokens();
@@ -252,7 +208,7 @@ namespace Parser {
     // check if null statement
     if (Shared::isInstanceOf<AST::Statement, AST::NullStatement>(thenStatement)) {
       Base::Position position = this->getCurrentToken().getPosition();
-      throw ParserException(position, "Invalid condition then branch");
+      throw Exception(position, "Invalid condition then branch");
     }
 
     this->skipMultilineSpaceTokens();
@@ -270,7 +226,7 @@ namespace Parser {
       // check if null statement
       if (Shared::isInstanceOf<AST::Statement, AST::NullStatement>(elseStatement)) {
         Base::Position position = this->getCurrentToken().getPosition();
-        throw ParserException(position, "Invalid condition else branch");
+        throw Exception(position, "Invalid condition else branch");
       }
     } else {
       elseStatement = new AST::NullStatement;
@@ -302,7 +258,7 @@ namespace Parser {
 
     if (Shared::isInstanceOf<AST::Statement, AST::NullStatement>(initializer)) {
       Base::Position position = this->getCurrentToken().getPosition();
-      throw ParserException(position, "Invalid for loop initializer");
+      throw Exception(position, "Invalid for loop initializer");
     }
 
     this->skipMultilineSpaceTokens();
@@ -321,7 +277,7 @@ namespace Parser {
 
     if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(condition)) {
       Base::Position position = this->getCurrentToken().getPosition();
-      throw ParserException(position, "Invalid for loop condition");
+      throw Exception(position, "Invalid for loop condition");
     }
 
     this->skipMultilineSpaceTokens();
@@ -340,7 +296,7 @@ namespace Parser {
   
     if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(increment)) {
       Base::Position position = this->getCurrentToken().getPosition();
-      throw ParserException(position, "Invalid for loop increment");
+      throw Exception(position, "Invalid for loop increment");
     }
 
     this->skipMultilineSpaceTokens();
@@ -355,7 +311,7 @@ namespace Parser {
 
     if (Shared::isInstanceOf<AST::Statement, AST::NullStatement>(body)) {
       Base::Position position = this->getCurrentToken().getPosition();
-      throw ParserException(position, "Invalid for loop body");
+      throw Exception(position, "Invalid for loop body");
     }
 
     this->requireNewlineForNextStatement();
@@ -384,7 +340,7 @@ namespace Parser {
   
     if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(condition)) {
       Base::Position position = this->getCurrentToken().getPosition();
-      throw ParserException(position, "Invalid while loop condition");
+      throw Exception(position, "Invalid while loop condition");
     }
 
     this->skipMultilineSpaceTokens();
@@ -400,7 +356,7 @@ namespace Parser {
 
     if (Shared::isInstanceOf<AST::Statement, AST::NullStatement>(body)) {
       Base::Position position = this->getCurrentToken().getPosition();
-      throw ParserException(position, "Invalid while loop body");
+      throw Exception(position, "Invalid while loop body");
     }
 
     this->requireNewlineForNextStatement();
@@ -603,7 +559,7 @@ namespace Parser {
       !Shared::isInstanceOf<AST::Statement, AST::ClassDeclarationStatement>(exports)
     ) {
       Base::Position position = exportToken.getPosition();
-      throw ParserException(position, "Invalid export statement");
+      throw Exception(position, "Invalid export statement");
     }
 
     AST::ExportStatement* exportStatement = new AST::ExportStatement(exports);
@@ -715,7 +671,7 @@ namespace Parser {
       // check if base expression is followed by another expression without operator
       else if (!this->matchTokens(OPERATION_PRECEDENCE)) {
         Base::Position position = this->getCurrentToken().getPosition();
-        throw ParserException(position, "Invalid expression composition");
+        throw Exception(position, "Invalid expression composition");
       }
     }
 
@@ -772,7 +728,7 @@ namespace Parser {
         // validate suffix operator
         if (!isSuffixOperator(operatorToken.getType()) && !isAffixUnaryOperator(operatorToken.getType())) {
           Base::Position position = operatorToken.getPosition();
-          throw ParserException(position, "Prefix operator is used in suffix position");
+          throw Exception(position, "Prefix operator is used in suffix position");
         }
 
         // compute operand expression
@@ -780,7 +736,7 @@ namespace Parser {
 
         if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(operand)) {
           Base::Position position = this->getCurrentToken().getPosition();
-          throw ParserException(position, "Invalid operand");
+          throw Exception(position, "Invalid operand");
         }
 
         // compose operation
@@ -793,7 +749,7 @@ namespace Parser {
       // otherwise prefix expression is present
       if (!isPrefixOperator(operatorToken.getType()) && !isAffixUnaryOperator(operatorToken.getType())) {
         Base::Position position = operatorToken.getPosition();
-        throw ParserException(position, "Suffix operator is used in prefix position");
+        throw Exception(position, "Suffix operator is used in prefix position");
       }
 
       // no base expression and no tokens here 
@@ -801,7 +757,7 @@ namespace Parser {
 
       if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(operand)) {
         Base::Position position = this->getCurrentToken().getPosition();
-        throw ParserException(position, "Invalid operand");
+        throw Exception(position, "Invalid operand");
       }
 
       AST::SuffixUnaryOperationExpression* operation = new AST::SuffixUnaryOperationExpression(operatorToken, operand);
@@ -833,7 +789,7 @@ namespace Parser {
 
       if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(leftBranch)) {
         Base::Position position = this->getCurrentToken().getPosition();
-        throw ParserException(position, "Invalid operand");
+        throw Exception(position, "Invalid operand");
       }
 
       // get right branch
@@ -841,7 +797,7 @@ namespace Parser {
     
       if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(leftBranch)) {
         Base::Position position = this->getCurrentToken().getPosition();
-        throw ParserException(position, "Invalid operand");
+        throw Exception(position, "Invalid operand");
       }
 
       // compose expression
@@ -876,7 +832,7 @@ namespace Parser {
 
         if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(expression)) {
           Base::Position position = this->getCurrentToken().getPosition();
-          throw ParserException(position, "Invalid expression");
+          throw Exception(position, "Invalid expression");
         }
 
         expressions.push_back(expression);
@@ -920,7 +876,7 @@ namespace Parser {
 
       if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(leftBranch)) {
         Base::Position position = this->getCurrentToken().getPosition();
-        throw ParserException(position, "Invalid expression");
+        throw Exception(position, "Invalid expression");
       }
 
       // compose grouping application expression
@@ -957,7 +913,7 @@ namespace Parser {
 
         if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(keyExpression)) {
           Base::Position position = this->getCurrentToken().getPosition();
-          throw ParserException(position, "Invalid key expression");
+          throw Exception(position, "Invalid key expression");
         }
 
         this->skipMultilineSpaceTokens();
@@ -977,7 +933,7 @@ namespace Parser {
 
           if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(keyExpression)) {
             Base::Position position = this->getCurrentToken().getPosition();
-            throw ParserException(position, "Invalid value expression");
+            throw Exception(position, "Invalid value expression");
           }
         }
 
@@ -1007,7 +963,7 @@ namespace Parser {
   
     // handle invalid operators
     Base::Position position = operatorToken.getPosition();
-    throw ParserException(position, "Invalid operator");
+    throw Exception(position, "Invalid operator");
   }
   AST::Expression* Parser::getExpressionFromBaseExpresionOrPassedTokens(AST::Expression* baseExpression, std::vector<Lexer::Token> tokens) {
     // default case
@@ -1033,8 +989,14 @@ namespace Parser {
 
     // otherwise these tokens do not form a valid expression
     Base::Position position = tokens[0].getPosition();
-    throw ParserException(position, "Invalid tokens combination");
+    throw Exception(position, "Invalid tokens combination");
   };
+  bool Parser::isLiteralToken(Specification::TokenType type) {
+    return Shared::includes<Specification::TokenType>(Specification::LITERAL_TOKENS, type);
+  }
+  bool Parser::isIdentifierToken(Specification::TokenType type) {
+    return type == Specification::TokenType::IDENTIFIER_TOKEN;
+  }
 
   void Parser::requireNewlineForNextStatement() {
     this->skipSingleLineSpaceTokens();
@@ -1063,7 +1025,7 @@ namespace Parser {
       message += Specification::MAP_TOKEN_TYPE_TO_STRING.at(tokenType);
       message += "\"";
 
-      throw ParserException(currentToken.getPosition(), "Invalid token");
+      throw Exception(currentToken.getPosition(), "Invalid token");
     }
   }
 
@@ -1115,11 +1077,5 @@ namespace Parser {
   
   bool Parser::isEnd() {
     return this->position >= this->tokens.size();
-  }
-
-  // parser exception
-  ParserException::ParserException(const Base::Position position, const std::string message): Base::Exception(position, message) {
-    this->position = position;
-    this->message = message;
   }
 }

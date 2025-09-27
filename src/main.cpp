@@ -1,7 +1,8 @@
 #include <iostream>
 
 #include "lexer/lexer.h"
-#include "base/specification.h"
+#include "lexer/exception.h"
+#include "specification/specification.h"
 
 int main() {
   Lexer::Lexer lexer;
@@ -10,7 +11,7 @@ int main() {
     std::vector<Lexer::Token> tokens = lexer.parse("a = 3\nb = 4");
     std::cout << tokens.size() << std::endl;
   }
-  catch (Lexer::LexerException e) {
+  catch (Lexer::Exception e) {
     std::cout << e.getMessage() << std::endl;
   }
 

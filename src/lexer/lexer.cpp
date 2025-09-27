@@ -1,64 +1,15 @@
 #include <regex>
 
-#include "lexer.h"
-#include "shared/shared.h"
+#include "lexer/lexer.h"
+#include "lexer/exception.h"
+#include "shared/utils.h"
 
 namespace Lexer {
-  Token::Token(const Base::Position position, const Specification::TokenType type, const std::string code) {
-    this->position = position;
-    this->type = type;
-    this->code = code;
-  }
-  Token::Token(const Token& token) {
-    this->position = token.position;
-    this->type = token.type;
-    this->code = token.code;
-  }
-  Base::Position Token::getPosition() {
-    return this->position;
-  }
-  Specification::TokenType Token::getType() {
-    return this->type;
-  }
-  std::string Token::getCode() {
-    return this->code;
-  }
-  bool Token::isOfType(Specification::TokenType tokenType) {
-    return tokenType == this->type;
-  }
-  bool Token::isOfType(std::vector<Specification::TokenType> tokenTypes) {
-    return Shared::includes(tokenTypes, this->type);
-  }
-
   Lexer::Lexer() {
     this->code = "";
     this->position = 0;
   }
-  void Lexer::Lexer::loadCode(std::string code) {
-    this->code = code;
-    this->position = 0;
-  } 
-  void Lexer::Lexer::movePositionByDelta(int delta) {
-    this->position += delta;
-  }
-  Base::Position Lexer::computeCurrentTokenPosition() {
-    int line = 1;
-    int column = 1;
 
-    for (int i = 0; i < this->position; i++) {
-      if (this->code[i] == '\n') {
-        line += 1;
-        column = 1;
-        continue;
-      }
-
-      column++;
-    }
-
-    Base::Position position(line, column);
-
-    return position;
-  }
   std::vector<Token> Lexer::parse(std::string code) {
     // load source code string
     this->loadCode(code);
@@ -126,15 +77,36 @@ namespace Lexer {
         Base::Position position = this->computeCurrentTokenPosition();
         std::string message = "Invalid token is found";
 
-        throw LexerException(position, message);
+        throw Exception(position, message);
       }
     }   
     
     return tokens;
   }
 
-  LexerException::LexerException(const Base::Position position, const std::string message): Base::Exception(position, message) {
-    this->position = position;
-    this->message = message;
+  void Lexer::Lexer::loadCode(std::string code) {
+    this->code = code;
+    this->position = 0;
+  } 
+  void Lexer::Lexer::movePositionByDelta(int delta) {
+    this->position += delta;
+  }
+  Base::Position Lexer::computeCurrentTokenPosition() {
+    int line = 1;
+    int column = 1;
+
+    for (int i = 0; i < this->position; i++) {
+      if (this->code[i] == '\n') {
+        line += 1;
+        column = 1;
+        continue;
+      }
+
+      column++;
+    }
+
+    Base::Position position(line, column);
+
+    return position;
   }
 }
