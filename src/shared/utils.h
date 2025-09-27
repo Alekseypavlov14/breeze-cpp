@@ -15,6 +15,12 @@ namespace Shared {
     return dynamic_cast<Target*>(instance) != nullptr;
   }
 
+  // casts value type
+  template<class Current, class Target>
+  Target* cast(Current* value) {
+    return dynamic_cast<Target*>(value);
+  }
+
   // checks if vector contains element
   template<class T> 
   bool includes(std::vector<T> list, T element) {

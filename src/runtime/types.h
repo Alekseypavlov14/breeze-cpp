@@ -37,59 +37,53 @@ namespace Runtime
   // primitive data types are copied-by-value (cloned)
   class PrimitiveValue: public Value {};
   
-  class NullValue: public Value {
+  class NullValue: public PrimitiveValue {
     public:
       NullValue();
 
       DataType getType();
-
-      NullValue copy();
   };
-  class BooleanValue: public Value {
+  class BooleanValue: public PrimitiveValue {
     private:
       bool data;
 
     public:
       BooleanValue(bool);
+      BooleanValue(const BooleanValue&);
 
       DataType getType();
 
       bool getData();
       void setData(bool);
-
-      BooleanValue copy();
   };
-  class NumberValue: public Value {
+  class NumberValue: public PrimitiveValue {
     private:
       double data;
 
     public:
       NumberValue(double);
+      NumberValue(const NumberValue&);
 
       DataType getType();
 
       double getData();
       void setData(double);
-
-      NumberValue copy();
   };
-  class StringValue: public Value {
+  class StringValue: public PrimitiveValue {
     private:
       std::string data;
 
     public:
       StringValue(std::string data);
+      StringValue(const StringValue&);
 
       DataType getType();
 
       std::string getData();
       void setData(std::string);
-
-      StringValue copy();
   };
 
   // define compound types
-  // data types code does not validate the access
   // interpreter code has to validate operations
   // compound data types are copied by reference
   class CompoundValue: public Value {};
@@ -105,7 +99,7 @@ namespace Runtime
       std::vector<Value*> items;
 
     public:
-      VectorValue();
+      VectorValue(std::vector<Value*> items);
 
       DataType getType();
 
@@ -137,15 +131,17 @@ namespace Runtime
       FieldType type;
       FieldMutability mutability;
 
-      StringValue key;
+      Value* key;
       Value* value;
 
     public: 
-      Field(FieldAccess access, FieldType type, FieldMutability mutability, StringValue key, Value* value);
-      ~Field();
+      Field(FieldAccess access, FieldType type, FieldMutability mutability, Value* key, Value* value);
       
       FieldAccess getAccess();
-      StringValue getKey();
+      FieldType getType();
+      FieldMutability getMutability();
+
+      Value* getKey();
 
       Value* getValue();
       void setValue(Value*);
@@ -159,14 +155,20 @@ namespace Runtime
       std::vector<Field> entries;
 
     public:
-      ObjectValue(std::vector<Field> entries);
+      ObjectValue(ClassValue* constructor, std::vector<Field> entries);
 
       DataType getType();
 
       std::vector<Field> getEntries();
-      Value* getEntryValue(PrimitiveValue);
-      void setEntry(PrimitiveValue, Value*);
-      bool hasEntry(PrimitiveValue);
+      Value* getEntryValue(Value*);
+
+      // return if the field is added
+      bool addField(Field);
+
+      // return if the entry is set
+      bool setEntry(Value*, Value*);
+      
+      bool hasEntry(Value*);
   };
 
   class ClassValue: public CompoundValue {
@@ -190,7 +192,6 @@ namespace Runtime
       );
 
       DataType getType();
-      void* getData();
 
       std::vector<ClassValue*> getParents();      
       std::vector<Field> getFields();
@@ -209,4 +210,9 @@ namespace Runtime
 
       Value* execute(std::vector<Value*>); 
   };
+
+  // compares two values 
+  // primitive values are compared by value and by reference
+  // compound values are compared only by reference and considered non-equal if references are different
+  bool compareValues(Value*, Value*);
 } 
