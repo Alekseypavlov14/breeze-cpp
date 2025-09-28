@@ -10,13 +10,16 @@ namespace Runtime {
   // containers are stored in memory pool
   class Container {
     private:
+      bool isConstant;
       std::string name;
       Value* value;
 
     public:
-      Container(std::string, Value*);
+      Container(bool, std::string, Value*);
 
+      bool getIsConstant();
       std::string getName();
+
       Value* getValue();
       void setValue(Value*);
   };
@@ -62,5 +65,17 @@ namespace Runtime {
 
       // returns flag if the container is removed successfully
       bool removeContainerByName(std::string);
+  };
+
+  // exports registry
+  class ExportsRegistry {
+    private:
+      std::vector<Container*> containers;
+    
+    public:
+      ExportsRegistry();
+
+      bool addContainer(Container*);
+      Container* getContainerByName(std::string);
   };
 }

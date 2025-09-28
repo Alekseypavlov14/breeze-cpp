@@ -1,9 +1,13 @@
 #include "runtime/stack.h"
 
 namespace Runtime {
-  Container::Container(std::string name, Value* value) {
+  Container::Container(bool isConstant, std::string name, Value* value) {
+    this->isConstant = isConstant;
     this->name = name;
     this->value = value;
+  }
+  bool Container::getIsConstant() {
+    return this->isConstant;
   }
   std::string Container::getName() {
     return this->name;
@@ -84,5 +88,22 @@ namespace Runtime {
   }
   bool Stack::removeContainerByName(std::string name) {
     return this->scopes[this->scopes.size() - 1].removeContainerByName(name);
+  }
+
+  ExportsRegistry::ExportsRegistry() {
+    this->containers = {};
+  }
+  bool ExportsRegistry::addContainer(Container* container) {
+    if (this->getContainerByName(container->getName()) != NULL) return false;
+    this->containers.push_back(container);
+  }
+  Container* ExportsRegistry::getContainerByName(std::string name) {
+    for (int i = 0; i < this->containers.size(); i++) {
+      if (this->containers[i]->getName() == name) {
+        return this->containers[i];
+      }
+    }
+
+    return NULL;
   }
 }

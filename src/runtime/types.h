@@ -4,6 +4,8 @@
 #include <vector>
 #include <functional>
 
+#include "runtime/stack.h"
+
 // defines how language stores data in runtime
 // adds typing and classes
 // memory is freed by the stack and scope
@@ -151,6 +153,7 @@ namespace Runtime
   // objects have public instance fields
   class ObjectValue: public CompoundValue {
     private:
+      // contains NULL for plain objects
       ClassValue* constructor;
       std::vector<Field> entries;
 
@@ -158,6 +161,8 @@ namespace Runtime
       ObjectValue(ClassValue* constructor, std::vector<Field> entries);
 
       DataType getType();
+
+      ClassValue* getConstructor();
 
       std::vector<Field> getEntries();
       Value* getEntryValue(Value*);
@@ -198,15 +203,18 @@ namespace Runtime
   };
 
   // function value
-  // TODO: add closures
   class FunctionValue: public CompoundValue {
     private:
+      // copy of the stack at the moment of declaration
+      Stack closure;
       std::function<Value*(std::vector<Value*>)> callable;
 
     public:
-      FunctionValue(std::function<Value*(std::vector<Value*>)>);
+      FunctionValue(Stack, std::function<Value*(std::vector<Value*>)>);
 
       DataType getType();
+
+      Stack getClosure();
 
       Value* execute(std::vector<Value*>); 
   };

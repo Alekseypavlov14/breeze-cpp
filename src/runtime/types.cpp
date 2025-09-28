@@ -104,6 +104,9 @@ namespace Runtime {
   DataType ObjectValue::getType() {
     return DataType::Object;
   }
+  ClassValue* ObjectValue::getConstructor() {
+    return this->constructor;
+  }
   std::vector<Field> ObjectValue::getEntries() {
     return this->entries;
   }
@@ -161,11 +164,15 @@ namespace Runtime {
     return this->fields;
   }
 
-  FunctionValue::FunctionValue(std::function<Value*(std::vector<Value*>)> callable) {
+  FunctionValue::FunctionValue(Stack stack, std::function<Value*(std::vector<Value*>)> callable) {
+    this->closure = stack;
     this->callable = callable;
   }
   DataType FunctionValue::getType() {
     return DataType::Function;
+  }
+  Stack FunctionValue::getClosure() {
+    return this->closure;
   }
   Value* FunctionValue::execute(std::vector<Value*> values) {
     return this->execute(values);
