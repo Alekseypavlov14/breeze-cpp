@@ -18,21 +18,29 @@ namespace Runtime {
 
       // keeps track of all used variables (containers)
       // containers only point to values, flat structure
+      // flat structure -> retain/release is enough
       std::vector<Container*> containers;
       // keeps track of all used values (containers point to value)
       // values can point to other values, cyclic structure
+      // cyclic structure -> has to be released recursively and checked for accessibility
       std::vector<Value*> values;
 
+      // pointers to current operating entity
       Stack* currentStack;
       ExportsRegistry* currentExportsRegistry;
 
+      // count allocated memory references
       // used to release memory when nobody uses it
       std::unordered_map<Container*, int> containerReferenceCount;
       std::unordered_map<Value*, int> valuesReferenceCount;
 
       // used during operations to prevent loops
       // particularly used for recursive values releasing
-      std::vector<Value*> releasingValues;
+      std::vector<Value*> processingValues;
+
+      // utility that optimizes value operations
+      // searches value and its children and adds them to this.processingValues
+      void recursivelySearchValues(Value*);
 
     public:
       Memory();
@@ -49,20 +57,22 @@ namespace Runtime {
       void setCurrentExportsRegistryByIndex(int);
 
       // control containers usage
+      // increment and decrement pointer reference count and remove unused containers
       void retainContainer(Container* container);
       void releaseContainer(Container* container);
 
       // control values usage
+      // increment and decrement pointer reference count and remove unused values
+      // release is recursive
       void retainValue(Value* value);
       void releaseValue(Value* value);
 
-      // utility that optimizes value releasing
-      // searches value and its children and adds them to releasingValues
-      void recursivelySearchReleasingValues(Value*);
-
-      // TODO: add utility that clears values that are not accessible through any container
+      // clears values that are not accessible through any container
+      // removes cycled references 
+      void removeUnreachableValues();
 
       // clear specific container or value
+      // delete pointer and its reference count
       void removeContainer(Container*);
       void removeValue(Value*);
       

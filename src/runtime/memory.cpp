@@ -20,9 +20,6 @@ namespace Runtime {
     this->currentStack = NULL;
     this->currentExportsRegistry = NULL;
 
-    this->containerReferenceCount = {};
-    this->valuesReferenceCount = {};
-
     for (int i = 0; i < modulesAmount; i++) {
       this->stacks.push_back(Stack());
       this->exports.push_back(ExportsRegistry());
@@ -53,10 +50,9 @@ namespace Runtime {
     // release used value
     this->releaseValue(container->getValue());
 
-    // clean if nobody refers this container
+    // clean if nobody refers to this container
     if (!containerCount) {
       this->removeContainer(container);
-      this->containerReferenceCount.erase(container);
     }
   }
 
@@ -64,11 +60,16 @@ namespace Runtime {
     this->valuesReferenceCount[value]++;
   }
   void Memory::releaseValue(Value* value) {
-    // clear releasing values
-    this->releasingValues = {};
+    // clear processing values
+    this->processingValues = {};
 
     // search all releasing values
-    this->recursivelySearchReleasingValues(value);
+    this->recursivelySearchValues(value);
+
+    // decrement pointer for all releasing values
+    for (int i = 0; i < this->processingValues.size(); i++) {
+      this->valuesReferenceCount[this->processingValues[i]]--;
+    }
   
     // init new values list
     std::vector<Value*> newValues = {};
@@ -77,46 +78,75 @@ namespace Runtime {
     for (int i = 0; i < this->values.size(); i++) {
       if (this->valuesReferenceCount[this->values[i]] > 0) {
         newValues.push_back(this->values[i]);
+      } else {
+        // remove unused value
+        this->valuesReferenceCount.erase(this->values[i]);
+        delete this->values[i];
       }
     }
+
+    // update values list
+    this->values = newValues;
   }
 
-  void Memory::recursivelySearchReleasingValues(Value* value) {
+  void Memory::removeUnreachableValues() {
+    // remove processing values
+    this->processingValues = {};
+
+    // search all accessible values
+    for (int i = 0; i < this->containers.size(); i++) {
+      this->recursivelySearchValues(this->containers[i]->getValue());
+    }
+
+    std::vector<Value*> newValues = {};
+
+    // delete all values that are not accessible
+    for (int i = 0; i < this->values.size(); i++) {
+      if (Shared::includes(this->processingValues, this->values[i])) {
+        newValues.push_back(this->values[i]);
+      } else {
+        // remove value
+        this->valuesReferenceCount.erase(this->values[i]);
+        delete this->values[i];
+      }
+    }
+
+    this->values = newValues;
+  }
+
+  void Memory::recursivelySearchValues(Value* value) {
     // skip already analyzed value
-    if (Shared::includes(this->releasingValues, value)) return;
+    if (Shared::includes(this->processingValues, value)) return;
 
     // analyze current value
-    this->releasingValues.push_back(value);
+    this->processingValues.push_back(value);
     
-    // decrement counter
-    this->valuesReferenceCount[value]--;
-
     // analyze current value children
     if (Shared::isInstanceOf<Value, PrimitiveValue>(value)) return;
     if (Shared::isInstanceOf<Value, VectorValue>(value)) {
       std::vector<Value*> items = Shared::cast<Value, VectorValue>(value)->getItems();
   
       for (int i = 0; i < items.size(); i++) {
-        this->recursivelySearchReleasingValues(items[i]);
+        this->recursivelySearchValues(items[i]);
       }
     }
     if (Shared::isInstanceOf<Value, ObjectValue>(value)) {
       std::vector<Field> fields = Shared::cast<Value, ObjectValue>(value)->getEntries();
       for (int i = 0; i < fields.size(); i++) {
-        this->recursivelySearchReleasingValues(fields[i].getKey());
-        this->recursivelySearchReleasingValues(fields[i].getValue());
+        this->recursivelySearchValues(fields[i].getKey());
+        this->recursivelySearchValues(fields[i].getValue());
       }
     }
     if (Shared::isInstanceOf<Value, ClassValue>(value)) {
       std::vector<ClassValue*> parents = Shared::cast<Value, ClassValue>(value)->getParents();
       for (int i = 0; i < parents.size(); i++) {
-        this->recursivelySearchReleasingValues(parents[i]);
+        this->recursivelySearchValues(parents[i]);
       }
 
       std::vector<Field> fields = Shared::cast<Value, ClassValue>(value)->getFields();
       for (int i = 0; i < fields.size(); i++) {
-        this->recursivelySearchReleasingValues(fields[i].getKey());
-        this->recursivelySearchReleasingValues(fields[i].getValue());
+        this->recursivelySearchValues(fields[i].getKey());
+        this->recursivelySearchValues(fields[i].getValue());
       }
     }
     if (Shared::isInstanceOf<Value, FunctionValue>(value)) return;
@@ -127,7 +157,9 @@ namespace Runtime {
     
     for (int i = 0; i < this->containers.size(); i++) {
       if (this->containers[i] == container) {
+        // delete reference count
         this->containerReferenceCount.erase(container);
+        // release allocated memory
         delete container;
 
         continue;
@@ -143,7 +175,9 @@ namespace Runtime {
 
     for (int i = 0; i < this->values.size(); i++) {
       if (this->values[i] == value) {
+        // delete reference count
         this->valuesReferenceCount.erase(value);
+        // release allocated memory
         delete value;
 
         continue;
