@@ -92,6 +92,12 @@ namespace Specification {
     
     CLASS_KEYWORD_TOKEN,
     NEW_KEYWORD_TOKEN,
+
+    PRIVATE_KEYWORD_TOKEN,
+    PROTECTED_KEYWORD_TOKEN,
+    PUBLIC_KEYWORD_TOKEN,
+    
+    STATIC_KEYWORD_TOKEN,
     
     TRUE_KEYWORD_TOKEN,
     FALSE_KEYWORD_TOKEN,
@@ -161,6 +167,7 @@ namespace Specification {
     { TokenType::NUMBER_TOKEN, "number" },
     { TokenType::STRING_TOKEN, "string" },
 
+    // keywords
     { TokenType::VARIABLE_KEYWORD_TOKEN, "var" },
     { TokenType::CONSTANT_KEYWORD_TOKEN, "const" },
 
@@ -181,6 +188,12 @@ namespace Specification {
 
     { TokenType::CLASS_KEYWORD_TOKEN, "class" },
     { TokenType::NEW_KEYWORD_TOKEN, "new" },
+
+    { TokenType::PRIVATE_KEYWORD_TOKEN, "private" },
+    { TokenType::PROTECTED_KEYWORD_TOKEN, "protected" },
+    { TokenType::PUBLIC_KEYWORD_TOKEN, "public" },
+
+    { TokenType::STATIC_KEYWORD_TOKEN, "static" },
 
     { TokenType::TRUE_KEYWORD_TOKEN, "true" },
     { TokenType::FALSE_KEYWORD_TOKEN, "false" },
@@ -344,6 +357,12 @@ namespace Specification {
   inline const std::string CLASS_KEYWORD = "class";
   inline const std::string NEW_KEYWORD = "new";
 
+  inline const std::string PRIVATE_KEYWORD = "private";
+  inline const std::string PROTECTED_KEYWORD = "protected";
+  inline const std::string PUBLIC_KEYWORD = "public";
+
+  inline const std::string STATIC_KEYWORD = "static";
+
   inline const std::string TRUE_KEYWORD = "true";
   inline const std::string FALSE_KEYWORD = "false";
   inline const std::string NULL_KEYWORD = "null";
@@ -365,6 +384,10 @@ namespace Specification {
     EXPORT_KEYWORD,
     CLASS_KEYWORD,
     NEW_KEYWORD,
+    PRIVATE_KEYWORD,
+    PROTECTED_KEYWORD,
+    PUBLIC_KEYWORD,
+    STATIC_KEYWORD,
     TRUE_KEYWORD,
     FALSE_KEYWORD,
     NULL_KEYWORD
@@ -387,6 +410,10 @@ namespace Specification {
     { EXPORT_KEYWORD, TokenType::EXPORT_KEYWORD_TOKEN },
     { CLASS_KEYWORD, TokenType::CLASS_KEYWORD_TOKEN },
     { NEW_KEYWORD, TokenType::NEW_KEYWORD_TOKEN },
+    { PRIVATE_KEYWORD, TokenType::PRIVATE_KEYWORD_TOKEN },
+    { PROTECTED_KEYWORD, TokenType::PROTECTED_KEYWORD_TOKEN },
+    { PUBLIC_KEYWORD, TokenType::PUBLIC_KEYWORD_TOKEN },
+    { STATIC_KEYWORD, TokenType::STATIC_KEYWORD_TOKEN },
     { TRUE_KEYWORD, TokenType::TRUE_KEYWORD_TOKEN },
     { FALSE_KEYWORD, TokenType::FALSE_KEYWORD_TOKEN },
     { NULL_KEYWORD, TokenType::NULL_KEYWORD_TOKEN }
