@@ -31,5 +31,7 @@ namespace Shared {
     return false;
   }
 
+  // string utils
   std::string slice(std::string, int, int);
+  bool startsWith(std::string string, std::string start);
 }

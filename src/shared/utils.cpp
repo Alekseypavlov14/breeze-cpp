@@ -11,4 +11,13 @@ namespace Shared {
 
     return part;
   }
+  // check if string starts with given sequence
+  bool startsWith(std::string string, std::string start) {
+    for (int i = 0; i < start.size(); i++) {
+      if (i >= string.size()) return false;
+      if (string[i] != start[i]) return false;
+    }
+
+    return true;
+  }
 }
