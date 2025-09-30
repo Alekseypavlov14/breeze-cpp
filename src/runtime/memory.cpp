@@ -98,6 +98,9 @@ namespace Runtime {
       this->recursivelySearchValues(this->containers[i]->getValue());
     }
 
+    // if no memory lost, stop procedure
+    if (this->processingValues.size() == this->values.size()) return;
+
     std::vector<Value*> newValues = {};
 
     // delete all values that are not accessible
