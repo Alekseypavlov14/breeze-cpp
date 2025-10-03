@@ -31,7 +31,22 @@ namespace Shared {
     return false;
   }
 
+  // remove elements from vector
+  template<class T>
+  void removeAll(std::vector<T>& list, T element) {
+    std::vector<T> newList = {};
+
+    for (int i = 0; i < list.size(); i++) {
+      if (element != list[i]) newList.push_back(element);
+    }
+
+    list = newList;
+  }
+
   // string utils
   std::string slice(std::string, int, int);
   bool startsWith(std::string string, std::string start);
+
+  // file utils
+  std::string readFileByAbsolutePath(std::string);
 }

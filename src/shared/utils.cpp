@@ -1,3 +1,5 @@
+#include <fstream>
+
 #include "shared/utils.h"
 
 namespace Shared {
@@ -19,5 +21,18 @@ namespace Shared {
     }
 
     return true;
+  }
+
+  // file utils
+  std::string readFileByAbsolutePath(std::string path) {
+    std::ifstream file(path);
+    if (!file.is_open()) return "";
+
+    std::string content, line;
+    while (std::getline(file, line)) {
+      content += line + "\n";
+    }
+    
+    return content;
   }
 }
