@@ -1,16 +1,18 @@
 #include "base/exception.h"
 
 namespace Base {
-  // exception implementations
-  Exception::Exception(const Position position, const std::string message) {
-    this->position = position;
+  Exception::Exception(const std::string message) {
     this->message = message;
-  }
-  
-  Position Exception::getPosition() {
-    return this->position;
   }
   std::string Exception::getMessage() {
     return this->message;
+  }
+
+  SourceCodeException::SourceCodeException(const Position position, const std::string message): Exception(message) {
+    this->position = position;
+    this->message = message;
+  }
+  Position SourceCodeException::getPosition() {
+    return this->position;
   }
 }

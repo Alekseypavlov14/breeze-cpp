@@ -10,15 +10,24 @@ namespace Base {
   // all interpreter exceptions instantiate this class
   class Exception: public std::exception {  
     protected:
-      Position position;
       std::string message;
     
     public:
-      Exception(const Position, const std::string);
+      Exception(const std::string);
       // makes class polymorphic
       virtual ~Exception() = default;
 
-      Position getPosition();
       std::string getMessage();
+  };
+    
+  // source code exceptions have position
+  class SourceCodeException: public Exception {
+    protected:
+      Position position;
+    
+    public:
+      SourceCodeException(const Position, const std::string);
+
+      Position getPosition();
   };
 }

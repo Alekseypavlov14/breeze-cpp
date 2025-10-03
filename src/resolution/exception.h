@@ -5,10 +5,10 @@
 namespace Resolution {
   class Exception: public Base::Exception {
     public:
-      Exception(const Base::Position, const std::string);
+      Exception(const std::string);
   };
 
-  class PathException: public Base::Exception {
+  class PathException: public Base::SourceCodeException {
     public:
       PathException(const Base::Position, const std::string);
   };

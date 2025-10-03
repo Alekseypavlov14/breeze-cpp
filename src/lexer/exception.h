@@ -5,7 +5,7 @@
 #include "base/exception.h"
 
 namespace Lexer {
-  class Exception: public Base::Exception {
+  class Exception: public Base::SourceCodeException {
     public:
       Exception(const Base::Position, const std::string);
   };

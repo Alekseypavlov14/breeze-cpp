@@ -4,7 +4,7 @@
 #include "base/exception.h"
 
 namespace Runtime {
-  class NameException: public Base::Exception {
+  class NameException: public Base::SourceCodeException {
     public:
       NameException(Base::Position, std::string);
   };
