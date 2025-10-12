@@ -1,4 +1,5 @@
 #include "runtime/memory.h"
+#include "runtime/exceptions.h"
 #include "shared/utils.h"
 
 namespace Runtime {
@@ -17,8 +18,16 @@ namespace Runtime {
     this->stacks = {};
     this->exports = {};
 
-    this->currentStack = NULL;
-    this->currentExportsRegistry = NULL;
+    this->currentStackIndex = 0;
+    this->currentExportsIndex = 0;
+
+    this->containers = {};
+    this->values = {};
+
+    this->containerReferenceCount = {};
+    this->valuesReferenceCount = {};
+
+    this->processingValues = {};
 
     for (int i = 0; i < modulesAmount; i++) {
       this->stacks.push_back(Stack());
@@ -26,18 +35,62 @@ namespace Runtime {
     } 
   }
 
-  Stack* Memory::getCurrentStack() {
-    return this->currentStack;
-  }
   void Memory::setCurrentStackByIndex(int index) {
-    this->currentStack = &this->stacks[index];
-  }
-
-  ExportsRegistry* Memory::getCurrentExportsRegistry() {
-    return this->currentExportsRegistry;
+    this->currentStackIndex = index;
   }
   void Memory::setCurrentExportsRegistryByIndex(int index) {
-    this->currentExportsRegistry = &this->exports[index];
+    this->currentExportsIndex = index;
+  }
+
+  void Memory::addScopeToStack() {
+    if (this->stacks.size() >= this->currentStackIndex) {
+      throw Runtime::Exception("No stack available by this index");
+    } 
+
+    this->stacks[this->currentStackIndex].addScope(Scope());
+  }
+  void Memory::removeScopeFromStack() {
+    if (this->stacks.size() >= this->currentStackIndex) {
+      throw Runtime::Exception("No stack available by this index");
+    } 
+
+    this->stacks[this->currentStackIndex].removeScope();
+  }
+  bool Memory::addContainerToStack(Container* container) {
+    if (this->stacks.size() >= this->currentStackIndex) {
+      throw Runtime::Exception("No stack available by this index");
+    } 
+
+    return this->stacks[this->currentStackIndex].addContainer(container);
+  }
+  Container* Memory::getContainerFromStack(std::string name) {
+    if (this->stacks.size() >= this->currentStackIndex) {
+      throw Runtime::Exception("No stack available by this index");
+    } 
+
+    return this->stacks[this->currentStackIndex].getContainerByName(name);
+  }
+  bool Memory::removeContainerFromStack(std::string name) {
+    if (this->stacks.size() >= this->currentStackIndex) {
+      throw Runtime::Exception("No stack available by this index");
+    } 
+
+    return this->stacks[this->currentStackIndex].removeContainerByName(name);
+  }
+
+  bool Memory::addContainerToExports(Container* container) {
+    if (this->currentExportsIndex >= this->exports.size()) {
+      throw Runtime::Exception("No exports available by this index");
+    }
+
+    return this->exports[this->currentExportsIndex].addContainer(container);
+  }
+  Container* Memory::getContainerFromExports(std::string name) {
+    if (this->currentExportsIndex >= this->exports.size()) {
+      throw Runtime::Exception("No exports available by this index");
+    }
+
+    return this->exports[this->currentExportsIndex].getContainerByName(name);
   }
 
   void Memory::retainContainer(Container* container) {
@@ -54,6 +107,24 @@ namespace Runtime {
     if (!containerCount) {
       this->removeContainer(container);
     }
+  }
+  void Memory::removeContainer(Container* container) {
+    std::vector<Container*> newContainers = {};
+    
+    for (int i = 0; i < this->containers.size(); i++) {
+      if (this->containers[i] == container) {
+        // delete reference count
+        this->containerReferenceCount.erase(container);
+        // release allocated memory
+        delete container;
+
+        continue;
+      }
+
+      newContainers.push_back(this->containers[i]);
+    }
+
+    this->containers = newContainers;
   }
 
   void Memory::retainValue(Value* value) {
@@ -116,7 +187,6 @@ namespace Runtime {
 
     this->values = newValues;
   }
-
   void Memory::recursivelySearchValues(Value* value) {
     // skip already analyzed value
     if (Shared::includes(this->processingValues, value)) return;
@@ -153,43 +223,6 @@ namespace Runtime {
       }
     }
     if (Shared::isInstanceOf<Value, FunctionValue>(value)) return;
-  }
-
-  void Memory::removeContainer(Container* container) {
-    std::vector<Container*> newContainers = {};
-    
-    for (int i = 0; i < this->containers.size(); i++) {
-      if (this->containers[i] == container) {
-        // delete reference count
-        this->containerReferenceCount.erase(container);
-        // release allocated memory
-        delete container;
-
-        continue;
-      }
-
-      newContainers.push_back(this->containers[i]);
-    }
-
-    this->containers = newContainers;
-  }
-  void Memory::removeValue(Value* value) {
-    std::vector<Value*> newValues = {};
-
-    for (int i = 0; i < this->values.size(); i++) {
-      if (this->values[i] == value) {
-        // delete reference count
-        this->valuesReferenceCount.erase(value);
-        // release allocated memory
-        delete value;
-
-        continue;
-      }
-
-      newValues.push_back(this->values[i]);
-    }
-
-    this->values = newValues;
   }
 
   void Memory::removeAllContainers() {

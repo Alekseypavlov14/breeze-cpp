@@ -16,6 +16,10 @@ namespace Runtime {
       // exports contains containers from stacks and scopes
       std::vector<ExportsRegistry> exports;
 
+      // pointers to current operating entities
+      int currentStackIndex;
+      int currentExportsIndex;
+
       // keeps track of all used variables (containers)
       // containers only point to values, flat structure
       // flat structure -> retain/release is enough
@@ -25,22 +29,22 @@ namespace Runtime {
       // cyclic structure -> has to be released recursively and checked for accessibility
       std::vector<Value*> values;
 
-      // pointers to current operating entity
-      Stack* currentStack;
-      ExportsRegistry* currentExportsRegistry;
-
       // count allocated memory references
       // used to release memory when nobody uses it
       std::unordered_map<Container*, int> containerReferenceCount;
       std::unordered_map<Value*, int> valuesReferenceCount;
-
+      
+      // utility that optimizes value operations
+      // searches value and its children and adds them to this.processingValues
+      void recursivelySearchValues(Value*);
       // used during operations to prevent loops
       // particularly used for recursive values releasing
       std::vector<Value*> processingValues;
 
-      // utility that optimizes value operations
-      // searches value and its children and adds them to this.processingValues
-      void recursivelySearchValues(Value*);
+      // deletes all containers and counts
+      void removeAllContainers();
+      // deletes all values and counts
+      void removeAllValues();
 
     public:
       Memory();
@@ -50,34 +54,39 @@ namespace Runtime {
       // is called before module graph executed
       void prepareStructuresForModules(int modulesAmount);
 
-      Stack* getCurrentStack();
       void setCurrentStackByIndex(int);
-
-      ExportsRegistry* getCurrentExportsRegistry();
       void setCurrentExportsRegistryByIndex(int);
 
+      // stack usage
+      void addScopeToStack();
+      void removeScopeFromStack();
+      // add container to current stack
+      bool addContainerToStack(Container* container);
+      // get container by name
+      Container* getContainerFromStack(std::string);
+      // remove container from current stack
+      bool removeContainerFromStack(std::string);
+
+      // exports usage
+      bool addContainerToExports(Container* container);
+      Container* getContainerFromExports(std::string);
+      
       // control containers usage
-      // increment and decrement pointer reference count and remove unused containers
+      // increment pointer reference count
       void retainContainer(Container* container);
+      // decrement pointer reference count and deletes container if nobody uses it
       void releaseContainer(Container* container);
+      // deletes container by pointer from containers list
+      void removeContainer(Container*);
 
       // control values usage
-      // increment and decrement pointer reference count and remove unused values
-      // release is recursive
+      // increment pointer reference count
       void retainValue(Value* value);
+      // decrement pointer reference count and remove unused values recursively
       void releaseValue(Value* value);
 
       // clears values that are not accessible through any container
       // removes cycled references 
       void removeUnreachableValues();
-
-      // clear specific container or value
-      // delete pointer and its reference count
-      void removeContainer(Container*);
-      void removeValue(Value*);
-      
-      // clears all allocated objects
-      void removeAllContainers();
-      void removeAllValues();
   };
 }
