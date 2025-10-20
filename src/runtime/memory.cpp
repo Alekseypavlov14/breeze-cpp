@@ -27,6 +27,8 @@ namespace Runtime {
     this->containerReferenceCount = {};
     this->valuesReferenceCount = {};
 
+    this->temporaryValues = {};
+
     this->processingValues = {};
 
     for (int i = 0; i < modulesAmount; i++) {
@@ -158,6 +160,27 @@ namespace Runtime {
 
     // update values list
     this->values = newValues;
+  }
+
+  void Memory::addTemporaryValue(Value* value) {
+    this->temporaryValues.push_back(value);
+  }
+  void Memory::excludeTemporaryValue(Value* value) {
+    std::vector<Value*> values = {};
+
+    for (int i = 0; i < this->temporaryValues.size(); i++) {
+      if (this->temporaryValues[i] == value) continue;
+
+      values.push_back(this->temporaryValues[i]);
+    }
+
+    this->temporaryValues = values;
+  }
+  void Memory::clearTemporaryValues() {
+    for (int i = 0; i < this->temporaryValues.size(); i++) {
+      delete this->temporaryValues[i];
+    }
+    this->temporaryValues = {};
   }
 
   void Memory::removeUnreachableValues() {

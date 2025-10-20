@@ -15,11 +15,11 @@ namespace Runtime {
       // keeps track of modules exports
       // exports contains containers from stacks and scopes
       std::vector<ExportsRegistry> exports;
-
+      
       // pointers to current operating entities
       int currentStackIndex;
       int currentExportsIndex;
-
+      
       // keeps track of all used variables (containers)
       // containers only point to values, flat structure
       // flat structure -> retain/release is enough
@@ -28,11 +28,21 @@ namespace Runtime {
       // values can point to other values, cyclic structure
       // cyclic structure -> has to be released recursively and checked for accessibility
       std::vector<Value*> values;
-
+      
       // count allocated memory references
       // used to release memory when nobody uses it
       std::unordered_map<Container*, int> containerReferenceCount;
       std::unordered_map<Value*, int> valuesReferenceCount;
+      
+      // holds list of pointers to temporary values 
+      // temporary values are used for expression computations
+      std::vector<Value*> temporaryValues;
+      // method to add value to temporal values
+      void addTemporaryValue(Value*);
+      // method to exclude value from temporaries
+      void excludeTemporaryValue(Value*);
+      // method to remove temporary values
+      void clearTemporaryValues();
       
       // utility that optimizes value operations
       // searches value and its children and adds them to this.processingValues
