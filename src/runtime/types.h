@@ -4,13 +4,13 @@
 #include <vector>
 #include <functional>
 
-#include "runtime/stack.h"
-
 // defines how language stores data in runtime
 // adds typing and classes
 // memory is freed by the stack and scope
-namespace Runtime
-{
+namespace Runtime {
+  // forward declaration (from stack.h)
+  class Stack;
+
   // define all possible data types
   enum class DataType {
     Null,
@@ -185,15 +185,15 @@ namespace Runtime
       std::vector<Field> fields;
 
       // constructor and destructor 
-      FunctionValue constructor;
-      FunctionValue destructor;
+      FunctionValue* constructor;
+      FunctionValue* destructor;
 
     public:
       ClassValue(
         std::vector<ClassValue*> parents, 
         std::vector<Field> fields,
-        FunctionValue constructor,
-        FunctionValue destructor
+        FunctionValue* constructor,
+        FunctionValue* destructor
       );
 
       DataType getType();
@@ -206,15 +206,15 @@ namespace Runtime
   class FunctionValue: public CompoundValue {
     private:
       // copy of the stack at the moment of declaration
-      Stack closure;
+      Stack* closure;
       std::function<Value*(std::vector<Value*>)> callable;
 
     public:
-      FunctionValue(Stack, std::function<Value*(std::vector<Value*>)>);
+      FunctionValue(Stack*, std::function<Value*(std::vector<Value*>)>);
 
       DataType getType();
 
-      Stack getClosure();
+      Stack* getClosure();
 
       Value* execute(std::vector<Value*>); 
   };

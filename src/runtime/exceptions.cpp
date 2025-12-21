@@ -5,8 +5,11 @@ namespace Runtime {
     this->message = message;
   }
 
-  NameException::NameException(Base::Position position, std::string message): Base::SourceCodeException(position, message) {
-    this->position = position;
+  NameException::NameException(std::string message): Base::Exception(message) {
+    this->message = message;
+  }
+
+  TypeException::TypeException(std::string message): Base::Exception(message) {
     this->message = message;
   }
 }

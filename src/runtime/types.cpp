@@ -1,3 +1,4 @@
+#include "runtime/stack.h"
 #include "runtime/types.h"
 #include "shared/utils.h"
 
@@ -27,7 +28,7 @@ namespace Runtime {
     this->data = data;
   }
   NumberValue::NumberValue(const NumberValue& other) {
-    this->data = data;
+    this->data = other.data;
   }
   DataType NumberValue::getType() {
     return DataType::Number;
@@ -146,13 +147,13 @@ namespace Runtime {
   ClassValue::ClassValue(
     std::vector<ClassValue*> parents, 
     std::vector<Field> fields,
-    FunctionValue constructor,
-    FunctionValue destructor
+    FunctionValue* constructor,
+    FunctionValue* destructor
   ): constructor(constructor), destructor(destructor) {
     this->parents = parents;
     this->fields = fields;
     this->constructor = constructor;
-    this->destructor;
+    this->destructor = destructor;
   }
   DataType ClassValue::getType() {
     return DataType::Class;
@@ -164,14 +165,14 @@ namespace Runtime {
     return this->fields;
   }
 
-  FunctionValue::FunctionValue(Stack stack, std::function<Value*(std::vector<Value*>)> callable) {
+  FunctionValue::FunctionValue(Stack* stack, std::function<Value*(std::vector<Value*>)> callable) {
     this->closure = stack;
     this->callable = callable;
   }
   DataType FunctionValue::getType() {
     return DataType::Function;
   }
-  Stack FunctionValue::getClosure() {
+  Stack* FunctionValue::getClosure() {
     return this->closure;
   }
   Value* FunctionValue::execute(std::vector<Value*> values) {

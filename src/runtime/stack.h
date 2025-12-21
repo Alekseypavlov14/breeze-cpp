@@ -3,9 +3,10 @@
 #include <string>
 #include <vector>
 
-#include "runtime/types.h"
-
 namespace Runtime {
+  // forward declaration (from types.h)
+  class Value;
+
   // container describes a variable
   // containers are stored in memory pool
   class Container {

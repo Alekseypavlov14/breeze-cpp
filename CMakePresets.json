@@ -3,7 +3,7 @@
   "cmakeMinimumRequired": { "major": 3, "minor": 15 },
   "configurePresets": [
     {
-      "name": "breeze",
+      "name": "cpp",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {

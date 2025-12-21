@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 # set project name
-set(PROJECT_NAME breeze)
+set(PROJECT_NAME cpp)
 
 # initialize project
 project(${PROJECT_NAME} CXX)

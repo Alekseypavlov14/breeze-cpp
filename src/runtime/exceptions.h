@@ -9,8 +9,13 @@ namespace Runtime {
       Exception(std::string message);
   };
   
-  class NameException: public Base::SourceCodeException {
+  class NameException: public Base::Exception {
     public:
-      NameException(Base::Position, std::string);
+      NameException(std::string);
+  };
+
+  class TypeException: public Base::Exception {
+    public:
+      TypeException(std::string);
   };
 }

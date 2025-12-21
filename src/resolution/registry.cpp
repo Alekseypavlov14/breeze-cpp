@@ -1,5 +1,3 @@
-#pragma once
-
 #include "resolution/registry.h"
 #include "resolution/module.h"
 

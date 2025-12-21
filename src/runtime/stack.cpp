@@ -1,4 +1,5 @@
 #include "runtime/stack.h"
+#include "runtime/types.h"
 
 namespace Runtime {
   Container::Container(bool isConstant, std::string name, Value* value) {
@@ -96,6 +97,7 @@ namespace Runtime {
   bool ExportsRegistry::addContainer(Container* container) {
     if (this->getContainerByName(container->getName()) != NULL) return false;
     this->containers.push_back(container);
+    return true;
   }
   Container* ExportsRegistry::getContainerByName(std::string name) {
     for (int i = 0; i < this->containers.size(); i++) {
