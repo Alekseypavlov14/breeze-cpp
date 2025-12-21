@@ -17,9 +17,12 @@ namespace Runtime {
     private:
       Memory memory;
 
+      // binary expressions
       Value* evaluateAdditionExpression(Value* left, Value* right);
       Value* evaluateSubtractionExpression(Value* left, Value* right);
       Value* evaluateMultiplicationExpression(Value* left, Value* right);
       Value* evaluateDivisionExpression(Value* left, Value* right);
+
+      Container* evaluateLeftExpression(AST::Expression*);
   };
 }

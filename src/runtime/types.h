@@ -57,6 +57,8 @@ namespace Runtime {
 
       bool getData();
       void setData(bool);
+
+      static bool getDataOf(Value*);
   };
   class NumberValue: public PrimitiveValue {
     private:
@@ -70,6 +72,8 @@ namespace Runtime {
 
       double getData();
       void setData(double);
+
+      static double getDataOf(Value*);
   };
   class StringValue: public PrimitiveValue {
     private:
@@ -83,6 +87,8 @@ namespace Runtime {
 
       std::string getData();
       void setData(std::string);
+
+      static std::string getDataOf(Value*);
   };
 
   // define compound types

@@ -37,12 +37,6 @@ namespace Runtime {
       // holds list of pointers to temporary values 
       // temporary values are used for expression computations
       std::vector<Value*> temporaryValues;
-      // method to add value to temporal values
-      void addTemporaryValue(Value*);
-      // method to exclude value from temporaries
-      void excludeTemporaryValue(Value*);
-      // method to remove temporary values
-      void clearTemporaryValues();
       
       // utility that optimizes value operations
       // searches value and its children and adds them to this.processingValues
@@ -50,7 +44,7 @@ namespace Runtime {
       // used during operations to prevent loops
       // particularly used for recursive values releasing
       std::vector<Value*> processingValues;
-
+      
       // deletes all containers and counts
       void removeAllContainers();
       // deletes all values and counts
@@ -59,14 +53,14 @@ namespace Runtime {
     public:
       Memory();
       ~Memory();
-
+      
       // creates stacks, exports registries for each module
       // is called before module graph executed
       void prepareStructuresForModules(int modulesAmount);
-
+      
       void setCurrentStackByIndex(int);
       void setCurrentExportsRegistryByIndex(int);
-
+      
       // stack usage
       void addScopeToStack();
       void removeScopeFromStack();
@@ -76,7 +70,7 @@ namespace Runtime {
       Container* getContainerFromStack(std::string);
       // remove container from current stack
       bool removeContainerFromStack(std::string);
-
+      
       // exports usage
       bool addContainerToExports(Container* container);
       Container* getContainerFromExports(std::string);
@@ -94,7 +88,14 @@ namespace Runtime {
       void retainValue(Value* value);
       // decrement pointer reference count and remove unused values recursively
       void releaseValue(Value* value);
-
+      
+      // method to add value to temporal values
+      void addTemporaryValue(Value*);
+      // method to exclude value from temporaries
+      void excludeTemporaryValue(Value*);
+      // method to remove temporary values
+      void clearTemporaryValues();
+      
       // clears values that are not accessible through any container
       // removes cycled references 
       void removeUnreachableValues();

@@ -23,6 +23,9 @@ namespace Runtime {
   void BooleanValue::setData(bool data) {
     this->data = data;
   }
+  bool BooleanValue::getDataOf(Value* value) {
+    return Shared::cast<Value, BooleanValue>(value)->getData();
+  }
 
   NumberValue::NumberValue(double data) {
     this->data = data;
@@ -39,6 +42,9 @@ namespace Runtime {
   void NumberValue::setData(double data) {
     this->data = data;
   }
+  double NumberValue::getDataOf(Value* value) {
+    return Shared::cast<Value, NumberValue>(value)->getData();
+  }
 
   StringValue::StringValue(std::string data) {
     this->data = data;
@@ -54,6 +60,9 @@ namespace Runtime {
   }
   void StringValue::setData(std::string data) {
     this->data = data;
+  }
+  std::string StringValue::getDataOf(Value* value) {
+    return Shared::cast<Value, StringValue>(value)->getData();
   }
 
   VectorValue::VectorValue(std::vector<Value*> items) {
@@ -194,18 +203,18 @@ namespace Runtime {
       // two nulls are the same
       if (type1 == DataType::Null) return true;
       if (type1 == DataType::Boolean) {
-        bool data1 = Shared::cast<Value, BooleanValue>(value1)->getData();
-        bool data2 = Shared::cast<Value, BooleanValue>(value2)->getData();
+        bool data1 = BooleanValue::getDataOf(value1);
+        bool data2 = BooleanValue::getDataOf(value2);
         return data1 == data2;
       }
       if (type1 == DataType::Number) {
-        double data1 = Shared::cast<Value, NumberValue>(value1)->getData();
-        double data2 = Shared::cast<Value, NumberValue>(value2)->getData();
+        double data1 = NumberValue::getDataOf(value1);
+        double data2 = NumberValue::getDataOf(value2);
         return data1 == data2;
       }
       if (type1 == DataType::String) {
-        std::string data1 = Shared::cast<Value, StringValue>(value1)->getData();
-        std::string data2 = Shared::cast<Value, StringValue>(value2)->getData();
+        std::string data1 = StringValue::getDataOf(value1);
+        std::string data2 = StringValue::getDataOf(value2);
         return data1 == data2;
       }
     }

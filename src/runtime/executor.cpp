@@ -2,22 +2,80 @@
 #include "runtime/exceptions.h"
 #include "shared/utils.h"
 
+#include <iostream>
+
 namespace Runtime {
+  Executor::Executor() {
+    this->memory = Memory();
+  }
+
+  void Executor::execute() {} 
+
   Value* Executor::evaluateAdditionExpression(Value* left, Value* right) {
     // number + number
     if (Shared::isInstanceOf<Value, NumberValue>(left) && Shared::isInstanceOf<Value, NumberValue>(right)) {
-      double leftValue = Shared::cast<Value, NumberValue>(left)->getData();
-      double rightValue = Shared::cast<Value, NumberValue>(right)->getData();
-      return new NumberValue(leftValue + rightValue);
+      double leftValue = NumberValue::getDataOf(left);
+      double rightValue = NumberValue::getDataOf(right);
+
+      NumberValue* result = new NumberValue(leftValue + rightValue);
+      this->memory.addTemporaryValue(result);
+
+      return result;
     }
 
     // string + string
     if (Shared::isInstanceOf<Value, StringValue>(left) && Shared::isInstanceOf<Value, StringValue>(right)) {
-      std::string leftValue = Shared::cast<Value, StringValue>(left)->getData();
-      std::string rightValue = Shared::cast<Value, StringValue>(right)->getData();
-      return new StringValue(leftValue + rightValue);
+      std::string leftValue = StringValue::getDataOf(left);
+      std::string rightValue = StringValue::getDataOf(right);
+
+      StringValue* result = new StringValue(leftValue + rightValue);
+      this->memory.addTemporaryValue(result);
+
+      return result;
     }
 
     throw new TypeException("Operator \"+\" is used with invalid type pair");
+  }
+  Value* Executor::evaluateSubtractionExpression(Value* left, Value* right) {
+    if (Shared::isInstanceOf<Value, NumberValue>(left) && Shared::isInstanceOf<Value, NumberValue>(right)) {
+      double leftValue = NumberValue::getDataOf(left);
+      double rightValue = NumberValue::getDataOf(right);
+
+      NumberValue* result = new NumberValue(leftValue - rightValue);
+      this->memory.addTemporaryValue(result);
+
+      return result;
+    }
+
+    throw new TypeException("Operator \"-\" is used with invalid type pair");
+  }
+  Value* Executor::evaluateMultiplicationExpression(Value* left, Value* right) {
+    if (Shared::isInstanceOf<Value, NumberValue>(left) && Shared::isInstanceOf<Value, NumberValue>(right)) {
+      double leftValue = NumberValue::getDataOf(left);
+      double rightValue = NumberValue::getDataOf(right);
+
+      NumberValue* result = new NumberValue(leftValue * rightValue);
+      this->memory.addTemporaryValue(result);
+
+      return result;
+    }
+
+    throw new TypeException("Operator \"*\" is used with invalid type pair");
+  }
+  Value* Executor::evaluateDivisionExpression(Value* left, Value* right) {
+    if (Shared::isInstanceOf<Value, NumberValue>(left) && Shared::isInstanceOf<Value, NumberValue>(right)) {
+      double leftValue = NumberValue::getDataOf(left);
+      double rightValue = NumberValue::getDataOf(right);
+
+      NumberValue* result = new NumberValue(leftValue / rightValue);
+      this->memory.addTemporaryValue(result);
+
+      return result;
+    }
+
+    throw new TypeException("Operator \"/\" is used with invalid type pair");
+  }
+
+  Container* Executor::evaluateLeftExpression(AST::Expression* expression) {
   }
 }
