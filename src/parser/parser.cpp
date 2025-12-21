@@ -481,7 +481,19 @@ namespace Parser {
     return returnStatement;
   }
   // TODO: implement class declaration statement
-  // AST::ClassDeclarationStatement Parser::parseClassDeclarationStatement() {}
+  AST::ClassDeclarationStatement* Parser::parseClassDeclarationStatement() {
+    this->requireToken(Specification::TokenType::CLASS_KEYWORD_TOKEN);
+    this->consumeCurrentToken();
+
+    this->skipSingleLineSpaceTokens();
+
+    this->requireToken(Specification::TokenType::IDENTIFIER_TOKEN);
+    Lexer::Token className = this->consumeCurrentToken();
+
+    this->requireNewlineForNextStatement();
+
+    return new AST::ClassDeclarationStatement(className);
+  }
   AST::ImportStatement* Parser::parseImportStatement() {
     this->requireToken(Specification::TokenType::IMPORT_KEYWORD_TOKEN);
     this->consumeCurrentToken();
