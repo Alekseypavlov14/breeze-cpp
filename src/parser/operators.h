@@ -158,4 +158,32 @@ namespace Parser {
   };
 
   Specification::TokenType getGroupingClosingTokenType(Specification::TokenType);
+
+  // associativity of operators
+  inline const std::vector<Specification::TokenType> RIGHT_ASSOCIATIVE_OPERATORS = {
+    Specification::TokenType::LAMBDA_TOKEN,
+
+    Specification::TokenType::ASSIGN_TOKEN,
+    Specification::TokenType::PLUS_ASSIGN_TOKEN,
+    Specification::TokenType::MINUS_ASSIGN_TOKEN,
+    Specification::TokenType::MULTIPLICATION_ASSIGN_TOKEN,
+    Specification::TokenType::DIVISION_ASSIGN_TOKEN,
+    Specification::TokenType::REMAINDER_ASSIGN_TOKEN,
+    Specification::TokenType::EXPONENTIAL_ASSIGN_TOKEN,
+
+    Specification::TokenType::BIT_AND_ASSIGN_TOKEN,
+    Specification::TokenType::BIT_OR_ASSIGN_TOKEN,
+    Specification::TokenType::BIT_XOR_ASSIGN_TOKEN,
+    Specification::TokenType::LEFT_SHIFT_ASSIGN_TOKEN,
+    Specification::TokenType::RIGHT_SHIFT_ASSIGN_TOKEN,
+
+    Specification::TokenType::EXPONENTIAL_TOKEN,
+
+    Specification::TokenType::NOT_TOKEN,
+    Specification::TokenType::BIT_NOT_TOKEN,
+    Specification::TokenType::NEW_KEYWORD_TOKEN
+  };
+
+  bool isRightAssociativeOperator(Specification::TokenType);
+  bool isLeftAssociativeOperator(Specification::TokenType);
 }

@@ -718,7 +718,10 @@ namespace Parser {
     if (isUnaryOperator(operatorToken.getType())) {
       // handle cases when base precedence is higher than current precedence
       // higher base precedence - complete base expression first
-      if (basePrecedence > currentPrecedence) {
+      if (
+        (basePrecedence > currentPrecedence) || 
+        (basePrecedence == currentPrecedence && isLeftAssociativeOperator(operatorToken.getType()))
+      ) {
         // do not pass current operator
         this->decrementPosition();
 
@@ -781,7 +784,10 @@ namespace Parser {
     // handle binary operations
     if (isBinaryOperator(operatorToken.getType())) {
       // handle cases when base precedence is higher than or equal to current precedence
-      if (basePrecedence >= currentPrecedence) {
+      if (
+        (basePrecedence > currentPrecedence) ||
+        (basePrecedence == currentPrecedence && isLeftAssociativeOperator(operatorToken.getType())) 
+      ) {
         // do not pass current operator
         this->decrementPosition();
 

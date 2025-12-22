@@ -40,4 +40,11 @@ namespace Parser {
   Specification::TokenType getGroupingClosingTokenType(Specification::TokenType tokenType) {
     return GROUPING_OPERATOR_PAIRS.at(tokenType);
   }
+
+  bool isRightAssociativeOperator(Specification::TokenType op) {
+    return Shared::includes(RIGHT_ASSOCIATIVE_OPERATORS, op);
+  }
+  bool isLeftAssociativeOperator(Specification::TokenType op) {
+    return !isRightAssociativeOperator(op);
+  }
 }
