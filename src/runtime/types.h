@@ -25,6 +25,11 @@ namespace Runtime {
     Class,
   };
 
+  // default values
+  inline const bool BOOLEAN_DEFAULT_VALUE = false;
+  inline const double NUMBER_DEFAULT_VALUE = 0;
+  inline const std::string STRING_DEFAULT_VALUE = "";
+
   // root for value hierarchy
   class Value {
     public:
@@ -225,8 +230,13 @@ namespace Runtime {
       Value* execute(std::vector<Value*>); 
   };
 
+  // fundamental utilities
+
   // compares two values 
   // primitive values are compared by value and by reference
   // compound values are compared only by reference and considered non-equal if references are different
   bool compareValues(Value*, Value*);
+
+  // evaluate value a bool
+  bool getBoolean(Value*);
 } 

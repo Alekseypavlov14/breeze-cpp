@@ -222,4 +222,12 @@ namespace Runtime {
     // otherwise consider different
     return false;
   }
+
+  bool getBoolean(Value* value) {
+    if (Shared::isInstanceOf<Value, NullValue>(value)) return false;
+    if (Shared::isInstanceOf<Value, BooleanValue>(value)) return BooleanValue::getDataOf(value);
+    if (Shared::isInstanceOf<Value, NumberValue>(value)) return NumberValue::getDataOf(value) != NUMBER_DEFAULT_VALUE;
+    if (Shared::isInstanceOf<Value, StringValue>(value)) return StringValue::getDataOf(value) != STRING_DEFAULT_VALUE;
+    if (Shared::isInstanceOf<Value, CompoundValue>(value)) return true;
+  }
 }

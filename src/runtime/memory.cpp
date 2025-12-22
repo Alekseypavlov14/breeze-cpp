@@ -27,6 +27,7 @@ namespace Runtime {
     this->containerReferenceCount = {};
     this->valuesReferenceCount = {};
 
+    this->temporaryContainers = {};
     this->temporaryValues = {};
 
     this->processingValues = {};

@@ -16,7 +16,7 @@ namespace Runtime {
       Value* value;
 
     public:
-      Container(bool, std::string, Value*);
+      Container(std::string, Value*, bool = false);
 
       bool getIsConstant();
       std::string getName();

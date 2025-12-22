@@ -2,7 +2,7 @@
 #include "runtime/types.h"
 
 namespace Runtime {
-  Container::Container(bool isConstant, std::string name, Value* value) {
+  Container::Container(std::string name, Value* value, bool isConstant) {
     this->isConstant = isConstant;
     this->name = name;
     this->value = value;
