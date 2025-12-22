@@ -162,19 +162,24 @@ namespace Runtime {
     this->values = newValues;
   }
 
+  void Memory::addTemporaryContainer(Container* container) {
+    this->temporaryContainers.push_back(container);
+  }
+  void Memory::excludeTemporaryContainer(Container* container) {
+    Shared::removeAll(this->containers, container);
+  }
+  void Memory::clearTemporaryContainers() {
+    for (int i = 0; i < this->temporaryContainers.size(); i++) {
+      delete this->temporaryContainers[i];
+    }
+    this->temporaryContainers = {};
+  }
+
   void Memory::addTemporaryValue(Value* value) {
     this->temporaryValues.push_back(value);
   }
   void Memory::excludeTemporaryValue(Value* value) {
-    std::vector<Value*> values = {};
-
-    for (int i = 0; i < this->temporaryValues.size(); i++) {
-      if (this->temporaryValues[i] == value) continue;
-
-      values.push_back(this->temporaryValues[i]);
-    }
-
-    this->temporaryValues = values;
+    Shared::removeAll(this->temporaryValues, value);
   }
   void Memory::clearTemporaryValues() {
     for (int i = 0; i < this->temporaryValues.size(); i++) {

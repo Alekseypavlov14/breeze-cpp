@@ -34,6 +34,9 @@ namespace Runtime {
       std::unordered_map<Container*, int> containerReferenceCount;
       std::unordered_map<Value*, int> valuesReferenceCount;
       
+      // holds list of pointers to temporary containers
+      // temporary containers are used for expressions
+      std::vector<Container*> temporaryContainers;
       // holds list of pointers to temporary values 
       // temporary values are used for expression computations
       std::vector<Value*> temporaryValues;
@@ -89,11 +92,12 @@ namespace Runtime {
       // decrement pointer reference count and remove unused values recursively
       void releaseValue(Value* value);
       
-      // method to add value to temporal values
+      void addTemporaryContainer(Container*);
+      void excludeTemporaryContainer(Container*);
+      void clearTemporaryContainers();
+
       void addTemporaryValue(Value*);
-      // method to exclude value from temporaries
       void excludeTemporaryValue(Value*);
-      // method to remove temporary values
       void clearTemporaryValues();
       
       // clears values that are not accessible through any container
