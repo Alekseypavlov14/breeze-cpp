@@ -132,6 +132,7 @@ namespace Runtime {
   bool ObjectValue::addField(Field field) {
     if (this->hasEntry(field.getKey())) return false;
     this->entries.push_back(field);
+    return true;
   }
   bool ObjectValue::setEntry(Value* key, Value* value) {
     for (int i = 0; i < this->entries.size(); i++) {
@@ -229,5 +230,6 @@ namespace Runtime {
     if (Shared::isInstanceOf<Value, NumberValue>(value)) return NumberValue::getDataOf(value) != NUMBER_DEFAULT_VALUE;
     if (Shared::isInstanceOf<Value, StringValue>(value)) return StringValue::getDataOf(value) != STRING_DEFAULT_VALUE;
     if (Shared::isInstanceOf<Value, CompoundValue>(value)) return true;
+    return false;
   }
 }

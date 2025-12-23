@@ -1051,8 +1051,7 @@ namespace Parser {
     if (this->isEnd()) return false;
 
     Lexer::Token currentToken = this->getCurrentToken();
-
-    return currentToken.getType() == tokenType;
+    return currentToken.isOfType(tokenType);
   }
   bool Parser::matchTokens(std::vector<Specification::TokenType> tokensTypes) {
     for (int i = 0; i < tokensTypes.size(); i++) {

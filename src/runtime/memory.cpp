@@ -46,35 +46,35 @@ namespace Runtime {
   }
 
   void Memory::addScopeToStack() {
-    if (this->stacks.size() >= this->currentStackIndex) {
+    if (this->currentStackIndex >= this->stacks.size()) {
       throw Runtime::Exception("No stack available by this index");
     } 
 
     this->stacks[this->currentStackIndex].addScope(Scope());
   }
   void Memory::removeScopeFromStack() {
-    if (this->stacks.size() >= this->currentStackIndex) {
+    if (this->currentStackIndex >= this->stacks.size()) {
       throw Runtime::Exception("No stack available by this index");
     } 
 
     this->stacks[this->currentStackIndex].removeScope();
   }
   bool Memory::addContainerToStack(Container* container) {
-    if (this->stacks.size() >= this->currentStackIndex) {
+    if (this->currentStackIndex >= this->stacks.size()) {
       throw Runtime::Exception("No stack available by this index");
     } 
 
     return this->stacks[this->currentStackIndex].addContainer(container);
   }
   Container* Memory::getContainerFromStack(std::string name) {
-    if (this->stacks.size() >= this->currentStackIndex) {
+    if (this->currentStackIndex >= this->stacks.size()) {
       throw Runtime::Exception("No stack available by this index");
     } 
 
     return this->stacks[this->currentStackIndex].getContainerByName(name);
   }
   bool Memory::removeContainerFromStack(std::string name) {
-    if (this->stacks.size() >= this->currentStackIndex) {
+    if (this->currentStackIndex >= this->stacks.size()) {
       throw Runtime::Exception("No stack available by this index");
     } 
 

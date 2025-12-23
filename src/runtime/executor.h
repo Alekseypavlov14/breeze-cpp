@@ -88,6 +88,14 @@ namespace Runtime {
       Container* evaluateGreaterThanOrEqualExpression(AST::BinaryOperationExpression*);
       Container* evaluateLessThanOrEqualExpression(AST::BinaryOperationExpression*);
 
+      // grouping expressions
+      Container* evaluateParenthesesExpression(AST::GroupingExpression*);
+      Container* evaluateSquareBracketsExpression(AST::GroupingExpression*);
+
+      // grouping application expressions
+      Container* evaluateParenthesesApplicationExpression(AST::GroupingApplicationExpression*);
+      Container* evaluateSquareBracketsApplicationExpression(AST::GroupingApplicationExpression*);
+
       // utils
       Container* createConstantContainer(Value*);
   };

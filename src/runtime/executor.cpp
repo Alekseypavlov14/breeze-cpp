@@ -20,13 +20,13 @@ namespace Runtime {
     this->modules = modules;
     this->memory.prepareStructuresForModules(modules.size());
   }
-
+  void Executor::registerBuiltins() {
+    throw Exception("Not implemented");
+  }
   void Executor::execute() {
     for (int i = 0; i < this->modules.size(); i++) {
       this->memory.setCurrentStackByIndex(i);
       this->memory.setCurrentExportsRegistryByIndex(i);
-
-      this->memory.addScopeToStack();
       this->executeStatement(this->modules[i]->getContent());
     }
   } 
@@ -34,6 +34,9 @@ namespace Runtime {
   // statements
   void Executor::executeStatement(AST::Statement* statement) {
     if (Shared::isInstanceOf<AST::Statement, AST::NullStatement>(statement)) return;
+    if (Shared::isInstanceOf<AST::Statement, AST::BlockStatement>(statement)) {
+      return this->executeBlockStatement(Shared::cast<AST::Statement, AST::BlockStatement>(statement));
+    }
     if (Shared::isInstanceOf<AST::Statement, AST::VariableDeclarationStatement>(statement)) {
       return this->executeVariableDeclarationStatement(Shared::cast<AST::Statement, AST::VariableDeclarationStatement>(statement));
     }
@@ -67,6 +70,57 @@ namespace Runtime {
     if (Shared::isInstanceOf<AST::Statement, AST::ExpressionStatement>(statement)) {
       return this->executeExpressionStatement(Shared::cast<AST::Statement, AST::ExpressionStatement>(statement));
     }
+
+    throw Exception("Invalid statement");
+  }
+
+  void Executor::executeBlockStatement(AST::BlockStatement* statement) {
+    this->memory.addScopeToStack();
+
+    for (int i = 0; i < statement->getStatements().size(); i++) {
+      this->executeStatement(statement->getStatements()[i]);
+    }
+
+    this->memory.removeScopeFromStack();
+  }
+  void Executor::executeVariableDeclarationStatement(AST::VariableDeclarationStatement * statement) {
+    throw Exception("Not implemented");
+  }
+  void Executor::executeConstantDeclarationStatement(AST::ConstantDeclarationStatement * statement) {
+    throw Exception("Not implemented");
+  }
+  void Executor::executeConditionStatement(AST::ConditionStatement *statement) {
+    throw Exception("Not implemented");
+  }
+  void Executor::executeWhileStatement(AST::WhileStatement *statement) {
+    throw Exception("Not implemented");
+  }
+  void Executor::executeForStatement(AST::ForStatement *statement) {
+    throw Exception("Not implemented");
+  }
+  void Executor::executeBreakStatement() {
+    throw Exception("Not implemented");
+  }
+  void Executor::executeContinueStatement() {
+    throw Exception("Not implemented");
+  }
+  void Executor::executeFunctionDeclarationStatement(AST::FunctionDeclarationStatement *statement) {
+    throw Exception("Not implemented");
+  }
+  void Executor::executeReturnStatement(AST::ReturnStatement *statement) {
+    throw Exception("Not implemented");
+  }
+  void Executor::executeImportStatement(AST::ImportStatement *statement) {
+    throw Exception("Not implemented");
+  }
+  void Executor::executeExportStatement(AST::ExportStatement *statement) {
+    throw Exception("Not implemented");
+  }
+  void Executor::executeExpressionStatement(AST::ExpressionStatement *statement) {
+    this->evaluateExpression(statement->getExpression());
+    
+    this->memory.clearTemporaryContainers();
+    this->memory.clearTemporaryValues();
   }
 
   // expressions
@@ -95,16 +149,205 @@ namespace Runtime {
     if (Shared::isInstanceOf<AST::Expression, AST::AssociationExpression>(expression)) {
       return this->evaluateAssociationExpression(Shared::cast<AST::Expression, AST::AssociationExpression>(expression));
     }
+
+    throw Exception("Invalid expression");
   }
 
-  Container* Executor::evaluateNullExpression() {}
-  Container* Executor::evaluateLiteralExpression(AST::LiteralExpression* expression) {}
-  Container* Executor::evaluateIdentifierExpression(AST::IdentifierExpression* expression) {}
-  Container* Executor::evaluateUnaryExpression(AST::UnaryOperationExpression* expression) {}
-  Container* Executor::evaluateBinaryExpression(AST::BinaryOperationExpression* expression) {}
-  Container* Executor::evaluateGroupingExpression(AST::GroupingExpression* expression) {}
-  Container* Executor::evaluateGroupingApplicationExpression(AST::GroupingApplicationExpression* expression) {}
-  Container* Executor::evaluateAssociationExpression(AST::AssociationExpression* expression) {}
+  Container* Executor::evaluateNullExpression() {
+    NullValue* nullValue = new NullValue();
+    this->memory.addTemporaryValue(nullValue);
+
+    Container* container = this->createConstantContainer(nullValue);
+    this->memory.addTemporaryContainer(container);
+
+    return container;
+  }
+  Container* Executor::evaluateLiteralExpression(AST::LiteralExpression* expression) {
+    Value* value = nullptr;
+
+    if (expression->getValue().isOfType(Specification::TokenType::NULL_KEYWORD_TOKEN)) {
+      value = new NullValue();
+    }
+    if (expression->getValue().isOfType(Specification::TokenType::TRUE_KEYWORD_TOKEN)) {
+      value = new BooleanValue(true);
+    }
+    if (expression->getValue().isOfType(Specification::TokenType::FALSE_KEYWORD_TOKEN)) {
+      value = new BooleanValue(false);
+    }
+    if (expression->getValue().isOfType(Specification::TokenType::NUMBER_TOKEN)) {
+      value = new NumberValue(std::stod(expression->getValue().getCode()));
+    }
+    if (expression->getValue().isOfType(Specification::TokenType::STRING_TOKEN)) {
+      value = new StringValue(expression->getValue().getCode());
+    }
+
+    if (value == nullptr) {
+      throw TypeException(expression->getValue().getPosition(), "Invalid literal expression");
+    }
+
+    this->memory.addTemporaryValue(value);
+
+    Container* container = this->createConstantContainer(value);
+    this->memory.addTemporaryContainer(container);
+
+    return container;
+  }
+  Container* Executor::evaluateIdentifierExpression(AST::IdentifierExpression* expression) {
+    return this->memory.getContainerFromStack(expression->getName().getCode());
+  }
+  Container* Executor::evaluateUnaryExpression(AST::UnaryOperationExpression* expression) {
+    if (expression->getOperator().isOfType(Specification::TokenType::NOT_TOKEN)) {
+      return this->evaluateNotExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::BIT_NOT_TOKEN)) {
+      return this->evaluateBitNotExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::INCREMENT_TOKEN)) {
+      return this->evaluateIncrementExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::DECREMENT_TOKEN)) {
+      return this->evaluateDecrementExpression(expression);
+    }
+
+    throw ExpressionException(expression->getOperator().getPosition(), "Invalid unary expression");
+  }
+  Container* Executor::evaluateBinaryExpression(AST::BinaryOperationExpression* expression) {
+    if (expression->getOperator().isOfType(Specification::TokenType::ASSIGN_TOKEN)) {
+      return this->evaluateAssignExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::DOT_TOKEN)) {
+      return this->evaluateMemberAccessExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::PLUS_TOKEN)) {
+      return this->evaluateAdditionExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::MINUS_TOKEN)) {
+      return this->evaluateSubtractionExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::MULTIPLICATION_TOKEN)) {
+      return this->evaluateMultiplicationExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::DIVISION_TOKEN)) {
+      return this->evaluateDivisionExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::EXPONENTIAL_TOKEN)) {
+      return this->evaluateExponentialExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::REMAINDER_TOKEN)) {
+      return this->evaluateRemainderExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::BIT_AND_TOKEN)) {
+      return this->evaluateBitAndExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::BIT_OR_TOKEN)) {
+      return this->evaluateBitOrExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::BIT_XOR_TOKEN)) {
+      return this->evaluateBitXorExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::LEFT_SHIFT_TOKEN)) {
+      return this->evaluateLeftShiftExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::RIGHT_SHIFT_TOKEN)) {
+      return this->evaluateRightShiftExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::PLUS_ASSIGN_TOKEN)) {
+      return this->evaluateAdditionAssignExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::MINUS_ASSIGN_TOKEN)) {
+      return this->evaluateSubtractionAssignExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::MULTIPLICATION_ASSIGN_TOKEN)) {
+      return this->evaluateMultiplicationAssignExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::DIVISION_ASSIGN_TOKEN)) {
+      return this->evaluateDivisionAssignExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::EXPONENTIAL_ASSIGN_TOKEN)) {
+      return this->evaluateExponentialAssignExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::REMAINDER_ASSIGN_TOKEN)) {
+      return this->evaluateRemainderAssignExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::BIT_AND_ASSIGN_TOKEN)) {
+      return this->evaluateBitAndAssignExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::BIT_OR_ASSIGN_TOKEN)) {
+      return this->evaluateBitOrAssignExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::BIT_XOR_ASSIGN_TOKEN)) {
+      return this->evaluateBitXorAssignExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::LEFT_SHIFT_ASSIGN_TOKEN)) {
+      return this->evaluateLeftShiftAssignExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::RIGHT_SHIFT_ASSIGN_TOKEN)) {
+      return this->evaluateRightShiftAssignExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::AND_TOKEN)) {
+      return this->evaluateAndExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::OR_TOKEN)) {
+      return this->evaluateOrExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::EQUAL_TOKEN)) {
+      return this->evaluateEqualExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::NOT_EQUAL_TOKEN)) {
+      return this->evaluateNotEqualExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::GREATER_THAN_TOKEN)) {
+      return this->evaluateGreaterThanExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::LESS_THAN_TOKEN)) {
+      return this->evaluateLessThanExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::GREATER_THAN_OR_EQUAL_TOKEN)) {
+      return this->evaluateGreaterThanOrEqualExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::LESS_THAN_OR_EQUAL_TOKEN)) {
+      return this->evaluateLessThanOrEqualExpression(expression);
+    }
+
+    throw ExpressionException(expression->getOperator().getPosition(), "Invalid binary expression");
+  }
+  Container* Executor::evaluateGroupingExpression(AST::GroupingExpression* expression) {
+    if (expression->getOperator().isOfType(Specification::TokenType::LEFT_PARENTHESES_TOKEN)) {
+      return this->evaluateParenthesesExpression(expression);
+    }
+    if (expression->getOperator().isOfType(Specification::TokenType::LEFT_SQUARE_BRACKET_TOKEN)) {
+      return this->evaluateSquareBracketsExpression(expression);
+    }
+
+    throw ExpressionException(expression->getOperator().getPosition(), "Invalid grouping expression");
+  }
+  Container* Executor::evaluateGroupingApplicationExpression(AST::GroupingApplicationExpression* expression) {
+    if (expression->getRight()->getOperator().isOfType(Specification::TokenType::LEFT_PARENTHESES_TOKEN)) {
+      return this->evaluateParenthesesApplicationExpression(expression);
+    }
+    if (expression->getRight()->getOperator().isOfType(Specification::TokenType::LEFT_SQUARE_BRACKET_TOKEN)) {
+      return this->evaluateSquareBracketsApplicationExpression(expression);
+    }
+
+    throw ExpressionException(expression->getRight()->getOperator().getPosition(), "Invalid grouping application expression");
+  }
+  Container* Executor::evaluateAssociationExpression(AST::AssociationExpression* expression) {
+    throw Exception("Not implemented");
+  }
+
+  // unary expression
+  Container *Executor::evaluateNotExpression(AST::UnaryOperationExpression* expression) {
+    throw Exception("Not implemented");
+  }
+  Container *Executor::evaluateBitNotExpression(AST::UnaryOperationExpression*) {
+    throw Exception("Not implemented");
+  }
+  Container *Executor::evaluateIncrementExpression(AST::UnaryOperationExpression*) {
+    throw Exception("Not implemented");
+  }
+  Container *Executor::evaluateDecrementExpression(AST::UnaryOperationExpression*) {
+    throw Exception("Not implemented");
+  }
 
   // binary expressions
   Container* Executor::evaluateAssignExpression(AST::BinaryOperationExpression* expression) {
@@ -116,6 +359,9 @@ namespace Runtime {
     leftContainer->setValue(rightContainer->getValue());
 
     return leftContainer;
+  }
+  Container* Executor::evaluateMemberAccessExpression(AST::BinaryOperationExpression* expression) {
+    return nullptr;
   }
   Container* Executor::evaluateAdditionExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -647,7 +893,47 @@ namespace Runtime {
 
     throw TypeException(expression->getOperator().getPosition(), "Operator \"<=\" is used with invalid type pair");
   }
-  
+
+  // grouping expressions
+  Container* Executor::evaluateParenthesesExpression(AST::GroupingExpression* expression) {
+    if (!expression->getExpressions().size()) {
+      NullValue* value = new NullValue();
+      this->memory.addTemporaryValue(value);
+
+      return this->createConstantContainer(value);
+    }
+
+    Container* result = nullptr;
+    this->memory.addTemporaryContainer(result);
+
+    for (int i = 0; i < expression->getExpressions().size(); i++) {
+      result = this->evaluateExpression(expression->getExpressions()[i]);
+    }
+
+    return result;
+  }
+  Container* Executor::evaluateSquareBracketsExpression(AST::GroupingExpression* expression) {
+    VectorValue* list = new VectorValue({});
+    this->memory.addTemporaryValue(list);
+
+    for (int i = 0; i < expression->getExpressions().size(); i++) {
+      list->push(this->evaluateExpression(expression->getExpressions()[i])->getValue());
+    }
+
+    Container* result = this->createConstantContainer(list);
+    this->memory.addTemporaryContainer(result);
+
+    return result;
+  }
+
+  // grouping application expressions
+  Container* Executor::evaluateParenthesesApplicationExpression(AST::GroupingApplicationExpression*) {
+    throw Exception("Not implemented");
+  }
+  Container* Executor::evaluateSquareBracketsApplicationExpression(AST::GroupingApplicationExpression*) {
+    throw Exception("Not implemented");
+  }
+ 
   // utils
   Container* Executor::createConstantContainer(Value* value) {
     return new Container("", value, true);
