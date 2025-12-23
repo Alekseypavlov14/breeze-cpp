@@ -73,10 +73,13 @@ namespace Runtime {
       Container* getContainerFromStack(std::string);
       // remove container from current stack
       bool removeContainerFromStack(std::string);
+      // current stack size
+      int getCurrentStackSize();
       
       // exports usage
       bool addContainerToExports(Container* container);
       Container* getContainerFromExports(std::string);
+      int getExportsIndexByAbsolutePath(std::string);
       
       // control containers usage
       // increment pointer reference count

@@ -66,6 +66,8 @@ namespace Runtime {
 
       // returns flag if the container is removed successfully
       bool removeContainerByName(std::string);
+
+      int getSize();
   };
 
   // exports registry

@@ -80,6 +80,13 @@ namespace Runtime {
 
     return this->stacks[this->currentStackIndex].removeContainerByName(name);
   }
+  int Memory::getCurrentStackSize() {
+    if (this->currentStackIndex >= this->exports.size()) {
+      throw Runtime::Exception("No exports available by this index");
+    }
+
+    return this->stacks[this->currentStackIndex].getSize();
+  }
 
   bool Memory::addContainerToExports(Container* container) {
     if (this->currentExportsIndex >= this->exports.size()) {

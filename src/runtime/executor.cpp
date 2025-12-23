@@ -5,29 +5,15 @@
 #include <iostream>
 
 namespace Runtime {
-  Executor::Executor() {
-    this->modules = {};
+  Executor::Executor(Resolution::ModulesLoader loader) {
+    this->loader = loader;
     this->memory = Memory();
   }
-  Executor::~Executor() {
-    for (int i = 0; i < this->modules.size(); i++) {
-      delete this->modules[i];
-    }
-  }
-
-  // setup
-  void Executor::loadModules(std::vector<Resolution::Module*> modules) {
-    this->modules = modules;
-    this->memory.prepareStructuresForModules(modules.size());
-  }
-  void Executor::registerBuiltins() {
-    throw Exception("Not implemented");
-  }
   void Executor::execute() {
-    for (int i = 0; i < this->modules.size(); i++) {
+    for (int i = 0; i < this->loader.getModules().size(); i++) {
       this->memory.setCurrentStackByIndex(i);
       this->memory.setCurrentExportsRegistryByIndex(i);
-      this->executeStatement(this->modules[i]->getContent());
+      this->executeStatement(this->loader.getModules()[i]->getContent());
     }
   } 
 
@@ -83,20 +69,60 @@ namespace Runtime {
 
     this->memory.removeScopeFromStack();
   }
-  void Executor::executeVariableDeclarationStatement(AST::VariableDeclarationStatement * statement) {
-    throw Exception("Not implemented");
+  void Executor::executeVariableDeclarationStatement(AST::VariableDeclarationStatement* statement) {
+    Container* initialization = this->evaluateExpression(statement->getInitializer());
+    Container* variableContainer = new Container(statement->getName().getCode(), initialization->getValue());
+
+    this->memory.addContainerToStack(variableContainer);
+
+    this->memory.retainContainer(variableContainer);
+    this->memory.retainValue(variableContainer->getValue());
   }
-  void Executor::executeConstantDeclarationStatement(AST::ConstantDeclarationStatement * statement) {
-    throw Exception("Not implemented");
+  void Executor::executeConstantDeclarationStatement(AST::ConstantDeclarationStatement* statement) {
+    Container* initialization = this->evaluateExpression(statement->getInitializer());
+    Container* constantContainer = new Container(statement->getName().getCode(), initialization->getValue(), true);
+
+    this->memory.addContainerToStack(constantContainer);
+
+    this->memory.retainContainer(constantContainer);
+    this->memory.retainValue(constantContainer->getValue());
   }
   void Executor::executeConditionStatement(AST::ConditionStatement *statement) {
-    throw Exception("Not implemented");
+    Container* condition = this->evaluateExpression(statement->getCondition());
+    Value* conditionValue = condition->getValue();
+
+    if (getBoolean(conditionValue)) {
+      this->executeStatement(statement->getThenBranch());
+    } else {
+      this->executeStatement(statement->getElseBranch());
+    }
   }
   void Executor::executeWhileStatement(AST::WhileStatement *statement) {
-    throw Exception("Not implemented");
+    while(true) {
+      Container* condition = this->evaluateExpression(statement->getCondition());
+      Value* conditionValue = condition->getValue();
+
+      if (!getBoolean(conditionValue)) break;
+
+      this->executeStatement(statement->getBody());
+    } 
   }
   void Executor::executeForStatement(AST::ForStatement *statement) {
-    throw Exception("Not implemented");
+    this->memory.addScopeToStack();
+
+    this->executeStatement(statement->getInitializer());
+
+    while(true) {
+      Container* condition = this->evaluateExpression(statement->getCondition());
+      Value* conditionValue = condition->getValue();
+
+      if (!getBoolean(conditionValue)) break;
+
+      this->executeStatement(statement->getBody());
+      this->evaluateExpression(statement->getIncrement());
+    } 
+
+    this->memory.removeScopeFromStack();
   }
   void Executor::executeBreakStatement() {
     throw Exception("Not implemented");
@@ -111,7 +137,11 @@ namespace Runtime {
     throw Exception("Not implemented");
   }
   void Executor::executeImportStatement(AST::ImportStatement *statement) {
-    throw Exception("Not implemented");
+    if (this->memory.getCurrentStackSize() > BASE_STACK_SIZE) {
+      throw ExpressionException(statement->getPath().getPosition(), "Import statement can be used only on top level");
+    }
+
+    
   }
   void Executor::executeExportStatement(AST::ExportStatement *statement) {
     throw Exception("Not implemented");
@@ -356,8 +386,11 @@ namespace Runtime {
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    leftContainer->setValue(rightContainer->getValue());
+    this->memory.releaseValue(leftContainer->getValue());
+    this->memory.retainValue(rightContainer->getValue());
 
+    leftContainer->setValue(rightContainer->getValue());
+    
     return leftContainer;
   }
   Container* Executor::evaluateMemberAccessExpression(AST::BinaryOperationExpression* expression) {

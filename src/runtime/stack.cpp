@@ -90,6 +90,9 @@ namespace Runtime {
   bool Stack::removeContainerByName(std::string name) {
     return this->scopes[this->scopes.size() - 1].removeContainerByName(name);
   }
+  int Stack::getSize() {
+    return this->scopes.size();
+  }
 
   ExportsRegistry::ExportsRegistry() {
     this->containers = {};

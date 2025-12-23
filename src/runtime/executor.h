@@ -3,20 +3,20 @@
 #include "runtime/memory.h"
 #include "runtime/stack.h"
 #include "runtime/types.h"
+#include "resolution/loader.h"
 #include "resolution/module.h"
 
 namespace Runtime {
+  // size of stack at the beginning of execution
+  inline const int BASE_STACK_SIZE = 1;
+
   class Executor {
     public:
-      Executor();
-      ~Executor();
-
-      void loadModules(std::vector<Resolution::Module*>);
-      void registerBuiltins();
+      Executor(Resolution::ModulesLoader);
       void execute();
 
     private:
-      std::vector<Resolution::Module*> modules;
+      Resolution::ModulesLoader loader;
       Memory memory;
 
       // general statement execution

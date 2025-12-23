@@ -10,12 +10,11 @@ int main() {
   std::cout << "=== Execution starts ===" << std::endl;
 
   Resolution::ModulesLoader loader;
-  Runtime::Executor executor;
+  Runtime::Executor executor(loader);
 
   loader.loadModulesFromEntrypointPath("C:/Users/User/Desktop/programming-language/cpp/test/app.br");
   std::vector<Resolution::Module*> modules = loader.getModules();
 
-  executor.loadModules(modules);
   executor.execute();
 
   std::cout << "=== Execution ends ===" << std::endl;
