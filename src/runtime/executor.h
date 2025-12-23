@@ -19,6 +19,9 @@ namespace Runtime {
       Resolution::ModulesLoader loader;
       Memory memory;
 
+      // shortcuts
+      Resolution::Module* currentModule;
+
       // general statement execution
       void executeStatement(AST::Statement*);
 
@@ -98,5 +101,6 @@ namespace Runtime {
 
       // utils
       Container* createConstantContainer(Value*);
+      bool isExecutionOnTopLevel();
   };
 }

@@ -63,6 +63,9 @@ namespace Runtime {
       
       void setCurrentStackByIndex(int);
       void setCurrentExportsRegistryByIndex(int);
+
+      int getCurrentStackIndex();
+      int getCurrentExportsRegistryByIndex();
       
       // stack usage
       void addScopeToStack();
@@ -79,7 +82,6 @@ namespace Runtime {
       // exports usage
       bool addContainerToExports(Container* container);
       Container* getContainerFromExports(std::string);
-      int getExportsIndexByAbsolutePath(std::string);
       
       // control containers usage
       // increment pointer reference count

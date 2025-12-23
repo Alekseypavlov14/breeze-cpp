@@ -61,37 +61,6 @@ namespace Resolution {
     return Shared::readFileByAbsolutePath(absolutePath);
   }
 
-  std::string ModulesLoader::resolveAbsolutePath(std::string basePath, std::string dependencyPath) {
-    // get base directory path
-    std::filesystem::path baseDirectoryPath = std::filesystem::path(basePath).parent_path(); 
-    // get default full path (join with dependency path)
-    std::filesystem::path fullPath = baseDirectoryPath / dependencyPath;
-
-    // check aliases
-    if (Shared::startsWith(dependencyPath, ALIAS_SYMBOL)) {
-      bool isAliasResolved = false;
-
-      // iterate through aliases
-      for (const auto& [key, value]: this->pathAliases) {
-        // skip unmatched aliases
-        if (!Shared::startsWith(dependencyPath, key)) continue;
-
-        // replace alias with real path
-        std::string resolvedDependencyPath = value + dependencyPath.substr(key.size());
-        // update full path 
-        fullPath = baseDirectoryPath / resolvedDependencyPath;
-
-        // stop iteration
-        break;
-      }
-
-      // return empty string if alias is not resolved
-      if (!isAliasResolved) return "";
-    }
-
-    return std::filesystem::weakly_canonical(fullPath).string();
-  }
-
   void ModulesLoader::loadPathAliases(std::unordered_map<std::string, std::string> aliases) {
     this->pathAliases = aliases;
   }
@@ -122,5 +91,58 @@ namespace Resolution {
 
   std::vector<Module*> ModulesLoader::getModules() {
     return this->registry.getModules();
+  }
+
+  Module* ModulesLoader::getLoadedModuleByAbsolutePath(std::string absolutePath) {
+    std::vector<Module*> modules = this->registry.getModules();
+
+    for (int i = 0; i < modules.size(); i++) {
+      if (modules[i]->getAbsolutePath() == absolutePath) {
+        return modules[i];
+      }
+    }
+
+    throw Resolution::Exception("Module with absolute path " + absolutePath + " is not found");
+  }
+  int ModulesLoader::getLoadedModuleIndexByAbsolutePath(std::string absolutePath) {
+    std::vector<Module*> modules = this->registry.getModules();
+
+    for (int i = 0; i < modules.size(); i++) {
+      if (modules[i]->getAbsolutePath() == absolutePath) {
+        return i;
+      }
+    }
+
+    throw Resolution::Exception("Module with absolute path " + absolutePath + " is not found");
+  }
+  std::string ModulesLoader::resolveAbsolutePath(std::string basePath, std::string dependencyPath) {
+    // get base directory path
+    std::filesystem::path baseDirectoryPath = std::filesystem::path(basePath).parent_path(); 
+    // get default full path (join with dependency path)
+    std::filesystem::path fullPath = baseDirectoryPath / dependencyPath;
+
+    // check aliases
+    if (Shared::startsWith(dependencyPath, ALIAS_SYMBOL)) {
+      bool isAliasResolved = false;
+
+      // iterate through aliases
+      for (const auto& [key, value]: this->pathAliases) {
+        // skip unmatched aliases
+        if (!Shared::startsWith(dependencyPath, key)) continue;
+
+        // replace alias with real path
+        std::string resolvedDependencyPath = value + dependencyPath.substr(key.size());
+        // update full path 
+        fullPath = baseDirectoryPath / resolvedDependencyPath;
+
+        // stop iteration
+        break;
+      }
+
+      // return empty string if alias is not resolved
+      if (!isAliasResolved) return "";
+    }
+
+    return std::filesystem::weakly_canonical(fullPath).string();
   }
 }

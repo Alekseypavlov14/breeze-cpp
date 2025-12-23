@@ -12,8 +12,10 @@ namespace Runtime {
   void Executor::execute() {
     for (int i = 0; i < this->loader.getModules().size(); i++) {
       this->memory.setCurrentStackByIndex(i);
-      this->memory.setCurrentExportsRegistryByIndex(i);
-      this->executeStatement(this->loader.getModules()[i]->getContent());
+      this->memory.setCurrentExportsRegistryByIndex(i);      
+
+      this->currentModule = this->loader.getModules()[i];
+      this->executeStatement(this->currentModule->getContent());
     }
   } 
 
@@ -137,11 +139,29 @@ namespace Runtime {
     throw Exception("Not implemented");
   }
   void Executor::executeImportStatement(AST::ImportStatement *statement) {
-    if (this->memory.getCurrentStackSize() > BASE_STACK_SIZE) {
+    if (!this->isExecutionOnTopLevel()) {
       throw ExpressionException(statement->getPath().getPosition(), "Import statement can be used only on top level");
     }
 
-    
+    // find dependency module
+    std::string dependencyAbsolutePath = this->loader.resolveAbsolutePath(this->currentModule->getAbsolutePath(), statement->getPath().getCode());
+    int moduleIndex = this->loader.getLoadedModuleIndexByAbsolutePath(dependencyAbsolutePath);
+
+    // put dependency as current exporting module
+    this->memory.setCurrentExportsRegistryByIndex(moduleIndex);
+
+    // import each symbol
+    for (int i = 0; i < statement->getImports().size(); i++) {
+      Lexer::Token currentImportSymbol = statement->getImports()[i];
+      Container* currentImportContainer = this->memory.getContainerFromExports(currentImportSymbol.getCode());
+
+      Container* constantSymbol = new Container(currentImportSymbol.getCode(), currentImportContainer->getValue(), true);
+     
+      this->memory.retainContainer(constantSymbol);
+      this->memory.retainValue(constantSymbol->getValue());
+
+      this->memory.addContainerToStack(constantSymbol);
+    }
   }
   void Executor::executeExportStatement(AST::ExportStatement *statement) {
     throw Exception("Not implemented");
@@ -970,5 +990,8 @@ namespace Runtime {
   // utils
   Container* Executor::createConstantContainer(Value* value) {
     return new Container("", value, true);
+  }
+  bool Executor::isExecutionOnTopLevel() {
+    return this->memory.getCurrentStackIndex() <= BASE_STACK_SIZE;
   }
 }

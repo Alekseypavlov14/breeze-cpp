@@ -45,6 +45,13 @@ namespace Runtime {
     this->currentExportsIndex = index;
   }
 
+  int Memory::getCurrentStackIndex() {
+    return this->currentStackIndex;
+  }
+  int Memory::getCurrentExportsRegistryByIndex() {
+    return this->currentExportsIndex;
+  }
+
   void Memory::addScopeToStack() {
     if (this->currentStackIndex >= this->stacks.size()) {
       throw Runtime::Exception("No stack available by this index");

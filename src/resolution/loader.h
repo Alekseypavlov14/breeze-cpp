@@ -28,23 +28,26 @@ namespace Resolution {
       std::vector<std::string> getModuleDependencies(std::string, AST::BlockStatement*);
       std::string readModuleSourceCodeByAbsolutePath(std::string);
 
+      // utility list to prevent loops during recursive loading
+      std::vector<std::string> loadingModulesPaths;
+      
+    public:
+      ModulesLoader();
+      
+      // sets path aliases
+      void loadPathAliases(std::unordered_map<std::string, std::string>);
+      
+      // recursively loads modules starting with provided entry module path
+      void loadModulesFromEntrypointPath(std::string);
+      
+      // gets loaded modules
+      std::vector<Module*> getModules();
+      
+      // get loaded module by absolute path
+      Module* getLoadedModuleByAbsolutePath(std::string);
+      int getLoadedModuleIndexByAbsolutePath(std::string);
       // computes absolute path of dependency by absolute path of dependent module and relative path to dependency
       // returns empty string if alias is not resolved
       std::string resolveAbsolutePath(std::string basePath, std::string path);
-
-      // utility list to prevent loops during recursive loading
-      std::vector<std::string> loadingModulesPaths;
-
-    public:
-      ModulesLoader();
-
-      // sets path aliases
-      void loadPathAliases(std::unordered_map<std::string, std::string>);
-
-      // recursively loads modules starting with provided entry module path
-      void loadModulesFromEntrypointPath(std::string);
-
-      // gets loaded modules
-      std::vector<Module*> getModules();
   };
 }
