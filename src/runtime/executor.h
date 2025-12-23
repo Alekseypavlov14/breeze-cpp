@@ -26,18 +26,19 @@ namespace Runtime {
       void executeStatement(AST::Statement*);
 
       void executeBlockStatement(AST::BlockStatement* statement);
-      void executeVariableDeclarationStatement(AST::VariableDeclarationStatement* statement);
-      void executeConstantDeclarationStatement(AST::ConstantDeclarationStatement* statement);
+      Container* executeVariableDeclarationStatement(AST::VariableDeclarationStatement* statement);
+      Container* executeConstantDeclarationStatement(AST::ConstantDeclarationStatement* statement);
       void executeConditionStatement(AST::ConditionStatement* statement);
       void executeWhileStatement(AST::WhileStatement* statement);
       void executeForStatement(AST::ForStatement* statement);
       void executeBreakStatement();
       void executeContinueStatement();
-      void executeFunctionDeclarationStatement(AST::FunctionDeclarationStatement* statement);
+      Container* executeFunctionDeclarationStatement(AST::FunctionDeclarationStatement* statement);
       void executeReturnStatement(AST::ReturnStatement* statement);
       void executeImportStatement(AST::ImportStatement* statement);
       void executeExportStatement(AST::ExportStatement* statement);
-      void executeExpressionStatement(AST::ExpressionStatement* statement);
+      Container* executeExportingStatement(AST::Statement* statement);
+      Container* executeExpressionStatement(AST::ExpressionStatement* statement);
 
       // general expression evaluation
       Container* evaluateExpression(AST::Expression*);

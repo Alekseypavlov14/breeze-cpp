@@ -26,10 +26,12 @@ namespace Runtime {
       return this->executeBlockStatement(Shared::cast<AST::Statement, AST::BlockStatement>(statement));
     }
     if (Shared::isInstanceOf<AST::Statement, AST::VariableDeclarationStatement>(statement)) {
-      return this->executeVariableDeclarationStatement(Shared::cast<AST::Statement, AST::VariableDeclarationStatement>(statement));
+      this->executeVariableDeclarationStatement(Shared::cast<AST::Statement, AST::VariableDeclarationStatement>(statement));
+      return;
     }
     if (Shared::isInstanceOf<AST::Statement, AST::ConstantDeclarationStatement>(statement)) {
-      return this->executeConstantDeclarationStatement(Shared::cast<AST::Statement, AST::ConstantDeclarationStatement>(statement));
+      this->executeConstantDeclarationStatement(Shared::cast<AST::Statement, AST::ConstantDeclarationStatement>(statement));
+      return;
     }
     if (Shared::isInstanceOf<AST::Statement, AST::ConditionStatement>(statement)) {
       return this->executeConditionStatement(Shared::cast<AST::Statement, AST::ConditionStatement>(statement));
@@ -44,7 +46,8 @@ namespace Runtime {
       return this->executeContinueStatement();
     }
     if (Shared::isInstanceOf<AST::Statement, AST::FunctionDeclarationStatement>(statement)) {
-      return this->executeFunctionDeclarationStatement(Shared::cast<AST::Statement, AST::FunctionDeclarationStatement>(statement));
+      this->executeFunctionDeclarationStatement(Shared::cast<AST::Statement, AST::FunctionDeclarationStatement>(statement));
+      return;
     }
     if (Shared::isInstanceOf<AST::Statement, AST::ReturnStatement>(statement)) {
       return this->executeReturnStatement(Shared::cast<AST::Statement, AST::ReturnStatement>(statement));
@@ -56,7 +59,8 @@ namespace Runtime {
       return this->executeExportStatement(Shared::cast<AST::Statement, AST::ExportStatement>(statement));
     }
     if (Shared::isInstanceOf<AST::Statement, AST::ExpressionStatement>(statement)) {
-      return this->executeExpressionStatement(Shared::cast<AST::Statement, AST::ExpressionStatement>(statement));
+      this->executeExpressionStatement(Shared::cast<AST::Statement, AST::ExpressionStatement>(statement));
+      return;
     }
 
     throw Exception("Invalid statement");
@@ -71,23 +75,23 @@ namespace Runtime {
 
     this->memory.removeScopeFromStack();
   }
-  void Executor::executeVariableDeclarationStatement(AST::VariableDeclarationStatement* statement) {
+  Container* Executor::executeVariableDeclarationStatement(AST::VariableDeclarationStatement* statement) {
     Container* initialization = this->evaluateExpression(statement->getInitializer());
     Container* variableContainer = new Container(statement->getName().getCode(), initialization->getValue());
-
-    this->memory.addContainerToStack(variableContainer);
-
+    
     this->memory.retainContainer(variableContainer);
     this->memory.retainValue(variableContainer->getValue());
+
+    this->memory.addContainerToStack(variableContainer);
   }
-  void Executor::executeConstantDeclarationStatement(AST::ConstantDeclarationStatement* statement) {
+  Container* Executor::executeConstantDeclarationStatement(AST::ConstantDeclarationStatement* statement) {
     Container* initialization = this->evaluateExpression(statement->getInitializer());
     Container* constantContainer = new Container(statement->getName().getCode(), initialization->getValue(), true);
 
-    this->memory.addContainerToStack(constantContainer);
-
     this->memory.retainContainer(constantContainer);
     this->memory.retainValue(constantContainer->getValue());
+
+    this->memory.addContainerToStack(constantContainer);
   }
   void Executor::executeConditionStatement(AST::ConditionStatement *statement) {
     Container* condition = this->evaluateExpression(statement->getCondition());
@@ -132,7 +136,7 @@ namespace Runtime {
   void Executor::executeContinueStatement() {
     throw Exception("Not implemented");
   }
-  void Executor::executeFunctionDeclarationStatement(AST::FunctionDeclarationStatement *statement) {
+  Container* Executor::executeFunctionDeclarationStatement(AST::FunctionDeclarationStatement *statement) {
     throw Exception("Not implemented");
   }
   void Executor::executeReturnStatement(AST::ReturnStatement *statement) {
@@ -152,6 +156,8 @@ namespace Runtime {
 
     // import each symbol
     for (int i = 0; i < statement->getImports().size(); i++) {
+      // TODO: implement asterisk import
+
       Lexer::Token currentImportSymbol = statement->getImports()[i];
       Container* currentImportContainer = this->memory.getContainerFromExports(currentImportSymbol.getCode());
 
@@ -166,7 +172,10 @@ namespace Runtime {
   void Executor::executeExportStatement(AST::ExportStatement *statement) {
     throw Exception("Not implemented");
   }
-  void Executor::executeExpressionStatement(AST::ExpressionStatement *statement) {
+  Container* Executor::executeExportingStatement(AST::Statement* statement) {
+    throw Exception("Not implemented");
+  }
+  Container* Executor::executeExpressionStatement(AST::ExpressionStatement *statement) {
     this->evaluateExpression(statement->getExpression());
     
     this->memory.clearTemporaryContainers();

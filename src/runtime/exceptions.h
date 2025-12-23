@@ -19,6 +19,11 @@ namespace Runtime {
       TypeException(const Base::Position, std::string);
   };
 
+  class StatementException: public Base::SourceCodeException {
+    public:
+      StatementException(const Base::Position, std::string);
+  };
+
   class ExpressionException: public Base::SourceCodeException {
     public:
       ExpressionException(const Base::Position, std::string);
