@@ -18,11 +18,13 @@ namespace Parser {
     std::vector<AST::Statement*> statements = {};
     std::vector<Specification::TokenType> terminators = {};
 
+    Base::Position position = this->getCurrentToken().getPosition();
+
     while (!this->isEnd()) {
       statements.push_back(this->parseStatement(terminators));
     }
 
-    return new AST::BlockStatement(statements);
+    return new AST::BlockStatement(position, statements);
   }
   AST::Statement* Parser::parseStatement(std::vector<Specification::TokenType> terminators) {
     this->skipMultilineSpaceTokens();
@@ -77,7 +79,7 @@ namespace Parser {
   AST::VariableDeclarationStatement* Parser::parseVariableDeclaration(std::vector<Specification::TokenType> terminators) {
     // get variable keyword
     this->requireToken(Specification::TokenType::VARIABLE_KEYWORD_TOKEN);
-    this->consumeCurrentToken();
+    Lexer::Token variableToken = this->consumeCurrentToken();
 
     this->skipSingleLineSpaceTokens();
 
@@ -89,10 +91,10 @@ namespace Parser {
 
     // check if variable is not initialized with value
     if (this->matchToken(Specification::TokenType::NEWLINE_TOKEN)) {
-      this->consumeCurrentToken();
+      Lexer::Token newlineToken = this->consumeCurrentToken();
 
-      AST::NullExpression* initializer = new AST::NullExpression;
-      AST::VariableDeclarationStatement* variableDeclarationStatement = new AST::VariableDeclarationStatement(identifier, initializer);
+      AST::NullExpression* initializer = new AST::NullExpression(newlineToken.getPosition());
+      AST::VariableDeclarationStatement* variableDeclarationStatement = new AST::VariableDeclarationStatement(variableToken.getPosition(), identifier, initializer);
 
       return variableDeclarationStatement;
     }
@@ -120,7 +122,7 @@ namespace Parser {
       this->requireNewlineForNextStatement();
 
       // compose variable declaration statement
-      AST::VariableDeclarationStatement* variableDeclarationStatement = new AST::VariableDeclarationStatement(identifier, initializer);
+      AST::VariableDeclarationStatement* variableDeclarationStatement = new AST::VariableDeclarationStatement(variableToken.getPosition(), identifier, initializer);
       return variableDeclarationStatement;
     }
 
@@ -131,7 +133,7 @@ namespace Parser {
   AST::ConstantDeclarationStatement* Parser::parseConstantDeclaration(std::vector<Specification::TokenType> terminators) {
     // require const keyword
     this->requireToken(Specification::TokenType::CONSTANT_KEYWORD_TOKEN);
-    this->consumeCurrentToken();
+    Lexer::Token constantToken = this->consumeCurrentToken();
 
     this->skipSingleLineSpaceTokens();
 
@@ -166,13 +168,13 @@ namespace Parser {
     this->requireNewlineForNextStatement();
 
     // compose declaration statement
-    AST::ConstantDeclarationStatement* constantDeclarationStatement = new AST::ConstantDeclarationStatement(identifier, initializer);
+    AST::ConstantDeclarationStatement* constantDeclarationStatement = new AST::ConstantDeclarationStatement(constantToken.getPosition(), identifier, initializer);
     return constantDeclarationStatement;
   }
   AST::ConditionStatement* Parser::parseConditionStatement(std::vector<Specification::TokenType> terminators) {
     // get if keyword token
     this->requireToken(Specification::TokenType::IF_KEYWORD_TOKEN);
-    this->consumeCurrentToken();
+    Lexer::Token ifToken = this->consumeCurrentToken();
 
     this->skipSingleLineSpaceTokens();
 
@@ -229,18 +231,18 @@ namespace Parser {
         throw Exception(position, "Invalid condition else branch");
       }
     } else {
-      elseStatement = new AST::NullStatement;
+      elseStatement = new AST::NullStatement(this->getCurrentToken().getPosition());
     }
 
     this->requireNewlineForNextStatement();
 
-    AST::ConditionStatement* conditionStatement = new AST::ConditionStatement(conditionExpression, thenStatement, elseStatement);
+    AST::ConditionStatement* conditionStatement = new AST::ConditionStatement(ifToken.getPosition(), conditionExpression, thenStatement, elseStatement);
     return conditionStatement;
   }
   AST::ForStatement* Parser::parseForStatement(std::vector<Specification::TokenType> terminators) {
     // require FOR keyword
     this->requireToken(Specification::TokenType::FOR_KEYWORD_TOKEN);
-    this->consumeCurrentToken();
+    Lexer::Token forToken = this->consumeCurrentToken();
 
     this->skipSingleLineSpaceTokens();
     
@@ -317,13 +319,13 @@ namespace Parser {
     this->requireNewlineForNextStatement();
 
     // compose for loop
-    AST::ForStatement* forStatement = new AST::ForStatement(initializer, condition, increment, body);
+    AST::ForStatement* forStatement = new AST::ForStatement(forToken.getPosition(), initializer, condition, increment, body);
     return forStatement;
   }
   AST::WhileStatement* Parser::parseWhileStatement(std::vector<Specification::TokenType> terminators) {
     // require while keyword
     this->requireToken(Specification::TokenType::WHILE_KEYWORD_TOKEN);
-    this->consumeCurrentToken();
+    Lexer::Token whileToken = this->consumeCurrentToken();
   
     this->skipSingleLineSpaceTokens();
 
@@ -361,31 +363,31 @@ namespace Parser {
 
     this->requireNewlineForNextStatement();
 
-    AST::WhileStatement* whileStatement = new AST::WhileStatement(condition, body);
+    AST::WhileStatement* whileStatement = new AST::WhileStatement(whileToken.getPosition(), condition, body);
     return whileStatement;
   }
   AST::BreakStatement* Parser::parseBreakStatement() {
     this->requireToken(Specification::TokenType::BREAK_KEYWORD_TOKEN);
-    this->consumeCurrentToken();
+    Lexer::Token breakToken = this->consumeCurrentToken();
 
     this->requireNewlineForNextStatement();
 
-    AST::BreakStatement* breakStatement = new AST::BreakStatement;
+    AST::BreakStatement* breakStatement = new AST::BreakStatement(breakToken.getPosition());
     return breakStatement;
   }
   AST::ContinueStatement* Parser::parseContinueStatement() {
     this->requireToken(Specification::TokenType::CONTINUE_KEYWORD_TOKEN);
-    this->consumeCurrentToken();
+    Lexer::Token continueToken = this->consumeCurrentToken();
 
     this->requireNewlineForNextStatement();
 
-    AST::ContinueStatement* continueStatement = new AST::ContinueStatement;
+    AST::ContinueStatement* continueStatement = new AST::ContinueStatement(continueToken.getPosition());
     return continueStatement;
   }
   AST::FunctionDeclarationStatement* Parser::parseFunctionDeclarationStatement() {
     // get function keyword
     this->requireToken(Specification::TokenType::FUNCTION_KEYWORD_TOKEN);
-    this->consumeCurrentToken();
+    Lexer::Token functionToken = this->consumeCurrentToken();
 
     this->skipSingleLineSpaceTokens();
 
@@ -433,7 +435,7 @@ namespace Parser {
     
     this->requireNewlineForNextStatement();
 
-    AST::FunctionDeclarationStatement* functionDeclarationStatement = new AST::FunctionDeclarationStatement(name, parameters, body); 
+    AST::FunctionDeclarationStatement* functionDeclarationStatement = new AST::FunctionDeclarationStatement(functionToken.getPosition(), name, parameters, body); 
     return functionDeclarationStatement;
   }
   AST::FunctionParameterExpression* Parser::parseFunctionParameterExpression() {
@@ -459,16 +461,16 @@ namespace Parser {
       // compute default value
       defaultValue = this->parseExpression(NULL, BASE_PRECEDENCE, terminators);
     } else {
-      defaultValue = new AST::NullExpression;
+      defaultValue = new AST::NullExpression(name.getPosition());
     }
 
-    AST::FunctionParameterExpression* parameter = new AST::FunctionParameterExpression(name, defaultValue);
+    AST::FunctionParameterExpression* parameter = new AST::FunctionParameterExpression(name.getPosition(), name, defaultValue);
     return parameter;
   }
   AST::ReturnStatement* Parser::parseReturnStatement(std::vector<Specification::TokenType> terminators) {
     // consume return keyword
     this->requireToken(Specification::TokenType::RETURN_KEYWORD_TOKEN);
-    this->consumeCurrentToken();
+    Lexer::Token returnToken = this->consumeCurrentToken();
 
     this->skipSingleLineSpaceTokens();
 
@@ -477,13 +479,13 @@ namespace Parser {
 
     AST::Expression* expression = this->parseExpression(NULL, BASE_PRECEDENCE, newTerminators);
 
-    AST::ReturnStatement* returnStatement = new AST::ReturnStatement(expression);
+    AST::ReturnStatement* returnStatement = new AST::ReturnStatement(returnToken.getPosition(), expression);
     return returnStatement;
   }
   // TODO: implement class declaration statement
   AST::ClassDeclarationStatement* Parser::parseClassDeclarationStatement() {
     this->requireToken(Specification::TokenType::CLASS_KEYWORD_TOKEN);
-    this->consumeCurrentToken();
+    Lexer::Token classToken = this->consumeCurrentToken();
 
     this->skipSingleLineSpaceTokens();
 
@@ -492,11 +494,11 @@ namespace Parser {
 
     this->requireNewlineForNextStatement();
 
-    return new AST::ClassDeclarationStatement(className);
+    return new AST::ClassDeclarationStatement(classToken.getPosition(), className);
   }
   AST::ImportStatement* Parser::parseImportStatement() {
     this->requireToken(Specification::TokenType::IMPORT_KEYWORD_TOKEN);
-    this->consumeCurrentToken();
+    Lexer::Token importToken = this->consumeCurrentToken();
 
     this->skipSingleLineSpaceTokens();
 
@@ -549,7 +551,7 @@ namespace Parser {
 
     this->requireNewlineForNextStatement();
 
-    AST::ImportStatement* importStatement = new AST::ImportStatement(path, imports);
+    AST::ImportStatement* importStatement = new AST::ImportStatement(importToken.getPosition(), path, imports);
     return importStatement;
   }
   AST::ExportStatement* Parser::parseExportStatement(std::vector<Specification::TokenType> terminators) {
@@ -574,12 +576,12 @@ namespace Parser {
       throw Exception(position, "Invalid export statement");
     }
 
-    AST::ExportStatement* exportStatement = new AST::ExportStatement(exports);
+    AST::ExportStatement* exportStatement = new AST::ExportStatement(exportToken.getPosition(), exports);
     return exportStatement;
   }
   AST::BlockStatement* Parser::parseBlockStatement() {
     this->requireToken(Specification::TokenType::LEFT_CURLY_BRACE_TOKEN);
-    this->consumeCurrentToken();
+    Lexer::Token blockToken = this->consumeCurrentToken();
 
     std::vector<AST::Statement*> statements = {};
 
@@ -598,7 +600,7 @@ namespace Parser {
     this->requireToken(Specification::TokenType::RIGHT_CURLY_BRACE_TOKEN);
     this->consumeCurrentToken();
    
-    AST::BlockStatement* blockStatement = new AST::BlockStatement(statements);
+    AST::BlockStatement* blockStatement = new AST::BlockStatement(blockToken.getPosition(), statements);
     return blockStatement;
   }
   AST::ExpressionStatement* Parser::parseExpressionStatement(std::vector<Specification::TokenType> terminators) {
@@ -607,12 +609,13 @@ namespace Parser {
 
     AST::Expression* expression = this->parseExpression(NULL, BASE_PRECEDENCE, newTerminators);
 
-    AST::ExpressionStatement* statement = new AST::ExpressionStatement(expression);
+    AST::ExpressionStatement* statement = new AST::ExpressionStatement(expression->getPosition(), expression);
     return statement;
   }
   AST::NullStatement* Parser::parseComment() {
     this->requireToken(Specification::TokenType::COMMENT_TOKEN);
-    
+    Lexer::Token commentToken = this->consumeCurrentToken();
+
     while (!this->isEnd() && !this->matchToken(Specification::TokenType::NEWLINE_TOKEN)) {
       this->consumeCurrentToken();
     }
@@ -621,7 +624,7 @@ namespace Parser {
       this->consumeCurrentToken();
     } 
 
-    AST::NullStatement* nullStatement = new AST::NullStatement;
+    AST::NullStatement* nullStatement = new AST::NullStatement(commentToken.getPosition());
     return nullStatement;
   }
 
@@ -755,7 +758,7 @@ namespace Parser {
         }
 
         // compose operation
-        AST::SuffixUnaryOperationExpression* operation = new AST::SuffixUnaryOperationExpression(operatorToken, operand);
+        AST::SuffixUnaryOperationExpression* operation = new AST::SuffixUnaryOperationExpression(operatorToken.getPosition(), operatorToken, operand);
         
         // continue parsing based on this expression
         return this->parseExpression(operation, currentPrecedence, terminators);
@@ -775,7 +778,7 @@ namespace Parser {
         throw Exception(position, "Invalid operand");
       }
 
-      AST::SuffixUnaryOperationExpression* operation = new AST::SuffixUnaryOperationExpression(operatorToken, operand);
+      AST::SuffixUnaryOperationExpression* operation = new AST::SuffixUnaryOperationExpression(operatorToken.getPosition(), operatorToken, operand);
 
       // continue parsing based on this expression
       return this->parseExpression(operation, currentPrecedence, terminators);
@@ -819,7 +822,7 @@ namespace Parser {
       }
 
       // compose expression
-      AST::BinaryOperationExpression* operation = new AST::BinaryOperationExpression(operatorToken, leftBranch, rightBranch);
+      AST::BinaryOperationExpression* operation = new AST::BinaryOperationExpression(operatorToken.getPosition(), operatorToken, leftBranch, rightBranch);
     
       return this->parseExpression(operation, currentPrecedence, terminators);
     }
@@ -870,7 +873,7 @@ namespace Parser {
       this->consumeCurrentToken();
 
       // compose grouping expression
-      AST::GroupingExpression* groupingExpression = new AST::GroupingExpression(operatorToken, expressions);
+      AST::GroupingExpression* groupingExpression = new AST::GroupingExpression(operatorToken.getPosition(), operatorToken, expressions);
 
       // in case base precedence is higher, complete that first
       if (basePrecedence >= currentPrecedence) {
@@ -898,7 +901,7 @@ namespace Parser {
       }
 
       // compose grouping application expression
-      AST::GroupingApplicationExpression* groupingApplicationExpression = new AST::GroupingApplicationExpression(leftBranch, groupingExpression);
+      AST::GroupingApplicationExpression* groupingApplicationExpression = new AST::GroupingApplicationExpression(groupingExpression->getOperator().getPosition(), leftBranch, groupingExpression);
 
       return this->parseExpression(groupingApplicationExpression, BASE_PRECEDENCE, terminators);
     }
@@ -974,7 +977,7 @@ namespace Parser {
       }
 
       // compose expressions
-      AST::AssociationExpression* associationExpression = new AST::AssociationExpression(entries);
+      AST::AssociationExpression* associationExpression = new AST::AssociationExpression(operatorToken.getPosition(), entries);
 
       return this->parseExpression(associationExpression, currentPrecedence, terminators);
     }
@@ -994,15 +997,15 @@ namespace Parser {
   AST::Expression* Parser::parseExpressionFromTokens(std::vector<Lexer::Token> tokens) {
     // handle null expression
     if (tokens.size() == 0) {
-      return new AST::NullExpression;
+      return new AST::NullExpression(this->getCurrentToken().getPosition());
     }
     // handle literal tokens
     else if (tokens.size() == 1 && isLiteralToken(tokens[0].getType())) {
-      return new AST::LiteralExpression(tokens[0]);
+      return new AST::LiteralExpression(tokens[0].getPosition(), tokens[0]);
     } 
     // handle identifier token
     else if (tokens.size() == 1 && isIdentifierToken(tokens[0].getType())) {
-      return new AST::IdentifierExpression(tokens[0]);
+      return new AST::IdentifierExpression(tokens[0].getPosition(), tokens[0]);
     }
 
     // otherwise these tokens do not form a valid expression

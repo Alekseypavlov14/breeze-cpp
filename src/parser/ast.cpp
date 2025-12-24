@@ -1,12 +1,20 @@
 #include "ast.h"
 
 namespace AST {
+  Base::Position Node::getPosition() const {
+    return this->position;
+  }
+
   // expression variants
+  NullExpression::NullExpression(Base::Position position) {
+    this->position = position;
+  }
   NullExpression* NullExpression::clone() const {
-    return new NullExpression;
+    return new NullExpression(this->getPosition());
   }
   
-  UnaryOperationExpression::UnaryOperationExpression(Lexer::Token operatorToken, Expression* operand): operatorToken(operatorToken) {
+  UnaryOperationExpression::UnaryOperationExpression(Base::Position position, Lexer::Token operatorToken, Expression* operand): operatorToken(operatorToken) {
+    this->position = position;
     this->operatorToken = operatorToken;
     this->operand = operand;
   }
@@ -20,22 +28,23 @@ namespace AST {
     return this->operand;
   }
 
-  PrefixUnaryOperationExpression::PrefixUnaryOperationExpression(Lexer::Token operatorToken, Expression* operand): UnaryOperationExpression(operatorToken, operand) {}
+  PrefixUnaryOperationExpression::PrefixUnaryOperationExpression(Base::Position position, Lexer::Token operatorToken, Expression* operand): UnaryOperationExpression(position, operatorToken, operand) {}
   PrefixUnaryOperationExpression* PrefixUnaryOperationExpression::clone() const {
-    return new PrefixUnaryOperationExpression(this->getOperator(), this->getOperand()->clone());
+    return new PrefixUnaryOperationExpression(this->position, this->getOperator(), this->getOperand()->clone());
   }
 
-  SuffixUnaryOperationExpression::SuffixUnaryOperationExpression(Lexer::Token operatorToken, Expression* operand): UnaryOperationExpression(operatorToken, operand) {}
+  SuffixUnaryOperationExpression::SuffixUnaryOperationExpression(Base::Position position, Lexer::Token operatorToken, Expression* operand): UnaryOperationExpression(position, operatorToken, operand) {}
   SuffixUnaryOperationExpression* SuffixUnaryOperationExpression::clone() const {
-    return new SuffixUnaryOperationExpression(this->getOperator(), this->getOperand()->clone());
+    return new SuffixUnaryOperationExpression(this->position, this->getOperator(), this->getOperand()->clone());
   }
   
-  AffixUnaryOperationExpression::AffixUnaryOperationExpression(Lexer::Token operatorToken, Expression* operand): UnaryOperationExpression(operatorToken, operand) {}
+  AffixUnaryOperationExpression::AffixUnaryOperationExpression(Base::Position position, Lexer::Token operatorToken, Expression* operand): UnaryOperationExpression(position, operatorToken, operand) {}
   AffixUnaryOperationExpression* AffixUnaryOperationExpression::clone() const {
-    return new AffixUnaryOperationExpression(this->getOperator(), this->getOperand()->clone());
+    return new AffixUnaryOperationExpression(this->position, this->getOperator(), this->getOperand()->clone());
   }
 
-  BinaryOperationExpression::BinaryOperationExpression(Lexer::Token operatorToken, Expression* left, Expression* right): operatorToken(operatorToken) {
+  BinaryOperationExpression::BinaryOperationExpression(Base::Position position, Lexer::Token operatorToken, Expression* left, Expression* right): operatorToken(operatorToken) {
+    this->position = position;
     this->operatorToken = operatorToken;
     this->left = left;
     this->right = right;
@@ -45,7 +54,7 @@ namespace AST {
     delete this->right;
   }
   BinaryOperationExpression* BinaryOperationExpression::clone() const {
-    return new BinaryOperationExpression(this->getOperator(), this->getLeft()->clone(), this->getRight()->clone());
+    return new BinaryOperationExpression(this->position, this->getOperator(), this->getLeft()->clone(), this->getRight()->clone());
   }
   Lexer::Token BinaryOperationExpression::getOperator() const {
     return this->operatorToken;
@@ -57,27 +66,28 @@ namespace AST {
     return this->right;
   }
 
-  LiteralExpression::LiteralExpression(Lexer::Token value): value(value) {
+  LiteralExpression::LiteralExpression(Base::Position position, Lexer::Token value): value(value) {
     this->value = value;
   }
   LiteralExpression* LiteralExpression::clone() const {
-    return new LiteralExpression(this->getValue());
+    return new LiteralExpression(this->position, this->getValue());
   }
   Lexer::Token LiteralExpression::getValue() const {
     return this->value;
   }
 
-  IdentifierExpression::IdentifierExpression(Lexer::Token name): name(name) {
+  IdentifierExpression::IdentifierExpression(Base::Position position, Lexer::Token name): name(name) {
     this->name = name;
   }
   IdentifierExpression* IdentifierExpression::clone() const {
-    return new IdentifierExpression(this->getName());
+    return new IdentifierExpression(this->position, this->getName());
   }
   Lexer::Token IdentifierExpression::getName() const {
     return this->name;
   }
 
-  GroupingExpression::GroupingExpression(Lexer::Token operatorToken, std::vector<Expression*> expressions): operatorToken(operatorToken) {
+  GroupingExpression::GroupingExpression(Base::Position position, Lexer::Token operatorToken, std::vector<Expression*> expressions): operatorToken(operatorToken) {
+    this->position = position;
     this->operatorToken = operatorToken;
     this->expressions = expressions;
   }
@@ -93,7 +103,7 @@ namespace AST {
       expressions.push_back(this->getExpressions()[i]->clone());
     }
 
-    return new GroupingExpression(this->getOperator(), expressions);
+    return new GroupingExpression(this->position, this->getOperator(), expressions);
   }
   Lexer::Token GroupingExpression::getOperator() const {
     return this->operatorToken;
@@ -102,7 +112,8 @@ namespace AST {
     return this->expressions;
   }
 
-  GroupingApplicationExpression::GroupingApplicationExpression(Expression* left, GroupingExpression* right) {
+  GroupingApplicationExpression::GroupingApplicationExpression(Base::Position position, Expression* left, GroupingExpression* right) {
+    this->position = position;
     this->left = left;
     this->right = right;
   }
@@ -111,7 +122,7 @@ namespace AST {
     delete this->right;
   }
   GroupingApplicationExpression* GroupingApplicationExpression::clone() const {
-    return new GroupingApplicationExpression(this->getLeft()->clone(), this->getRight()->clone());
+    return new GroupingApplicationExpression(this->position, this->getLeft()->clone(), this->getRight()->clone());
   }
   Expression* GroupingApplicationExpression::getLeft() const {
     return this->left;
@@ -120,7 +131,8 @@ namespace AST {
     return this->right;
   }
 
-  AssociationExpression::AssociationExpression(std::vector<std::pair<Expression*, Expression*>> entries) {
+  AssociationExpression::AssociationExpression(Base::Position position, std::vector<std::pair<Expression*, Expression*>> entries) {
+    this->position = position;
     this->entries = entries;
   }
   AssociationExpression::~AssociationExpression() {
@@ -139,13 +151,13 @@ namespace AST {
       });
     }
 
-    return new AssociationExpression(entries);
+    return new AssociationExpression(this->position, entries);
   }
   std::vector<std::pair<Expression*, Expression*>> AssociationExpression::getEntries() const {
     return this->entries;
   }
 
-  FunctionParameterExpression::FunctionParameterExpression(Lexer::Token name, Expression* defaultValue): name(name) {
+  FunctionParameterExpression::FunctionParameterExpression(Base::Position position, Lexer::Token name, Expression* defaultValue): name(name) {
     this->name = name;
     this->defaultValue = defaultValue;
   }
@@ -153,7 +165,7 @@ namespace AST {
     delete this->defaultValue;
   }
   FunctionParameterExpression* FunctionParameterExpression::clone() const {
-    return new FunctionParameterExpression(this->getName(), this->getDefaultValue()->clone());
+    return new FunctionParameterExpression(this->position, this->getName(), this->getDefaultValue()->clone());
   }
   Lexer::Token FunctionParameterExpression::getName() const {
     return this->name;
@@ -163,24 +175,29 @@ namespace AST {
   }
 
   // statement variants
+  NullStatement::NullStatement(Base::Position position) {
+    this->position = position;
+  }
   NullStatement* NullStatement::clone() const {
-    return new NullStatement;
+    return new NullStatement(this->position);
   }
 
-  ExpressionStatement::ExpressionStatement(Expression* expression) {
+  ExpressionStatement::ExpressionStatement(Base::Position position, Expression* expression) {
+    this->position = position;
     this->expression = expression;
   }
   ExpressionStatement::~ExpressionStatement() {
     delete this->expression;
   }
   ExpressionStatement* ExpressionStatement::clone() const {
-    return new ExpressionStatement(this->getExpression()->clone());
+    return new ExpressionStatement(this->position, this->getExpression()->clone());
   }
   Expression* ExpressionStatement::getExpression() const {
     return this->expression;
   }
 
-  BlockStatement::BlockStatement(std::vector<Statement*> statements) {
+  BlockStatement::BlockStatement(Base::Position position, std::vector<Statement*> statements) {
+    this->position = position;
     this->statements = statements;
   }
   BlockStatement::~BlockStatement() {
@@ -195,13 +212,14 @@ namespace AST {
       statements.push_back(this->getStatements()[i]->clone());
     }
 
-    return new BlockStatement(statements);
+    return new BlockStatement(this->position, statements);
   }
   std::vector<Statement*> BlockStatement::getStatements() const {
     return this->statements;
   }
 
-  VariableDeclarationStatement::VariableDeclarationStatement(Lexer::Token name, Expression* initializer): name(name) {
+  VariableDeclarationStatement::VariableDeclarationStatement(Base::Position position, Lexer::Token name, Expression* initializer): name(name) {
+    this->position = position;
     this->name = name;
     this->initializer = initializer;
   }
@@ -209,7 +227,7 @@ namespace AST {
     delete this->initializer;
   }
   VariableDeclarationStatement* VariableDeclarationStatement::clone() const {
-    return new VariableDeclarationStatement(this->getName(), this->getInitializer()->clone());
+    return new VariableDeclarationStatement(this->position, this->getName(), this->getInitializer()->clone());
   }
   Lexer::Token VariableDeclarationStatement::getName() const {
     return this->name;
@@ -218,7 +236,8 @@ namespace AST {
     return this->initializer;
   }
 
-  ConstantDeclarationStatement::ConstantDeclarationStatement(Lexer::Token name, Expression* initializer): name(name) {
+  ConstantDeclarationStatement::ConstantDeclarationStatement(Base::Position position, Lexer::Token name, Expression* initializer): name(name) {
+    this->position = position;
     this->name = name;
     this->initializer = initializer;
   }
@@ -226,7 +245,7 @@ namespace AST {
     delete this->initializer;
   }
   ConstantDeclarationStatement* ConstantDeclarationStatement::clone() const {
-    return new ConstantDeclarationStatement(this->getName(), this->getInitializer()->clone());
+    return new ConstantDeclarationStatement(this->position, this->getName(), this->getInitializer()->clone());
   }
   Lexer::Token ConstantDeclarationStatement::getName() const {
     return this->name;
@@ -235,7 +254,8 @@ namespace AST {
     return this->initializer;
   }
 
-  ConditionStatement::ConditionStatement(Expression* condition, Statement* thenBranch, Statement* elseBranch) {
+  ConditionStatement::ConditionStatement(Base::Position position, Expression* condition, Statement* thenBranch, Statement* elseBranch) {
+    this->position = position;
     this->condition = condition;
     this->thenBranch = thenBranch;
     this->elseBranch = elseBranch;
@@ -246,7 +266,7 @@ namespace AST {
     delete this->elseBranch;
   }
   ConditionStatement* ConditionStatement::clone() const {
-    return new ConditionStatement(this->getCondition()->clone(), this->getThenBranch()->clone(), this->getElseBranch()->clone());
+    return new ConditionStatement(this->position, this->getCondition()->clone(), this->getThenBranch()->clone(), this->getElseBranch()->clone());
   }
   Expression* ConditionStatement::getCondition() const {
     return this->condition;
@@ -258,7 +278,8 @@ namespace AST {
     return this->elseBranch;
   }
 
-  WhileStatement::WhileStatement(Expression* condition, Statement* body) {
+  WhileStatement::WhileStatement(Base::Position position, Expression* condition, Statement* body) {
+    this->position = position;
     this->condition = condition;
     this->body = body;
   }
@@ -267,7 +288,7 @@ namespace AST {
     delete this->body;
   }
   WhileStatement* WhileStatement::clone() const {
-    return new WhileStatement(this->getCondition()->clone(), this->getBody()->clone());
+    return new WhileStatement(this->position, this->getCondition()->clone(), this->getBody()->clone());
   }
   Expression* WhileStatement::getCondition() const {
     return this->condition;
@@ -276,7 +297,8 @@ namespace AST {
     return this->body;
   }
 
-  ForStatement::ForStatement(Statement* initializer, Expression* condition, Expression* increment, Statement* body) {
+  ForStatement::ForStatement(Base::Position position, Statement* initializer, Expression* condition, Expression* increment, Statement* body) {
+    this->position = position;
     this->initializer = initializer;
     this->condition = condition;
     this->increment = increment;
@@ -290,6 +312,7 @@ namespace AST {
   }
   ForStatement* ForStatement::clone() const {
     return new ForStatement(
+      this->position, 
       this->getInitializer()->clone(),
       this->getCondition()->clone(),
       this->getIncrement()->clone(),
@@ -309,14 +332,21 @@ namespace AST {
     return this->body;
   }
 
+  BreakStatement::BreakStatement(Base::Position position) {
+    this->position = position;
+  }
   BreakStatement* BreakStatement::clone() const {
-    return new BreakStatement;
+    return new BreakStatement(this->position);
+  }
+  ContinueStatement::ContinueStatement(Base::Position position) {
+    this->position = position;
   }
   ContinueStatement* ContinueStatement::clone() const {
-    return new ContinueStatement;
+    return new ContinueStatement(this->position);
   }
 
-  FunctionDeclarationStatement::FunctionDeclarationStatement(Lexer::Token name, std::vector<FunctionParameterExpression*> params, BlockStatement* body) : name(name) {
+  FunctionDeclarationStatement::FunctionDeclarationStatement(Base::Position position, Lexer::Token name, std::vector<FunctionParameterExpression*> params, BlockStatement* body) : name(name) {
+    this->position = position;
     this->name = name;
     this->params = params;
     this->body = body;
@@ -334,7 +364,7 @@ namespace AST {
       parameters.push_back(this->getParams()[i]->clone());
     }
 
-    return new FunctionDeclarationStatement(this->getName(), parameters, this->getBody()->clone());
+    return new FunctionDeclarationStatement(this->position, this->getName(), parameters, this->getBody()->clone());
   }
   Lexer::Token FunctionDeclarationStatement::getName() const {
     return this->name;
@@ -346,36 +376,39 @@ namespace AST {
     return this->body;
   }
 
-  ReturnStatement::ReturnStatement(Expression* returns) {
+  ReturnStatement::ReturnStatement(Base::Position position, Expression* returns) {
+    this->position = position;
     this->returns = returns;
   }
   ReturnStatement::~ReturnStatement() {
     delete this->returns;
   }
   ReturnStatement* ReturnStatement::clone() const {
-    return new ReturnStatement(this->getReturns()->clone());
+    return new ReturnStatement(this->position, this->getReturns()->clone());
   }
   Expression* ReturnStatement::getReturns() const {
     return this->returns;
   }
 
   // TODO: implement class declaration statement
-  ClassDeclarationStatement::ClassDeclarationStatement(Lexer::Token name): name(name) {
+  ClassDeclarationStatement::ClassDeclarationStatement(Base::Position position, Lexer::Token name): name(name) {
+    this->position = position;
     this->name = name;
   }
   ClassDeclarationStatement* ClassDeclarationStatement::clone() const {
-    return new ClassDeclarationStatement(this->getName());
+    return new ClassDeclarationStatement(this->position, this->getName());
   }
   Lexer::Token ClassDeclarationStatement::getName() const {
     return this->name;
   }
 
-  ImportStatement::ImportStatement(Lexer::Token path, std::vector<Lexer::Token> imports): path(path) {
+  ImportStatement::ImportStatement(Base::Position position, Lexer::Token path, std::vector<Lexer::Token> imports): path(path) {
+    this->position = position;
     this->path = path;
     this->imports = imports;
   }
   ImportStatement* ImportStatement::clone() const {
-    return new ImportStatement(this->getPath(), this->getImports());
+    return new ImportStatement(this->position, this->getPath(), this->getImports());
   }
   Lexer::Token ImportStatement::getPath() const {
     return this->path;
@@ -384,14 +417,15 @@ namespace AST {
     return this->imports;
   }
 
-  ExportStatement::ExportStatement(Statement* exports) {
+  ExportStatement::ExportStatement(Base::Position position, Statement* exports) {
+    this->position = position;
     this->exports = exports;
   }
   ExportStatement::~ExportStatement() {
     delete this->exports;
   }
   ExportStatement* ExportStatement::clone() const {
-    return new ExportStatement(this->getExports()->clone());
+    return new ExportStatement(this->position, this->getExports()->clone());
   }
   Statement* ExportStatement::getExports() const {
     return this->exports;

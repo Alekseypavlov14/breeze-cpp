@@ -12,11 +12,15 @@
 // destructors free memory for their children
 namespace AST {
   class Node {
+    protected:
+      Base::Position position;
+
     public:
       // makes class polymorphic
       virtual ~Node() = default;
-      // every node implements clone method
       virtual Node* clone() const = 0;
+
+      Base::Position getPosition() const;
   };
   class Expression: public Node {
     public:
@@ -30,13 +34,11 @@ namespace AST {
   // expression variants
   class NullExpression: public Expression {
     public:
+      NullExpression(Base::Position position);
       NullExpression* clone() const;
   };
 
-  class OperationExpression: public Expression {
-    public: 
-      virtual OperationExpression* clone() const = 0;
-  };
+  class OperationExpression: public Expression {};
   
   class UnaryOperationExpression: public OperationExpression {
     private:
@@ -44,10 +46,8 @@ namespace AST {
       Expression* operand;
 
     public:
-      UnaryOperationExpression(Lexer::Token operatorToken, Expression* operand);
+      UnaryOperationExpression(Base::Position position, Lexer::Token operatorToken, Expression* operand);
       ~UnaryOperationExpression();
-
-      virtual UnaryOperationExpression* clone() const = 0;
 
       Lexer::Token getOperator() const;
       Expression* getOperand() const;
@@ -55,19 +55,19 @@ namespace AST {
 
   class PrefixUnaryOperationExpression: public UnaryOperationExpression {
     public:
-      PrefixUnaryOperationExpression(Lexer::Token operatorToken, Expression* operand);
+      PrefixUnaryOperationExpression(Base::Position position, Lexer::Token operatorToken, Expression* operand);
       PrefixUnaryOperationExpression* clone() const;
   };
 
   class SuffixUnaryOperationExpression: public UnaryOperationExpression {
     public:
-      SuffixUnaryOperationExpression(Lexer::Token operatorToken, Expression* operand);
+      SuffixUnaryOperationExpression(Base::Position position, Lexer::Token operatorToken, Expression* operand);
       SuffixUnaryOperationExpression* clone() const;
   };
 
   class AffixUnaryOperationExpression: public UnaryOperationExpression {
     public:
-      AffixUnaryOperationExpression(Lexer::Token operatorToken, Expression* operand);
+      AffixUnaryOperationExpression(Base::Position position, Lexer::Token operatorToken, Expression* operand);
       AffixUnaryOperationExpression* clone() const;
   };
 
@@ -78,7 +78,7 @@ namespace AST {
       Expression* right;
 
     public:
-      BinaryOperationExpression(Lexer::Token operatorToken, Expression* left, Expression* right);
+      BinaryOperationExpression(Base::Position position, Lexer::Token operatorToken, Expression* left, Expression* right);
       ~BinaryOperationExpression();
 
       BinaryOperationExpression* clone() const;
@@ -93,7 +93,7 @@ namespace AST {
       Lexer::Token value;
 
     public:
-      LiteralExpression(Lexer::Token value);
+      LiteralExpression(Base::Position position, Lexer::Token value);
 
       LiteralExpression* clone() const;
 
@@ -105,7 +105,7 @@ namespace AST {
       Lexer::Token name;
 
     public:
-      IdentifierExpression(Lexer::Token name);
+      IdentifierExpression(Base::Position position, Lexer::Token name);
 
       IdentifierExpression* clone() const;
 
@@ -119,7 +119,7 @@ namespace AST {
       std::vector<Expression*> expressions;
 
     public:
-      GroupingExpression(Lexer::Token operatorToken, std::vector<Expression*> expressions);
+      GroupingExpression(Base::Position position, Lexer::Token operatorToken, std::vector<Expression*> expressions);
       ~GroupingExpression();
 
       GroupingExpression* clone() const;
@@ -135,7 +135,7 @@ namespace AST {
       GroupingExpression* right;
 
     public:
-      GroupingApplicationExpression(Expression* left, GroupingExpression* right);
+      GroupingApplicationExpression(Base::Position position, Expression* left, GroupingExpression* right);
       ~GroupingApplicationExpression();
 
       GroupingApplicationExpression* clone() const;
@@ -150,7 +150,7 @@ namespace AST {
       std::vector<std::pair<Expression*, Expression*>> entries;
 
     public:
-      AssociationExpression(std::vector<std::pair<Expression*, Expression*>> entries);
+      AssociationExpression(Base::Position position, std::vector<std::pair<Expression*, Expression*>> entries);
       ~AssociationExpression();
 
       AssociationExpression* clone() const;
@@ -164,7 +164,7 @@ namespace AST {
       Expression* defaultValue;
 
     public:
-      FunctionParameterExpression(Lexer::Token name, Expression* defaultValue);
+      FunctionParameterExpression(Base::Position position, Lexer::Token name, Expression* defaultValue);
       ~FunctionParameterExpression();
 
       FunctionParameterExpression* clone() const;
@@ -176,6 +176,8 @@ namespace AST {
   // statement variants
   class NullStatement: public Statement {
     public:
+      NullStatement(Base::Position position);
+
       NullStatement* clone() const;
   };
 
@@ -184,7 +186,7 @@ namespace AST {
       Expression* expression; 
 
     public:
-      ExpressionStatement(Expression* expression);
+      ExpressionStatement(Base::Position position, Expression* expression);
       ~ExpressionStatement();
 
       ExpressionStatement* clone() const;
@@ -197,7 +199,7 @@ namespace AST {
       std::vector<Statement*> statements;
 
     public:
-      BlockStatement(std::vector<Statement*> statements);
+      BlockStatement(Base::Position position, std::vector<Statement*> statements);
       ~BlockStatement();
 
       BlockStatement* clone() const;
@@ -211,7 +213,7 @@ namespace AST {
       Expression* initializer;
 
     public: 
-      VariableDeclarationStatement(Lexer::Token name, Expression* initializer);
+      VariableDeclarationStatement(Base::Position position, Lexer::Token name, Expression* initializer);
       ~VariableDeclarationStatement();
 
       VariableDeclarationStatement* clone() const;
@@ -226,7 +228,7 @@ namespace AST {
       Expression* initializer;
 
     public:
-      ConstantDeclarationStatement(Lexer::Token name, Expression* initializer);
+      ConstantDeclarationStatement(Base::Position position, Lexer::Token name, Expression* initializer);
       ~ConstantDeclarationStatement();
 
       ConstantDeclarationStatement* clone() const;
@@ -242,7 +244,7 @@ namespace AST {
       Statement* elseBranch;
 
     public:
-      ConditionStatement(Expression* condition, Statement* thenBranch, Statement* elseBranch);
+      ConditionStatement(Base::Position position, Expression* condition, Statement* thenBranch, Statement* elseBranch);
       ~ConditionStatement();
 
       ConditionStatement* clone() const;
@@ -258,7 +260,7 @@ namespace AST {
       Statement* body;
 
     public:
-      WhileStatement(Expression* condition, Statement* body);
+      WhileStatement(Base::Position position, Expression* condition, Statement* body);
       ~WhileStatement();
 
       WhileStatement* clone() const;
@@ -275,7 +277,7 @@ namespace AST {
       Statement* body;
 
     public:
-      ForStatement(Statement* initializer, Expression* condition, Expression* increment, Statement* body);
+      ForStatement(Base::Position position, Statement* initializer, Expression* condition, Expression* increment, Statement* body);
       ~ForStatement();
 
       ForStatement* clone() const;
@@ -288,10 +290,14 @@ namespace AST {
 
   class BreakStatement: public Statement {
     public:
+      BreakStatement(Base::Position position);
+
       BreakStatement* clone() const;
   };
   class ContinueStatement: public Statement {
     public:
+      ContinueStatement(Base::Position position);
+
       ContinueStatement* clone() const;
   };
 
@@ -302,7 +308,7 @@ namespace AST {
       BlockStatement* body;
 
     public:
-      FunctionDeclarationStatement(Lexer::Token name, std::vector<FunctionParameterExpression*> params, BlockStatement* body);
+      FunctionDeclarationStatement(Base::Position position, Lexer::Token name, std::vector<FunctionParameterExpression*> params, BlockStatement* body);
       ~FunctionDeclarationStatement();
 
       FunctionDeclarationStatement* clone() const;
@@ -317,7 +323,7 @@ namespace AST {
       Expression* returns;
 
     public:
-      ReturnStatement(Expression* returns);
+      ReturnStatement(Base::Position position, Expression* returns);
       ~ReturnStatement();
 
       ReturnStatement* clone() const;
@@ -331,7 +337,7 @@ namespace AST {
       Lexer::Token name;
 
     public:
-      ClassDeclarationStatement(Lexer::Token name);
+      ClassDeclarationStatement(Base::Position position, Lexer::Token name);
 
       ClassDeclarationStatement* clone() const;
 
@@ -344,7 +350,7 @@ namespace AST {
       std::vector<Lexer::Token> imports;
 
     public:
-      ImportStatement(Lexer::Token path, std::vector<Lexer::Token> imports);
+      ImportStatement(Base::Position position, Lexer::Token path, std::vector<Lexer::Token> imports);
 
       ImportStatement* clone() const;
 
@@ -357,7 +363,7 @@ namespace AST {
       Statement* exports;
 
     public:
-      ExportStatement(Statement* exports);
+      ExportStatement(Base::Position position, Statement* exports);
       ~ExportStatement();
 
       ExportStatement* clone() const;
