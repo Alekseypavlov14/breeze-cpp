@@ -96,6 +96,9 @@ namespace Runtime {
 
     return this->stacks[this->currentStackIndex].removeContainerByName(name);
   }
+  Stack Memory::cloneCurrentStack() {
+    return this->stacks[this->currentStackIndex];
+  }
   int Memory::getCurrentStackSize() {
     if (this->currentStackIndex >= this->exports.size()) {
       throw Runtime::Exception("No exports available by this index");
@@ -121,6 +124,7 @@ namespace Runtime {
 
   void Memory::retainContainer(Container* container) {
     this->containerReferenceCount[container]++;
+    this->retainValue(container->getValue());
   }
   void Memory::releaseContainer(Container* container) {
     // decrement container counter
@@ -154,7 +158,16 @@ namespace Runtime {
   }
 
   void Memory::retainValue(Value* value) {
-    this->valuesReferenceCount[value]++;
+    // clear processing values
+    this->processingValues = {};
+
+    // search all retaining values
+    this->recursivelySearchValues(value);
+
+    // decrement pointer for all releasing values
+    for (int i = 0; i < this->processingValues.size(); i++) {
+      this->valuesReferenceCount[this->processingValues[i]]++;
+    }
   }
   void Memory::releaseValue(Value* value) {
     // clear processing values

@@ -67,7 +67,7 @@ namespace Runtime {
 
       int getCurrentStackIndex();
       int getCurrentExportsRegistryByIndex();
-      
+
       // stack usage
       void addScopeToStack();
       void removeScopeFromStack();
@@ -77,6 +77,8 @@ namespace Runtime {
       Container* getContainerFromStack(std::string);
       // remove container from current stack
       bool removeContainerFromStack(std::string);
+      // clone current stack to create closure
+      Stack cloneCurrentStack();
       // current stack size
       int getCurrentStackSize();
       

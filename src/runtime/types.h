@@ -1,5 +1,7 @@
 #pragma once
 
+#include "runtime/stack.h"
+
 #include <string>
 #include <vector>
 #include <functional>
@@ -8,9 +10,6 @@
 // adds typing and classes
 // memory is freed by the stack and scope
 namespace Runtime {
-  // forward declaration (from stack.h)
-  class Stack;
-
   // define all possible data types
   enum class DataType {
     Null,
@@ -220,15 +219,15 @@ namespace Runtime {
   class FunctionValue: public CompoundValue {
     private:
       // copy of the stack at the moment of declaration
-      Stack* closure;
+      Stack closure;
       Callable callable;
 
     public:
-      FunctionValue(Stack*, Callable);
+      FunctionValue(Stack, Callable);
 
       DataType getType();
 
-      Stack* getClosure();
+      Stack getClosure();
 
       Value* execute(std::vector<Value*>); 
   };

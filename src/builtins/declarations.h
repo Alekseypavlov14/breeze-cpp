@@ -9,7 +9,7 @@ namespace Builtins {
   
   inline const Base::Position BUILTIN_POSITION(0, 0);
   
-  using BuiltinModuleDeclarations = std::vector<const BuiltinDeclaration*>;
+  using BuiltinModuleDeclarations = std::vector<BuiltinDeclaration*>;
   
   // constants
   class ConstantBuiltinDeclaration: public BuiltinDeclaration {

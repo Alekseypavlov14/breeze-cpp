@@ -105,7 +105,7 @@ namespace Runtime {
       Container* evaluateSquareBracketsApplicationExpression(AST::GroupingApplicationExpression*);
 
       // builtin declarations
-      Container* Executor::executeBuiltinDeclaration(const Builtins::BuiltinDeclaration* statement);
+      Container* Executor::executeBuiltinDeclaration(Builtins::BuiltinDeclaration* statement);
       Container* executeBuiltinConstantDeclaration(Builtins::ConstantBuiltinDeclaration* statement);
       Container* executeBuiltinFunctionDeclaration(Builtins::FunctionBuiltinDeclaration* statement);
       Container* executeBuiltinClassDeclaration(Builtins::ClassBuiltinDeclaration* statement);

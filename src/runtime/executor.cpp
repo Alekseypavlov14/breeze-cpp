@@ -91,9 +91,6 @@ namespace Runtime {
     Container* initialization = this->evaluateExpression(statement->getInitializer());
     Container* variableContainer = new Container(statement->getName().getCode(), initialization->getValue());
     
-    this->memory.retainContainer(variableContainer);
-    this->memory.retainValue(variableContainer->getValue());
-
     this->memory.addContainerToStack(variableContainer);
 
     return variableContainer;
@@ -101,9 +98,6 @@ namespace Runtime {
   Container* Executor::executeConstantDeclarationStatement(AST::ConstantDeclarationStatement* statement) {
     Container* initialization = this->evaluateExpression(statement->getInitializer());
     Container* constantContainer = new Container(statement->getName().getCode(), initialization->getValue(), true);
-
-    this->memory.retainContainer(constantContainer);
-    this->memory.retainValue(constantContainer->getValue());
 
     this->memory.addContainerToStack(constantContainer);
 
@@ -182,9 +176,6 @@ namespace Runtime {
 
       Container* constantSymbol = new Container(currentImportSymbol.getCode(), currentImportContainer->getValue(), true);
      
-      this->memory.retainContainer(constantSymbol);
-      this->memory.retainValue(constantSymbol->getValue());
-
       this->memory.addContainerToStack(constantSymbol);
     }
   }
@@ -1016,24 +1007,45 @@ namespace Runtime {
   }
  
   // builtins
-  Container* Executor::executeBuiltinDeclaration(const Builtins::BuiltinDeclaration* statement) {
-    if (Shared::isInstanceOf<const Builtins::BuiltinDeclaration, Builtins::ConstantBuiltinDeclaration>(statement)) {
-      return this->executeBuiltinConstantDeclaration(Shared::cast<const Builtins::BuiltinDeclaration, Builtins::ConstantBuiltinDeclaration>(statement));
+  Container* Executor::executeBuiltinDeclaration(Builtins::BuiltinDeclaration* statement) {
+    if (Shared::isInstanceOf<Builtins::BuiltinDeclaration, Builtins::ConstantBuiltinDeclaration>(statement)) {
+      return this->executeBuiltinConstantDeclaration(Shared::cast<Builtins::BuiltinDeclaration, Builtins::ConstantBuiltinDeclaration>(statement));
     }
-    if (Shared::isInstanceOf<const Builtins::BuiltinDeclaration, Builtins::FunctionBuiltinDeclaration>(statement)) {
-      return this->executeBuiltinFunctionDeclaration(Shared::cast<const Builtins::BuiltinDeclaration, Builtins::FunctionBuiltinDeclaration>(statement));
+    if (Shared::isInstanceOf<Builtins::BuiltinDeclaration, Builtins::FunctionBuiltinDeclaration>(statement)) {
+      return this->executeBuiltinFunctionDeclaration(Shared::cast<Builtins::BuiltinDeclaration, Builtins::FunctionBuiltinDeclaration>(statement));
     }
-    if (Shared::isInstanceOf<const Builtins::BuiltinDeclaration, Builtins::ClassBuiltinDeclaration>(statement)) {
-      return this->executeBuiltinClassDeclaration(Shared::cast<const Builtins::BuiltinDeclaration, Builtins::ClassBuiltinDeclaration>(statement));
+    if (Shared::isInstanceOf<Builtins::BuiltinDeclaration, Builtins::ClassBuiltinDeclaration>(statement)) {
+      return this->executeBuiltinClassDeclaration(Shared::cast<Builtins::BuiltinDeclaration, Builtins::ClassBuiltinDeclaration>(statement));
     }
 
     throw Exception("Invalid builtin statement found");
   }
   Container* Executor::executeBuiltinConstantDeclaration(Builtins::ConstantBuiltinDeclaration* statement) {
-    throw Exception("Not implemented");
+    Container* constantContainer = new Container(statement->getName(), statement->getValue(), true);
+    return constantContainer;
   }
   Container* Executor::executeBuiltinFunctionDeclaration(Builtins::FunctionBuiltinDeclaration* statement) {
-    throw Exception("Not implemented");
+    Runtime::Callable callable = [this, statement](std::vector<Value*> arguments) -> Value* {
+      int argumentsLength = arguments.size();
+      Builtins::FunctionArgumentsAmount callableArgumentsAmount = statement->getArgumentsAmount();
+
+      if (argumentsLength > callableArgumentsAmount.getTotalArgumentsAmount()) {
+        throw Exception("Too much arguments passed");
+      }
+      if (argumentsLength < callableArgumentsAmount.getRequiredArgumentsAmount()) {
+        throw Exception("Not enough arguments passed");
+      }
+
+      Value* result = statement->getCallable()(arguments);
+      this->memory.addTemporaryValue(result);
+
+      return result;
+    };
+
+    FunctionValue* functionValue = new FunctionValue(this->memory.cloneCurrentStack(), callable);
+
+    Container* functionContainer = new Container(statement->getName(), functionValue, true);
+    return functionContainer;
   }
   Container* Executor::executeBuiltinClassDeclaration(Builtins::ClassBuiltinDeclaration* statement) {
     throw Exception("Not implemented");

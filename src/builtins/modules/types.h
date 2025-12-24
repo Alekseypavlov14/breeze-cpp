@@ -25,27 +25,27 @@ namespace Builtins {
     // StringValue* _builtin_types_type(Value*)
     inline const std::string typeName = "_builtin_types_type";
     inline const FunctionArgumentsAmount typeArguments(1);
-    Runtime::StringValue* typeCallable(std::vector<Runtime::Value*> arguments) {
+    inline Runtime::StringValue* typeCallable(std::vector<Runtime::Value*> arguments) {
       Runtime::Value* typeArgument = arguments[0];
       std::string type = TYPES.at(typeArgument->getType());
       return new Runtime::StringValue(type);
     }
-    inline const FunctionBuiltinDeclaration typeDeclaration(typeName, typeCallable, typeArguments);
+    inline FunctionBuiltinDeclaration typeDeclaration(typeName, typeCallable, typeArguments);
 
     // BooleanValue* _builtin_types_boolean(Value*)
     inline const std::string booleanName = "_builtin_types_boolean";
     inline const FunctionArgumentsAmount booleanArguments(1);
-    Runtime::BooleanValue* booleanCallable(std::vector<Runtime::Value*> arguments) {
+    inline Runtime::BooleanValue* booleanCallable(std::vector<Runtime::Value*> arguments) {
       Runtime::Value* booleanArgument = arguments[0];
       bool result = Runtime::getBoolean(booleanArgument);
       return new Runtime::BooleanValue(result);
     }
-    inline const FunctionBuiltinDeclaration booleanDeclaration(booleanName, booleanCallable, booleanArguments);
+    inline FunctionBuiltinDeclaration booleanDeclaration(booleanName, booleanCallable, booleanArguments);
 
     // NumberValue* _builtin_types_number(Value*)
     inline const std::string numberName = "_builtin_types_number";
     inline const FunctionArgumentsAmount numberArguments(1);
-    Runtime::NumberValue* numberCallable(std::vector<Runtime::Value*> arguments) {
+    inline Runtime::NumberValue* numberCallable(std::vector<Runtime::Value*> arguments) {
       Runtime::Value* numberArgument = arguments[0];
       
       if (Shared::isInstanceOf<Runtime::Value, Runtime::NullValue>(numberArgument)) {
@@ -66,12 +66,12 @@ namespace Builtins {
 
       throw Runtime::Exception("Invalid type is given");
     }
-    inline const FunctionBuiltinDeclaration numberDeclaration(numberName, numberCallable, numberArguments);
+    inline FunctionBuiltinDeclaration numberDeclaration(numberName, numberCallable, numberArguments);
 
     // StringValue* _builtin_types_string(PrimitiveValue*)
     inline const std::string stringName = "_builtin_types_string";
     inline const FunctionArgumentsAmount stringArguments(1);
-    Runtime::StringValue* stringCallable(std::vector<Runtime::Value*> arguments) {
+    inline Runtime::StringValue* stringCallable(std::vector<Runtime::Value*> arguments) {
       Runtime::Value* stringValue = arguments[0];
 
       if (Shared::isInstanceOf<Runtime::Value, Runtime::NullValue>(stringValue)) {
@@ -92,7 +92,7 @@ namespace Builtins {
 
       throw Runtime::Exception("Invalid type is given");
     }
-    inline const FunctionBuiltinDeclaration stringDeclaration(stringName, stringCallable, stringArguments);
+    inline FunctionBuiltinDeclaration stringDeclaration(stringName, stringCallable, stringArguments);
 
     // all declarations
     inline const BuiltinModuleDeclarations declarations = {
