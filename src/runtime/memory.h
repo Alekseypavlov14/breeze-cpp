@@ -73,6 +73,7 @@ namespace Runtime {
       void removeScopeFromStack();
       // add container to current stack
       bool addContainerToStack(Container* container);
+      std::vector<Container*> getContainersFromCurrentScope();
       // get container by name
       Container* getContainerFromStack(std::string);
       // remove container from current stack

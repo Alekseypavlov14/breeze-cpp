@@ -82,6 +82,13 @@ namespace Runtime {
 
     return this->stacks[this->currentStackIndex].addContainer(container);
   }
+  std::vector<Container*> Memory::getContainersFromCurrentScope() {
+    if (this->currentStackIndex >= this->stacks.size()) {
+      throw Runtime::Exception("No stack available by this index");
+    } 
+    
+    return this->stacks[this->currentStackIndex].getContainersFromCurrentScope();
+  }
   Container* Memory::getContainerFromStack(std::string name) {
     if (this->currentStackIndex >= this->stacks.size()) {
       throw Runtime::Exception("No stack available by this index");

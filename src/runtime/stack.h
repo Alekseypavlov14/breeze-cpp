@@ -39,6 +39,9 @@ namespace Runtime {
 
       bool isContainerAdded(std::string);
 
+      // returns all containers in current scope
+      std::vector<Container*> getContainers();
+
       // returns NULL if no container is found
       Container* getContainerByName(std::string);
  
@@ -60,6 +63,9 @@ namespace Runtime {
       
       // returns flag if the container is added successfully
       bool addContainer(Container*);
+
+      // returns containers from upper scope
+      std::vector<Container*> getContainersFromCurrentScope();
 
       // returns NULL if no container is found
       Container* getContainerByName(std::string);

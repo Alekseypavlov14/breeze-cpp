@@ -63,6 +63,10 @@ namespace Runtime {
     if (Shared::isInstanceOf<AST::Statement, AST::ReturnStatement>(statement)) {
       return this->executeReturnStatement(Shared::cast<AST::Statement, AST::ReturnStatement>(statement));
     }
+    if (Shared::isInstanceOf<AST::Statement, AST::ClassDeclarationStatement>(statement)) {
+      this->executeClassDeclarationStatement(Shared::cast<AST::Statement, AST::ClassDeclarationStatement>(statement));
+      return;
+    }
     if (Shared::isInstanceOf<AST::Statement, AST::ImportStatement>(statement)) {
       return this->executeImportStatement(Shared::cast<AST::Statement, AST::ImportStatement>(statement));
     }
@@ -78,7 +82,6 @@ namespace Runtime {
   }
 
   void Executor::executeBlockStatement(AST::BlockStatement* statement) {
-    // TODO: add containers management
     this->memory.addScopeToStack();
 
     for (int i = 0; i < statement->getStatements().size(); i++) {
@@ -92,7 +95,6 @@ namespace Runtime {
     Container* variableContainer = new Container(statement->getName().getCode(), initialization->getValue());
     
     this->memory.addContainerToStack(variableContainer);
-
     return variableContainer;
   }
   Container* Executor::executeConstantDeclarationStatement(AST::ConstantDeclarationStatement* statement) {
@@ -100,7 +102,6 @@ namespace Runtime {
     Container* constantContainer = new Container(statement->getName().getCode(), initialization->getValue(), true);
 
     this->memory.addContainerToStack(constantContainer);
-
     return constantContainer;
   }
   void Executor::executeConditionStatement(AST::ConditionStatement *statement) {
@@ -177,13 +178,29 @@ namespace Runtime {
       Container* constantSymbol = new Container(currentImportSymbol.getCode(), currentImportContainer->getValue(), true);
      
       this->memory.addContainerToStack(constantSymbol);
+      this->memory.retainContainer(constantSymbol);
     }
+
+    // return pointer to current exports
+    this->memory.setCurrentStackByIndex(this->memory.getCurrentStackIndex());
   }
   void Executor::executeExportStatement(AST::ExportStatement *statement) {
-    throw Exception("Not implemented");
+    Container* exportingSymbol = this->executeExportingStatement(statement);
+    this->memory.retainContainer(exportingSymbol);
+    this->memory.addContainerToExports(exportingSymbol);
   }
   Container* Executor::executeExportingStatement(AST::Statement* statement) {
-    throw Exception("Not implemented");
+    if (Shared::isInstanceOf<AST::Statement, AST::ConstantDeclarationStatement>(statement)) {
+      return this->executeConstantDeclarationStatement(Shared::cast<AST::Statement, AST::ConstantDeclarationStatement>(statement));
+    }
+    if (Shared::isInstanceOf<AST::Statement, AST::FunctionDeclarationStatement>(statement)) {
+      return this->executeFunctionDeclarationStatement(Shared::cast<AST::Statement, AST::FunctionDeclarationStatement>(statement));
+    }
+    if (Shared::isInstanceOf<AST::Statement, AST::ClassDeclarationStatement>(statement)) {
+      return this->executeClassDeclarationStatement(Shared::cast<AST::Statement, AST::ClassDeclarationStatement>(statement));
+    }
+
+    throw StatementException(statement->getPosition(), "Invalid exporting statement");
   }
   void Executor::executeExpressionStatement(AST::ExpressionStatement *statement) {
     this->evaluateExpression(statement->getExpression());

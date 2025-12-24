@@ -38,6 +38,9 @@ namespace Runtime {
 
     return false;
   }
+  std::vector<Container*> Scope::getContainers() {
+    return this->containers;
+  }
   Container* Scope::getContainerByName(std::string name) {
     for (int i = 0; i < this->containers.size(); i++) {
       if (this->containers[i]->getName() == name) {
@@ -78,6 +81,10 @@ namespace Runtime {
   bool Stack::addContainer(Container* container) {
     if (this->scopes.size() == 0) return false;
     return this->scopes[this->scopes.size() - 1].addContainer(container);
+  }
+  std::vector<Container*> Stack::getContainersFromCurrentScope() {
+    if (this->scopes.size() == 0) return {};
+    return this->scopes[this->scopes.size() - 1].getContainers();
   }
   Container* Stack::getContainerByName(std::string name) {
     for (int i = this->scopes.size() - 1; i >= 0; i--) {
