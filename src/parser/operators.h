@@ -79,14 +79,13 @@ namespace Parser {
   inline const std::vector<Specification::TokenType> PREFIX_UNARY_OPERATORS = {
     Specification::TokenType::BIT_NOT_TOKEN,
     Specification::TokenType::NOT_TOKEN,
-  };
-  inline const std::vector<Specification::TokenType> SUFFIX_UNARY_OPERATORS = {
     Specification::TokenType::NEW_KEYWORD_TOKEN,
   };
-  inline const std::vector<Specification::TokenType> AFFIX_UNARY_OPERATORS = {
+  inline const std::vector<Specification::TokenType> SUFFIX_UNARY_OPERATORS = {
     Specification::TokenType::INCREMENT_TOKEN,
     Specification::TokenType::DECREMENT_TOKEN,
   };
+  inline const std::vector<Specification::TokenType> AFFIX_UNARY_OPERATORS = {};
   inline const std::vector<Specification::TokenType> BINARY_OPERATORS = {
     Specification::TokenType::LAMBDA_TOKEN,
 
