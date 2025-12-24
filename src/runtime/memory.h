@@ -60,6 +60,7 @@ namespace Runtime {
       // creates stacks, exports registries for each module
       // is called before module graph executed
       void prepareStructuresForModules(int modulesAmount);
+      void loadBuiltinContainers(std::vector<Container*>);
       
       void setCurrentStackByIndex(int);
       void setCurrentExportsRegistryByIndex(int);

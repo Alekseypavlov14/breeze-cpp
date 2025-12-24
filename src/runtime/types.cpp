@@ -175,7 +175,7 @@ namespace Runtime {
     return this->fields;
   }
 
-  FunctionValue::FunctionValue(Stack* stack, std::function<Value*(std::vector<Value*>)> callable) {
+  FunctionValue::FunctionValue(Stack* stack, Callable callable) {
     this->closure = stack;
     this->callable = callable;
   }

@@ -3,16 +3,19 @@
 #include "runtime/memory.h"
 #include "runtime/stack.h"
 #include "runtime/types.h"
+#include "builtins/builtins.h"
 #include "resolution/loader.h"
 #include "resolution/module.h"
 
 namespace Runtime {
   // size of stack at the beginning of execution
-  inline const int BASE_STACK_SIZE = 1;
+  // one scope is for builtins and another one is for root block statement
+  inline const int TOP_LEVEL_STACK_SIZE = 2;
 
   class Executor {
     public:
       Executor(Resolution::ModulesLoader);
+      void registerBuiltins(std::vector<Builtins::BuiltinModuleDeclarations>);
       void execute();
 
     private:
@@ -35,6 +38,7 @@ namespace Runtime {
       void executeContinueStatement();
       Container* executeFunctionDeclarationStatement(AST::FunctionDeclarationStatement* statement);
       void executeReturnStatement(AST::ReturnStatement* statement);
+      Container* executeClassDeclarationStatement(AST::ClassDeclarationStatement* statement);
       void executeImportStatement(AST::ImportStatement* statement);
       void executeExportStatement(AST::ExportStatement* statement);
       Container* executeExportingStatement(AST::Statement* statement);
@@ -99,6 +103,12 @@ namespace Runtime {
       // grouping application expressions
       Container* evaluateParenthesesApplicationExpression(AST::GroupingApplicationExpression*);
       Container* evaluateSquareBracketsApplicationExpression(AST::GroupingApplicationExpression*);
+
+      // builtin declarations
+      Container* Executor::executeBuiltinDeclaration(const Builtins::BuiltinDeclaration* statement);
+      Container* executeBuiltinConstantDeclaration(Builtins::ConstantBuiltinDeclaration* statement);
+      Container* executeBuiltinFunctionDeclaration(Builtins::FunctionBuiltinDeclaration* statement);
+      Container* executeBuiltinClassDeclaration(Builtins::ClassBuiltinDeclaration* statement);
 
       // utils
       Container* createConstantContainer(Value*);

@@ -37,6 +37,15 @@ namespace Runtime {
       this->exports.push_back(ExportsRegistry());
     } 
   }
+  void Memory::loadBuiltinContainers(std::vector<Container*> containers) {
+    for (int i = 0; i < this->stacks.size(); i++) {
+      this->setCurrentStackByIndex(i);
+
+      for (int j = 0; j < containers.size(); j++) {
+        this->addContainerToStack(containers[i]);
+      }
+    }
+  }
 
   void Memory::setCurrentStackByIndex(int index) {
     this->currentStackIndex = index;

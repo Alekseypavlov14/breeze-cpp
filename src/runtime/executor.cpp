@@ -9,6 +9,17 @@ namespace Runtime {
     this->loader = loader;
     this->memory = Memory();
   }
+  void Executor::registerBuiltins(std::vector<Builtins::BuiltinModuleDeclarations> moduleDeclarations) {
+    std::vector<Container*> containers = {}; 
+    
+    for (int i = 0; i < moduleDeclarations.size(); i++) {
+      for (int j = 0; j < moduleDeclarations[i].size(); j++) {
+        containers.push_back(this->executeBuiltinDeclaration(moduleDeclarations[i][j]));
+      }
+    }
+
+    this->memory.loadBuiltinContainers(containers);
+  }
   void Executor::execute() {
     for (int i = 0; i < this->loader.getModules().size(); i++) {
       this->memory.setCurrentStackByIndex(i);
@@ -67,6 +78,7 @@ namespace Runtime {
   }
 
   void Executor::executeBlockStatement(AST::BlockStatement* statement) {
+    // TODO: add containers management
     this->memory.addScopeToStack();
 
     for (int i = 0; i < statement->getStatements().size(); i++) {
@@ -144,6 +156,9 @@ namespace Runtime {
     throw Exception("Not implemented");
   }
   void Executor::executeReturnStatement(AST::ReturnStatement *statement) {
+    throw Exception("Not implemented");
+  }
+  Container* Executor::executeClassDeclarationStatement(AST::ClassDeclarationStatement* statement) {
     throw Exception("Not implemented");
   }
   void Executor::executeImportStatement(AST::ImportStatement *statement) {
@@ -399,16 +414,16 @@ namespace Runtime {
   }
 
   // unary expression
-  Container *Executor::evaluateNotExpression(AST::UnaryOperationExpression* expression) {
+  Container* Executor::evaluateNotExpression(AST::UnaryOperationExpression* expression) {
     throw Exception("Not implemented");
   }
-  Container *Executor::evaluateBitNotExpression(AST::UnaryOperationExpression*) {
+  Container* Executor::evaluateBitNotExpression(AST::UnaryOperationExpression*) {
     throw Exception("Not implemented");
   }
-  Container *Executor::evaluateIncrementExpression(AST::UnaryOperationExpression*) {
+  Container* Executor::evaluateIncrementExpression(AST::UnaryOperationExpression*) {
     throw Exception("Not implemented");
   }
-  Container *Executor::evaluateDecrementExpression(AST::UnaryOperationExpression*) {
+  Container* Executor::evaluateDecrementExpression(AST::UnaryOperationExpression*) {
     throw Exception("Not implemented");
   }
 
@@ -1000,11 +1015,35 @@ namespace Runtime {
     throw Exception("Not implemented");
   }
  
+  // builtins
+  Container* Executor::executeBuiltinDeclaration(const Builtins::BuiltinDeclaration* statement) {
+    if (Shared::isInstanceOf<const Builtins::BuiltinDeclaration, Builtins::ConstantBuiltinDeclaration>(statement)) {
+      return this->executeBuiltinConstantDeclaration(Shared::cast<const Builtins::BuiltinDeclaration, Builtins::ConstantBuiltinDeclaration>(statement));
+    }
+    if (Shared::isInstanceOf<const Builtins::BuiltinDeclaration, Builtins::FunctionBuiltinDeclaration>(statement)) {
+      return this->executeBuiltinFunctionDeclaration(Shared::cast<const Builtins::BuiltinDeclaration, Builtins::FunctionBuiltinDeclaration>(statement));
+    }
+    if (Shared::isInstanceOf<const Builtins::BuiltinDeclaration, Builtins::ClassBuiltinDeclaration>(statement)) {
+      return this->executeBuiltinClassDeclaration(Shared::cast<const Builtins::BuiltinDeclaration, Builtins::ClassBuiltinDeclaration>(statement));
+    }
+
+    throw Exception("Invalid builtin statement found");
+  }
+  Container* Executor::executeBuiltinConstantDeclaration(Builtins::ConstantBuiltinDeclaration* statement) {
+    throw Exception("Not implemented");
+  }
+  Container* Executor::executeBuiltinFunctionDeclaration(Builtins::FunctionBuiltinDeclaration* statement) {
+    throw Exception("Not implemented");
+  }
+  Container* Executor::executeBuiltinClassDeclaration(Builtins::ClassBuiltinDeclaration* statement) {
+    throw Exception("Not implemented");
+  }
+
   // utils
   Container* Executor::createConstantContainer(Value* value) {
     return new Container("", value, true);
   }
   bool Executor::isExecutionOnTopLevel() {
-    return this->memory.getCurrentStackIndex() <= BASE_STACK_SIZE;
+    return this->memory.getCurrentStackIndex() <= TOP_LEVEL_STACK_SIZE;
   }
 }

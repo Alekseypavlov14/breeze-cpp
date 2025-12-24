@@ -213,15 +213,18 @@ namespace Runtime {
       std::vector<Field> getFields();
   };
 
+  // define function callable type
+  using Callable = std::function<Value*(std::vector<Value*>)>;
+
   // function value
   class FunctionValue: public CompoundValue {
     private:
       // copy of the stack at the moment of declaration
       Stack* closure;
-      std::function<Value*(std::vector<Value*>)> callable;
+      Callable callable;
 
     public:
-      FunctionValue(Stack*, std::function<Value*(std::vector<Value*>)>);
+      FunctionValue(Stack*, Callable);
 
       DataType getType();
 
