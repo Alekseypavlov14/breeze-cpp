@@ -83,6 +83,8 @@ namespace Runtime {
     this->memory.retainValue(variableContainer->getValue());
 
     this->memory.addContainerToStack(variableContainer);
+
+    return variableContainer;
   }
   Container* Executor::executeConstantDeclarationStatement(AST::ConstantDeclarationStatement* statement) {
     Container* initialization = this->evaluateExpression(statement->getInitializer());
@@ -92,6 +94,8 @@ namespace Runtime {
     this->memory.retainValue(constantContainer->getValue());
 
     this->memory.addContainerToStack(constantContainer);
+
+    return constantContainer;
   }
   void Executor::executeConditionStatement(AST::ConditionStatement *statement) {
     Container* condition = this->evaluateExpression(statement->getCondition());
@@ -175,7 +179,7 @@ namespace Runtime {
   Container* Executor::executeExportingStatement(AST::Statement* statement) {
     throw Exception("Not implemented");
   }
-  Container* Executor::executeExpressionStatement(AST::ExpressionStatement *statement) {
+  void Executor::executeExpressionStatement(AST::ExpressionStatement *statement) {
     this->evaluateExpression(statement->getExpression());
     
     this->memory.clearTemporaryContainers();
@@ -423,7 +427,7 @@ namespace Runtime {
     return leftContainer;
   }
   Container* Executor::evaluateMemberAccessExpression(AST::BinaryOperationExpression* expression) {
-    return nullptr;
+    throw Exception("Not implemented");
   }
   Container* Executor::evaluateAdditionExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());

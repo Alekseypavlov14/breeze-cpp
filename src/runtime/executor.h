@@ -38,7 +38,7 @@ namespace Runtime {
       void executeImportStatement(AST::ImportStatement* statement);
       void executeExportStatement(AST::ExportStatement* statement);
       Container* executeExportingStatement(AST::Statement* statement);
-      Container* executeExpressionStatement(AST::ExpressionStatement* statement);
+      void executeExpressionStatement(AST::ExpressionStatement* statement);
 
       // general expression evaluation
       Container* evaluateExpression(AST::Expression*);

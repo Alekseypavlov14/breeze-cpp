@@ -988,7 +988,7 @@ namespace Parser {
   }
   AST::Expression* Parser::getExpressionFromBaseExpresionOrPassedTokens(AST::Expression* baseExpression, std::vector<Lexer::Token> tokens) {
     // default case
-    if (!this->tokens.size()) {
+    if (!tokens.size()) {
       return baseExpression;
     }
 
@@ -997,6 +997,7 @@ namespace Parser {
   AST::Expression* Parser::parseExpressionFromTokens(std::vector<Lexer::Token> tokens) {
     // handle null expression
     if (tokens.size() == 0) {
+      if (this->isEnd()) return new AST::NullExpression(this->getPreviousToken().getPosition());
       return new AST::NullExpression(this->getCurrentToken().getPosition());
     }
     // handle literal tokens
