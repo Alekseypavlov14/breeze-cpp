@@ -63,7 +63,7 @@ namespace Runtime {
       return;
     }
 
-    throw Exception("Invalid statement");
+    throw StatementException(statement->getPosition(), "Invalid statement");
   }
 
   void Executor::executeBlockStatement(AST::BlockStatement* statement) {
@@ -144,7 +144,7 @@ namespace Runtime {
   }
   void Executor::executeImportStatement(AST::ImportStatement *statement) {
     if (!this->isExecutionOnTopLevel()) {
-      throw ExpressionException(statement->getPath().getPosition(), "Import statement can be used only on top level");
+      throw StatementException(statement->getPosition(), "Import statement can be used only on top level");
     }
 
     // find dependency module
@@ -209,7 +209,7 @@ namespace Runtime {
       return this->evaluateAssociationExpression(Shared::cast<AST::Expression, AST::AssociationExpression>(expression));
     }
 
-    throw Exception("Invalid expression");
+    throw ExpressionException(expression->getPosition(), "Invalid expression");
   }
 
   Container* Executor::evaluateNullExpression() {
@@ -241,7 +241,7 @@ namespace Runtime {
     }
 
     if (value == nullptr) {
-      throw TypeException(expression->getValue().getPosition(), "Invalid literal expression");
+      throw TypeException(expression->getPosition(), "Invalid literal expression");
     }
 
     this->memory.addTemporaryValue(value);
@@ -268,7 +268,7 @@ namespace Runtime {
       return this->evaluateDecrementExpression(expression);
     }
 
-    throw ExpressionException(expression->getOperator().getPosition(), "Invalid unary expression");
+    throw ExpressionException(expression->getPosition(), "Invalid unary expression");
   }
   Container* Executor::evaluateBinaryExpression(AST::BinaryOperationExpression* expression) {
     if (expression->getOperator().isOfType(Specification::TokenType::ASSIGN_TOKEN)) {
@@ -368,7 +368,7 @@ namespace Runtime {
       return this->evaluateLessThanOrEqualExpression(expression);
     }
 
-    throw ExpressionException(expression->getOperator().getPosition(), "Invalid binary expression");
+    throw ExpressionException(expression->getPosition(), "Invalid binary expression");
   }
   Container* Executor::evaluateGroupingExpression(AST::GroupingExpression* expression) {
     if (expression->getOperator().isOfType(Specification::TokenType::LEFT_PARENTHESES_TOKEN)) {
@@ -378,7 +378,7 @@ namespace Runtime {
       return this->evaluateSquareBracketsExpression(expression);
     }
 
-    throw ExpressionException(expression->getOperator().getPosition(), "Invalid grouping expression");
+    throw ExpressionException(expression->getPosition(), "Invalid grouping expression");
   }
   Container* Executor::evaluateGroupingApplicationExpression(AST::GroupingApplicationExpression* expression) {
     if (expression->getRight()->getOperator().isOfType(Specification::TokenType::LEFT_PARENTHESES_TOKEN)) {
@@ -411,7 +411,7 @@ namespace Runtime {
   // binary expressions
   Container* Executor::evaluateAssignExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getOperator().getPosition(), "Assignment to constant");
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
@@ -457,7 +457,7 @@ namespace Runtime {
       return resultContainer;
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"+\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"+\" is used with invalid type pair");
   }
   Container* Executor::evaluateSubtractionExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -477,7 +477,7 @@ namespace Runtime {
       return resultContainer;
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"-\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"-\" is used with invalid type pair");
   }
   Container* Executor::evaluateMultiplicationExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -497,7 +497,7 @@ namespace Runtime {
       return resultContainer;
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"*\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"*\" is used with invalid type pair");
   }
   Container* Executor::evaluateDivisionExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -517,7 +517,7 @@ namespace Runtime {
       return resultContainer;
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"/\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"/\" is used with invalid type pair");
   }
   Container* Executor::evaluateExponentialExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -536,7 +536,7 @@ namespace Runtime {
       return resultContainer;
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"**\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"**\" is used with invalid type pair");
   }
   Container* Executor::evaluateRemainderExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -555,7 +555,7 @@ namespace Runtime {
       return resultContainer;
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"%\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"%\" is used with invalid type pair");
   }
   Container* Executor::evaluateBitAndExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -574,7 +574,7 @@ namespace Runtime {
       return resultContainer;
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"&\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"&\" is used with invalid type pair");
   }
   Container* Executor::evaluateBitOrExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -593,7 +593,7 @@ namespace Runtime {
       return resultContainer;
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"|\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"|\" is used with invalid type pair");
   }
   Container* Executor::evaluateBitXorExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -612,7 +612,7 @@ namespace Runtime {
       return resultContainer;
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"^\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"^\" is used with invalid type pair");
   }
   Container* Executor::evaluateLeftShiftExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -631,7 +631,7 @@ namespace Runtime {
       return resultContainer;
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"<<\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"<<\" is used with invalid type pair");
   }
   Container* Executor::evaluateRightShiftExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -650,11 +650,11 @@ namespace Runtime {
       return resultContainer;
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \">>\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \">>\" is used with invalid type pair");
   }
   Container* Executor::evaluateAdditionAssignExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getOperator().getPosition(), "Assignment to constant");
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
@@ -677,11 +677,11 @@ namespace Runtime {
       leftContainer->setValue(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"+=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"+=\" is used with invalid type pair");
   }
   Container* Executor::evaluateSubtractionAssignExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getOperator().getPosition(), "Assignment to constant");
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
@@ -695,11 +695,11 @@ namespace Runtime {
       leftContainer->setValue(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"-=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"-=\" is used with invalid type pair");
   }
   Container* Executor::evaluateMultiplicationAssignExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getOperator().getPosition(), "Assignment to constant");
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
@@ -713,11 +713,11 @@ namespace Runtime {
       leftContainer->setValue(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"*=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"*=\" is used with invalid type pair");
   }
   Container* Executor::evaluateDivisionAssignExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getOperator().getPosition(), "Assignment to constant");
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
@@ -731,11 +731,11 @@ namespace Runtime {
       leftContainer->setValue(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"/=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"/=\" is used with invalid type pair");
   }
   Container* Executor::evaluateExponentialAssignExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getOperator().getPosition(), "Assignment to constant");
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
@@ -749,11 +749,11 @@ namespace Runtime {
       leftContainer->setValue(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"**=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"**=\" is used with invalid type pair");
   }
   Container* Executor::evaluateRemainderAssignExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getOperator().getPosition(), "Assignment to constant");
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
@@ -767,11 +767,11 @@ namespace Runtime {
       leftContainer->setValue(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"%=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"%=\" is used with invalid type pair");
   }
   Container* Executor::evaluateBitAndAssignExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getOperator().getPosition(), "Assignment to constant");
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
@@ -785,11 +785,11 @@ namespace Runtime {
       leftContainer->setValue(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"&=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"&=\" is used with invalid type pair");
   }
   Container* Executor::evaluateBitOrAssignExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getOperator().getPosition(), "Assignment to constant");
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
@@ -803,11 +803,11 @@ namespace Runtime {
       leftContainer->setValue(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"|=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"|=\" is used with invalid type pair");
   }
   Container* Executor::evaluateBitXorAssignExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getOperator().getPosition(), "Assignment to constant");
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
@@ -821,11 +821,11 @@ namespace Runtime {
       leftContainer->setValue(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"^=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"^=\" is used with invalid type pair");
   } 
   Container* Executor::evaluateLeftShiftAssignExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getOperator().getPosition(), "Assignment to constant");
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
@@ -839,11 +839,11 @@ namespace Runtime {
       leftContainer->setValue(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"<<=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"<<=\" is used with invalid type pair");
   }
   Container* Executor::evaluateRightShiftAssignExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getOperator().getPosition(), "Assignment to constant");
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
@@ -857,7 +857,7 @@ namespace Runtime {
       leftContainer->setValue(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \">>=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \">>=\" is used with invalid type pair");
   }
   Container* Executor::evaluateAndExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -905,7 +905,7 @@ namespace Runtime {
       return this->createConstantContainer(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \">\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \">\" is used with invalid type pair");
   }
   Container* Executor::evaluateLessThanExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -921,7 +921,7 @@ namespace Runtime {
       return this->createConstantContainer(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"<\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"<\" is used with invalid type pair");
   }
   Container* Executor::evaluateGreaterThanOrEqualExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -937,7 +937,7 @@ namespace Runtime {
       return this->createConstantContainer(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \">=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \">=\" is used with invalid type pair");
   }
   Container* Executor::evaluateLessThanOrEqualExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -953,7 +953,7 @@ namespace Runtime {
       return this->createConstantContainer(result);
     }
 
-    throw TypeException(expression->getOperator().getPosition(), "Operator \"<=\" is used with invalid type pair");
+    throw TypeException(expression->getPosition(), "Operator \"<=\" is used with invalid type pair");
   }
 
   // grouping expressions
