@@ -42,7 +42,7 @@ namespace Lexer {
         std::string smallestMatch = match[0].str();
         // check other groups if they contain smaller groups
         for (int i = 1; i < match.size(); i++) {
-          if (match[i].str().length() < smallestMatch.length()) {
+          if (match[i].str().length() < smallestMatch.length() && match[i].str().size() > 0) {
             smallestMatch = match[i].str();
           }
         }

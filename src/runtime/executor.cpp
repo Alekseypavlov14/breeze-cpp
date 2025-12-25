@@ -5,28 +5,40 @@
 #include <iostream>
 
 namespace Runtime {
-  Executor::Executor(Resolution::ModulesLoader loader) {
-    this->loader = loader;
+  Executor::Executor() {
+    this->loader = Resolution::ModulesLoader();
     this->memory = Memory();
+  }
+
+  void Executor::loadModulesFromEntrypoint(std::string absolutePath) {
+    this->loader.loadModulesFromEntrypointPath(absolutePath);
+    this->memory.prepareStructuresForModules(this->loader.getModules().size());
   }
   void Executor::registerBuiltins(std::vector<Builtins::BuiltinModuleDeclarations> moduleDeclarations) {
     std::vector<Container*> containers = {}; 
     
+    // execute declarations
     for (int i = 0; i < moduleDeclarations.size(); i++) {
       for (int j = 0; j < moduleDeclarations[i].size(); j++) {
         containers.push_back(this->executeBuiltinDeclaration(moduleDeclarations[i][j]));
       }
     }
 
+    // add scope for builtins for each stack
+    for (int i = 0; i < this->loader.getModules().size(); i++) {
+      this->memory.setCurrentStackByIndex(i);
+      this->memory.addScopeToStack();
+    }
+    
+    // load builtins
     this->memory.loadBuiltinContainers(containers);
   }
   void Executor::execute() {
     for (int i = 0; i < this->loader.getModules().size(); i++) {
       this->memory.setCurrentStackByIndex(i);
-      this->memory.setCurrentExportsRegistryByIndex(i);      
+      this->memory.setCurrentExportsRegistryByIndex(i);   
 
-      this->currentModule = this->loader.getModules()[i];
-      this->executeStatement(this->currentModule->getContent());
+      this->executeStatement(this->loader.getModules()[i]->getContent());
     }
   } 
 
@@ -163,8 +175,11 @@ namespace Runtime {
       throw StatementException(statement->getPosition(), "Import statement can be used only on top level");
     }
 
+    // get current module path
+    Resolution::Module* currentModule = this->loader.getModules()[this->memory.getCurrentStackIndex()];
+
     // find dependency module
-    std::string dependencyAbsolutePath = this->loader.resolveAbsolutePath(this->currentModule->getAbsolutePath(), statement->getPath().getCode());
+    std::string dependencyAbsolutePath = this->loader.resolveAbsolutePath(currentModule->getAbsolutePath(), statement->getPath().getCode());
     int moduleIndex = this->loader.getLoadedModuleIndexByAbsolutePath(dependencyAbsolutePath);
 
     // put dependency as current exporting module

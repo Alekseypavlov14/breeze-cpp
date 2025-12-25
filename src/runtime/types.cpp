@@ -201,7 +201,7 @@ namespace Runtime {
     return this->closure;
   }
   Value* FunctionValue::execute(std::vector<Value*> values) {
-    return this->execute(values);
+    return this->callable(values);
   }
   FunctionArgumentsAmount FunctionValue::getArgumentsAmount() {
     return this->argumentsAmount;

@@ -14,16 +14,15 @@ namespace Runtime {
 
   class Executor {
     public:
-      Executor(Resolution::ModulesLoader);
+      Executor();
+
+      void loadModulesFromEntrypoint(std::string);
       void registerBuiltins(std::vector<Builtins::BuiltinModuleDeclarations>);
       void execute();
 
     private:
       Resolution::ModulesLoader loader;
       Memory memory;
-
-      // shortcuts
-      Resolution::Module* currentModule;
 
       // general statement execution
       void executeStatement(AST::Statement*);
@@ -105,7 +104,7 @@ namespace Runtime {
       Container* evaluateSquareBracketsApplicationExpression(AST::GroupingApplicationExpression*);
 
       // builtin declarations
-      Container* Executor::executeBuiltinDeclaration(Builtins::BuiltinDeclaration* statement);
+      Container* executeBuiltinDeclaration(Builtins::BuiltinDeclaration* statement);
       Container* executeBuiltinConstantDeclaration(Builtins::ConstantBuiltinDeclaration* statement);
       Container* executeBuiltinFunctionDeclaration(Builtins::FunctionBuiltinDeclaration* statement);
       Container* executeBuiltinClassDeclaration(Builtins::ClassBuiltinDeclaration* statement);

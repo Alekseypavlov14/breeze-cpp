@@ -23,7 +23,7 @@ namespace Builtins {
     };
 
     // StringValue* _builtin_types_type(Value*)
-    inline const std::string typeName = "_builtin_types_type";
+    inline const std::string typeName = "_builtins_types_type";
     inline const Runtime::FunctionArgumentsAmount typeArguments(1);
     inline Runtime::StringValue* typeCallable(std::vector<Runtime::Value*> arguments) {
       Runtime::Value* typeArgument = arguments[0];
@@ -33,7 +33,7 @@ namespace Builtins {
     inline FunctionBuiltinDeclaration typeDeclaration(typeName, typeCallable, typeArguments);
 
     // BooleanValue* _builtin_types_boolean(Value*)
-    inline const std::string booleanName = "_builtin_types_boolean";
+    inline const std::string booleanName = "_builtins_types_boolean";
     inline const Runtime::FunctionArgumentsAmount booleanArguments(1);
     inline Runtime::BooleanValue* booleanCallable(std::vector<Runtime::Value*> arguments) {
       Runtime::Value* booleanArgument = arguments[0];
@@ -43,7 +43,7 @@ namespace Builtins {
     inline FunctionBuiltinDeclaration booleanDeclaration(booleanName, booleanCallable, booleanArguments);
 
     // NumberValue* _builtin_types_number(Value*)
-    inline const std::string numberName = "_builtin_types_number";
+    inline const std::string numberName = "_builtins_types_number";
     inline const Runtime::FunctionArgumentsAmount numberArguments(1);
     inline Runtime::NumberValue* numberCallable(std::vector<Runtime::Value*> arguments) {
       Runtime::Value* numberArgument = arguments[0];
@@ -69,7 +69,7 @@ namespace Builtins {
     inline FunctionBuiltinDeclaration numberDeclaration(numberName, numberCallable, numberArguments);
 
     // StringValue* _builtin_types_string(PrimitiveValue*)
-    inline const std::string stringName = "_builtin_types_string";
+    inline const std::string stringName = "_builtins_types_string";
     inline const Runtime::FunctionArgumentsAmount stringArguments(1);
     inline Runtime::StringValue* stringCallable(std::vector<Runtime::Value*> arguments) {
       Runtime::Value* stringValue = arguments[0];
