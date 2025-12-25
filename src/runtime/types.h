@@ -212,8 +212,23 @@ namespace Runtime {
       std::vector<Field> getFields();
   };
 
+  // define function value
   // define function callable type
   using Callable = std::function<Value*(std::vector<Value*>)>;
+
+  // function arguments controller
+  class FunctionArgumentsAmount {
+    private:
+      int argumentsAmount;
+      int optionalArguments;
+
+    public:
+      FunctionArgumentsAmount(int argumentsAmount = 0, int optionalArguments = 0);
+
+      int getTotalArgumentsAmount();
+      int getRequiredArgumentsAmount();
+      int getOptionalArgumentsAmount();
+  };
 
   // function value
   class FunctionValue: public CompoundValue {
@@ -221,15 +236,16 @@ namespace Runtime {
       // copy of the stack at the moment of declaration
       Stack closure;
       Callable callable;
+      FunctionArgumentsAmount argumentsAmount;
 
     public:
-      FunctionValue(Stack, Callable);
+      FunctionValue(Stack, Callable, FunctionArgumentsAmount);
 
       DataType getType();
 
       Stack getClosure();
-
       Value* execute(std::vector<Value*>); 
+      FunctionArgumentsAmount getArgumentsAmount();
   };
 
   // fundamental utilities

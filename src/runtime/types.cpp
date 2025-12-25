@@ -175,9 +175,24 @@ namespace Runtime {
     return this->fields;
   }
 
-  FunctionValue::FunctionValue(Stack stack, Callable callable) {
+  FunctionArgumentsAmount::FunctionArgumentsAmount(int argumentsAmount, int optionalArguments) {
+    this->argumentsAmount = argumentsAmount;
+    this->optionalArguments = optionalArguments;
+  }
+  int FunctionArgumentsAmount::getTotalArgumentsAmount() {
+    return this->argumentsAmount;
+  }
+  int FunctionArgumentsAmount::getRequiredArgumentsAmount() {
+    return this->argumentsAmount - this->optionalArguments;
+  }
+  int FunctionArgumentsAmount::getOptionalArgumentsAmount() {
+    return this->optionalArguments;
+  }
+
+  FunctionValue::FunctionValue(Stack stack, Callable callable, FunctionArgumentsAmount arguments) {
     this->closure = stack;
     this->callable = callable;
+    this->argumentsAmount = arguments;
   }
   DataType FunctionValue::getType() {
     return DataType::Function;
@@ -187,6 +202,9 @@ namespace Runtime {
   }
   Value* FunctionValue::execute(std::vector<Value*> values) {
     return this->execute(values);
+  }
+  FunctionArgumentsAmount FunctionValue::getArgumentsAmount() {
+    return this->argumentsAmount;
   }
  
   bool compareValues(Value* value1, Value* value2) {

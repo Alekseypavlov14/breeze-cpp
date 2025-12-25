@@ -26,31 +26,19 @@ namespace Builtins {
   };
 
   // functions
-  class FunctionArgumentsAmount {
-    private:
-      int argumentsAmount;
-      int optionalArguments;
-
-    public:
-      FunctionArgumentsAmount(int argumentsAmount = 0, int optionalArguments = 0);
-
-      int getTotalArgumentsAmount();
-      int getRequiredArgumentsAmount();
-      int getOptionalArgumentsAmount();
-  };
   class FunctionBuiltinDeclaration: public BuiltinDeclaration {
     private:
       std::string name;
       Runtime::Callable callable;
-      FunctionArgumentsAmount argumentsAmount;
+      Runtime::FunctionArgumentsAmount argumentsAmount;
 
     public:
-      FunctionBuiltinDeclaration(std::string name, Runtime::Callable callable, FunctionArgumentsAmount argumentsAmount);
+      FunctionBuiltinDeclaration(std::string name, Runtime::Callable callable, Runtime::FunctionArgumentsAmount argumentsAmount);
       FunctionBuiltinDeclaration* clone() const;
 
       std::string getName();
       Runtime::Callable getCallable();
-      FunctionArgumentsAmount getArgumentsAmount();
+      Runtime::FunctionArgumentsAmount getArgumentsAmount();
   };
 
   // classes

@@ -85,7 +85,7 @@ namespace Runtime {
 
     for (int i = 0; i < statement->getStatements().size(); i++) {
       this->executeStatement(statement->getStatements()[i]);
-      
+
       this->memory.clearTemporaryContainers();
       this->memory.clearTemporaryValues();
     }
@@ -1013,8 +1013,34 @@ namespace Runtime {
   }
 
   // grouping application expressions
-  Container* Executor::evaluateParenthesesApplicationExpression(AST::GroupingApplicationExpression*) {
-    throw Exception("Not implemented");
+  Container* Executor::evaluateParenthesesApplicationExpression(AST::GroupingApplicationExpression* expression) {
+    // validate function type
+    Container* functionContainer = this->evaluateExpression(expression->getLeft());
+    if (!Shared::isInstanceOf<Value, FunctionValue>(functionContainer->getValue())) {
+      throw ExpressionException(expression->getPosition(), "Not a function");
+    }
+    FunctionValue* functionValue = Shared::cast<Value, FunctionValue>(functionContainer->getValue());
+
+    // get arguments
+    std::vector<AST::Expression*> argumentExpressions = expression->getRight()->getExpressions();
+    std::vector<Value*> arguments = {};
+
+    for (int i = 0; i < argumentExpressions.size(); i++) {
+      arguments.push_back(this->evaluateExpression(argumentExpressions[i])->getValue());
+    }
+
+    // validate arguments amount
+    FunctionArgumentsAmount functionArgumentsAmount = functionValue->getArgumentsAmount();
+    if (arguments.size() < functionArgumentsAmount.getRequiredArgumentsAmount() || arguments.size() > functionArgumentsAmount.getTotalArgumentsAmount()) {
+      throw ExpressionException(expression->getPosition(), "Invalid arguments amount");
+    }
+
+    // execute function
+    Value* result = functionValue->execute(arguments);
+    Container* resultContainer = this->createConstantContainer(result);
+
+    this->memory.addContainerToStack(resultContainer);
+    return resultContainer;
   }
   Container* Executor::evaluateSquareBracketsApplicationExpression(AST::GroupingApplicationExpression*) {
     throw Exception("Not implemented");
@@ -1041,7 +1067,7 @@ namespace Runtime {
   Container* Executor::executeBuiltinFunctionDeclaration(Builtins::FunctionBuiltinDeclaration* statement) {
     Runtime::Callable callable = [this, statement](std::vector<Value*> arguments) -> Value* {
       int argumentsLength = arguments.size();
-      Builtins::FunctionArgumentsAmount callableArgumentsAmount = statement->getArgumentsAmount();
+      Runtime::FunctionArgumentsAmount callableArgumentsAmount = statement->getArgumentsAmount();
 
       if (argumentsLength > callableArgumentsAmount.getTotalArgumentsAmount()) {
         throw Exception("Too much arguments passed");
@@ -1056,7 +1082,7 @@ namespace Runtime {
       return result;
     };
 
-    FunctionValue* functionValue = new FunctionValue(this->memory.cloneCurrentStack(), callable);
+    FunctionValue* functionValue = new FunctionValue(this->memory.cloneCurrentStack(), callable, statement->getArgumentsAmount());
 
     Container* functionContainer = new Container(statement->getName(), functionValue, true);
     return functionContainer;

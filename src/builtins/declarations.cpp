@@ -16,21 +16,7 @@ namespace Builtins {
     return this->value;
   }
 
-  FunctionArgumentsAmount::FunctionArgumentsAmount(int argumentsAmount, int optionalArguments) {
-    this->argumentsAmount = argumentsAmount;
-    this->optionalArguments = optionalArguments;
-  }
-  int FunctionArgumentsAmount::getTotalArgumentsAmount() {
-    return this->argumentsAmount;
-  }
-  int FunctionArgumentsAmount::getRequiredArgumentsAmount() {
-    return this->argumentsAmount - this->optionalArguments;
-  }
-  int FunctionArgumentsAmount::getOptionalArgumentsAmount() {
-    return this->optionalArguments;
-  }
-
-  FunctionBuiltinDeclaration::FunctionBuiltinDeclaration(std::string name, Runtime::Callable callable, FunctionArgumentsAmount argumentsAmount) {
+  FunctionBuiltinDeclaration::FunctionBuiltinDeclaration(std::string name, Runtime::Callable callable, Runtime::FunctionArgumentsAmount argumentsAmount) {
     this->position = BUILTIN_POSITION;
     this->name = name;
     this->callable = callable;
@@ -45,7 +31,7 @@ namespace Builtins {
   Runtime::Callable FunctionBuiltinDeclaration::getCallable() {
     return this->callable;
   }
-  FunctionArgumentsAmount FunctionBuiltinDeclaration::getArgumentsAmount() {
+  Runtime::FunctionArgumentsAmount FunctionBuiltinDeclaration::getArgumentsAmount() {
     return this->argumentsAmount;
   }
 }

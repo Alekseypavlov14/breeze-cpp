@@ -15,7 +15,7 @@ namespace Builtins {
   namespace Console {
     // StringValue* _builtins_console_input();
     inline const std::string inputName = "_builtins_console_input";
-    inline const FunctionArgumentsAmount inputArgumentsAmount(0);
+    inline const Runtime::FunctionArgumentsAmount inputArgumentsAmount(0);
     inline Runtime::StringValue* inputCallable(std::vector<Runtime::Value*>) {
       std::string raw = "";
       std::cin >> raw;
@@ -27,7 +27,7 @@ namespace Builtins {
 
     // void _builtins_console_output(StringValue*);
     inline const std::string outputName = "_builtins_console_output";
-    inline const FunctionArgumentsAmount outputArgumentsAmount(1);
+    inline const Runtime::FunctionArgumentsAmount outputArgumentsAmount(1);
     inline Runtime::NullValue* outputCallable(std::vector<Runtime::Value*> arguments) {
       Runtime::Value* outputArgument = arguments[0];
       std::cout << Runtime::StringValue::getDataOf(outputArgument);
