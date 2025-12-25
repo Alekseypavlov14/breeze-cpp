@@ -33,8 +33,8 @@ namespace Lexer {
         std::smatch match;
 
         // if specification is not matched - skip specification
-        if (!std::regex_search(slice, match, regex)) continue;
-
+        if (!std::regex_search(slice, match, regex, std::regex_constants::match_continuous)) continue;
+        
         // shift position by whole match length
         this->movePositionByDelta(match[0].str().size());
 

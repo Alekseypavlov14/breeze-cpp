@@ -32,43 +32,43 @@ namespace Parser {
     if (this->matchVariableDeclarationStatement()) {
       return this->parseVariableDeclaration(terminators);
     } 
-    else if (this->matchConstantDeclarationStatement()) {
+    if (this->matchConstantDeclarationStatement()) {
       return this->parseConstantDeclaration(terminators);
     }
-    else if (this->matchConditionStatement()) {
+    if (this->matchConditionStatement()) {
       return this->parseConditionStatement(terminators);
     } 
-    else if (this->matchForStatement()) {
+    if (this->matchForStatement()) {
       return this->parseForStatement(terminators);
     }
-    else if (this->matchWhileStatement()) {
+    if (this->matchWhileStatement()) {
       return this->parseWhileStatement(terminators);
     }
-    else if (this->matchBreakStatement()) {
+    if (this->matchBreakStatement()) {
       return this->parseBreakStatement();
     }
-    else if (this->matchContinueStatement()) {
+    if (this->matchContinueStatement()) {
       return this->parseContinueStatement();
     }
-    else if (this->matchFunctionDeclarationStatement()) {
+    if (this->matchFunctionDeclarationStatement()) {
       return this->parseFunctionDeclarationStatement();
     }
-    else if (this->matchReturnStatement()) {
+    if (this->matchReturnStatement()) {
       return this->parseReturnStatement(terminators);
     }
-    else if (this->matchClassDeclarationStatement()) {
+    if (this->matchClassDeclarationStatement()) {
       return this->parseClassDeclarationStatement();
     }
-    else if (this->matchImportStatement()) {
+    if (this->matchImportStatement()) {
       return this->parseImportStatement();
     }
-    else if (this->matchExportStatement()) {
+    if (this->matchExportStatement()) {
       return this->parseExportStatement(terminators);
     }
-    else if (this->matchBlockStatement()) {
+    if (this->matchBlockStatement()) {
       return this->parseBlockStatement();
     }
-    else if (this->matchComment()) {
+    if (this->matchComment()) {
       return this->parseComment();
     }
 
@@ -623,7 +623,7 @@ namespace Parser {
     if (this->matchToken(Specification::TokenType::NEWLINE_TOKEN)) {
       this->consumeCurrentToken();
     } 
-
+    
     AST::NullStatement* nullStatement = new AST::NullStatement(commentToken.getPosition());
     return nullStatement;
   }

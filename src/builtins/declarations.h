@@ -5,10 +5,10 @@
 #include "base/position.h"
 
 namespace Builtins {
-  class BuiltinDeclaration: public AST::Statement {};
-  
-  inline const Base::Position BUILTIN_POSITION(0, 0);
-  
+  class BuiltinDeclaration {
+    public:
+      virtual ~BuiltinDeclaration() = default;
+  };
   using BuiltinModuleDeclarations = std::vector<BuiltinDeclaration*>;
   
   // constants
@@ -19,7 +19,6 @@ namespace Builtins {
 
     public:
       ConstantBuiltinDeclaration(std::string name, Runtime::Value* value);
-      ConstantBuiltinDeclaration* clone() const;
   
       std::string getName();
       Runtime::Value* getValue();
@@ -34,7 +33,6 @@ namespace Builtins {
 
     public:
       FunctionBuiltinDeclaration(std::string name, Runtime::Callable callable, Runtime::FunctionArgumentsAmount argumentsAmount);
-      FunctionBuiltinDeclaration* clone() const;
 
       std::string getName();
       Runtime::Callable getCallable();
@@ -45,6 +43,5 @@ namespace Builtins {
   class ClassBuiltinDeclaration: public BuiltinDeclaration {
     public:
       ClassBuiltinDeclaration();
-      ClassBuiltinDeclaration* clone() const;
   };
 }
