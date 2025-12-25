@@ -80,12 +80,14 @@ namespace Runtime {
 
     throw StatementException(statement->getPosition(), "Invalid statement");
   }
-
   void Executor::executeBlockStatement(AST::BlockStatement* statement) {
     this->memory.addScopeToStack();
 
     for (int i = 0; i < statement->getStatements().size(); i++) {
       this->executeStatement(statement->getStatements()[i]);
+      
+      this->memory.clearTemporaryContainers();
+      this->memory.clearTemporaryValues();
     }
 
     this->memory.removeScopeFromStack();
@@ -178,7 +180,6 @@ namespace Runtime {
       Container* constantSymbol = new Container(currentImportSymbol.getCode(), currentImportContainer->getValue(), true);
      
       this->memory.addContainerToStack(constantSymbol);
-      this->memory.retainContainer(constantSymbol);
     }
 
     // return pointer to current exports
@@ -186,7 +187,6 @@ namespace Runtime {
   }
   void Executor::executeExportStatement(AST::ExportStatement *statement) {
     Container* exportingSymbol = this->executeExportingStatement(statement);
-    this->memory.retainContainer(exportingSymbol);
     this->memory.addContainerToExports(exportingSymbol);
   }
   Container* Executor::executeExportingStatement(AST::Statement* statement) {
@@ -204,9 +204,6 @@ namespace Runtime {
   }
   void Executor::executeExpressionStatement(AST::ExpressionStatement *statement) {
     this->evaluateExpression(statement->getExpression());
-    
-    this->memory.clearTemporaryContainers();
-    this->memory.clearTemporaryValues();
   }
 
   // expressions
@@ -446,7 +443,7 @@ namespace Runtime {
     this->memory.retainValue(rightContainer->getValue());
 
     leftContainer->setValue(rightContainer->getValue());
-    
+
     return leftContainer;
   }
   Container* Executor::evaluateMemberAccessExpression(AST::BinaryOperationExpression* expression) {

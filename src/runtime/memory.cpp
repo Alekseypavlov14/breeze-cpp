@@ -73,6 +73,12 @@ namespace Runtime {
       throw Runtime::Exception("No stack available by this index");
     } 
 
+    std::vector<Container*> containers = this->getContainersFromCurrentScope();
+
+    for (int i = 0; i < containers.size(); i++) {
+      this->releaseContainer(containers[i]);
+    }
+
     this->stacks[this->currentStackIndex].removeScope();
   }
   bool Memory::addContainerToStack(Container* container) {
@@ -80,13 +86,14 @@ namespace Runtime {
       throw Runtime::Exception("No stack available by this index");
     } 
 
+    this->retainContainer(container);
     return this->stacks[this->currentStackIndex].addContainer(container);
   }
   std::vector<Container*> Memory::getContainersFromCurrentScope() {
     if (this->currentStackIndex >= this->stacks.size()) {
       throw Runtime::Exception("No stack available by this index");
     } 
-    
+
     return this->stacks[this->currentStackIndex].getContainersFromCurrentScope();
   }
   Container* Memory::getContainerFromStack(std::string name) {
@@ -101,6 +108,7 @@ namespace Runtime {
       throw Runtime::Exception("No stack available by this index");
     } 
 
+    this->retainContainer(this->getContainerFromStack(name));
     return this->stacks[this->currentStackIndex].removeContainerByName(name);
   }
   Stack Memory::cloneCurrentStack() {
@@ -119,6 +127,7 @@ namespace Runtime {
       throw Runtime::Exception("No exports available by this index");
     }
 
+    this->retainContainer(container);
     return this->exports[this->currentExportsIndex].addContainer(container);
   }
   Container* Memory::getContainerFromExports(std::string name) {
@@ -141,7 +150,7 @@ namespace Runtime {
     this->releaseValue(container->getValue());
 
     // clean if nobody refers to this container
-    if (!containerCount) {
+    if (containerCount <= 0) {
       this->removeContainer(container);
     }
   }
