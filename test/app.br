@@ -1,1 +1,2 @@
-const a = 5 - (1 + 2)
+_builtins_console_input()
+_builtins_console_output(_builtins_types_string(2 + 2) + "\n")

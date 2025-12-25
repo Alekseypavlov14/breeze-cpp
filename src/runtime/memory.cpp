@@ -2,6 +2,8 @@
 #include "runtime/exceptions.h"
 #include "shared/utils.h"
 
+#include <iostream>
+
 namespace Runtime {
   Memory::Memory() {
     this->prepareStructuresForModules(0);
@@ -42,7 +44,7 @@ namespace Runtime {
       this->setCurrentStackByIndex(i);
 
       for (int j = 0; j < containers.size(); j++) {
-        this->addContainerToStack(containers[i]);
+        this->addContainerToStack(containers[j]);
       }
     }
   }
@@ -156,7 +158,7 @@ namespace Runtime {
   }
   void Memory::removeContainer(Container* container) {
     std::vector<Container*> newContainers = {};
-    
+
     for (int i = 0; i < this->containers.size(); i++) {
       if (this->containers[i] == container) {
         // delete reference count
@@ -271,6 +273,7 @@ namespace Runtime {
   void Memory::recursivelySearchValues(Value* value) {
     // skip already analyzed value
     if (Shared::includes(this->processingValues, value)) return;
+    if (this->valuesReferenceCount[value] <= 0) return;
 
     // analyze current value
     this->processingValues.push_back(value);
