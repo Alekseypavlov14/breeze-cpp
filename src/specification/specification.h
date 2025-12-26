@@ -98,7 +98,9 @@ namespace Specification {
     PUBLIC_KEYWORD_TOKEN,
     
     STATIC_KEYWORD_TOKEN,
-    
+    EXTENDS_KEYWORD_TOKEN,
+    CONSTRUCTOR_KEYWORD_TOKEN,
+
     TRUE_KEYWORD_TOKEN,
     FALSE_KEYWORD_TOKEN,
     NULL_KEYWORD_TOKEN,
@@ -194,6 +196,8 @@ namespace Specification {
     { TokenType::PUBLIC_KEYWORD_TOKEN, "public" },
 
     { TokenType::STATIC_KEYWORD_TOKEN, "static" },
+    { TokenType::EXTENDS_KEYWORD_TOKEN, "extends" },
+    { TokenType::CONSTRUCTOR_KEYWORD_TOKEN, "constructor" },
 
     { TokenType::TRUE_KEYWORD_TOKEN, "true" },
     { TokenType::FALSE_KEYWORD_TOKEN, "false" },
@@ -362,6 +366,8 @@ namespace Specification {
   inline const std::string PUBLIC_KEYWORD = "public";
 
   inline const std::string STATIC_KEYWORD = "static";
+  inline const std::string EXTENDS_KEYWORD = "extends";
+  inline const std::string CONSTRUCTOR_KEYWORD = "constructor";
 
   inline const std::string TRUE_KEYWORD = "true";
   inline const std::string FALSE_KEYWORD = "false";
@@ -388,6 +394,8 @@ namespace Specification {
     PROTECTED_KEYWORD,
     PUBLIC_KEYWORD,
     STATIC_KEYWORD,
+    EXTENDS_KEYWORD,
+    CONSTRUCTOR_KEYWORD,
     TRUE_KEYWORD,
     FALSE_KEYWORD,
     NULL_KEYWORD
@@ -414,6 +422,8 @@ namespace Specification {
     { PROTECTED_KEYWORD, TokenType::PROTECTED_KEYWORD_TOKEN },
     { PUBLIC_KEYWORD, TokenType::PUBLIC_KEYWORD_TOKEN },
     { STATIC_KEYWORD, TokenType::STATIC_KEYWORD_TOKEN },
+    { EXTENDS_KEYWORD, TokenType::EXTENDS_KEYWORD_TOKEN },
+    { CONSTRUCTOR_KEYWORD, TokenType::CONSTRUCTOR_KEYWORD_TOKEN },
     { TRUE_KEYWORD, TokenType::TRUE_KEYWORD_TOKEN },
     { FALSE_KEYWORD, TokenType::FALSE_KEYWORD_TOKEN },
     { NULL_KEYWORD, TokenType::NULL_KEYWORD_TOKEN }
@@ -427,4 +437,11 @@ namespace Specification {
     TokenType::FALSE_KEYWORD_TOKEN,
     TokenType::NULL_KEYWORD_TOKEN,
   };
+
+  // access modifier tokens
+  inline const std::vector<TokenType> ACCESS_MODIFIER_TOKENS = {
+    TokenType::PRIVATE_KEYWORD_TOKEN,
+    TokenType::PROTECTED_KEYWORD_TOKEN,
+    TokenType::PUBLIC_KEYWORD_TOKEN,
+  }
 }

@@ -419,14 +419,17 @@ namespace AST {
     return this->exports;
   }
 
-  ClassMemberDeclarationStatement::ClassMemberDeclarationStatement(Base::Position position, Lexer::Token accessModifier, bool isStatic, bool isConstant, Lexer::Token name): accessModifier(accessModifier), name(name) {
+  ClassMemberDeclarationStatement::ClassMemberDeclarationStatement(Base::Position position, Specification::TokenType accessModifier, bool isStatic, bool isConstant, Lexer::Token name): name(name) {
     this->position = position;
     this->accessModifier = accessModifier;
     this->isStatic = isStatic;
     this->isConstant = isConstant;
     this->name = name;
   }
-  Lexer::Token ClassMemberDeclarationStatement::getAccessModifier() const {
+  ClassMemberDeclarationStatement* ClassMemberDeclarationStatement::clone() const {
+    return new ClassMemberDeclarationStatement(this->position, this->accessModifier, this->isStatic, this->isConstant, this->name);
+  }
+  Specification::TokenType ClassMemberDeclarationStatement::getAccessModifier() const {
     return this->accessModifier;
   }
   bool ClassMemberDeclarationStatement::getIsStatic() const {
@@ -439,7 +442,7 @@ namespace AST {
     return this->name;
   }
 
-  ClassFieldDeclarationStatement::ClassFieldDeclarationStatement(Base::Position position, Lexer::Token accessModifier, bool isStatic, bool isConstant, Lexer::Token name, Expression* initialization): ClassMemberDeclarationStatement(position, accessModifier, isStatic, isConstant, name) {
+  ClassFieldDeclarationStatement::ClassFieldDeclarationStatement(Base::Position position, Specification::TokenType accessModifier, bool isStatic, bool isConstant, Lexer::Token name, Expression* initialization): ClassMemberDeclarationStatement(position, accessModifier, isStatic, isConstant, name) {
     this->initialization = initialization;
   }
   ClassFieldDeclarationStatement::~ClassFieldDeclarationStatement() {
@@ -452,7 +455,7 @@ namespace AST {
     return this->initialization;
   }
 
-  ClassMethodDeclarationStatement::ClassMethodDeclarationStatement(Base::Position position, Lexer::Token accessModifier, bool isStatic, Lexer::Token name, std::vector<FunctionParameterExpression*> params, BlockStatement* body): ClassMemberDeclarationStatement(position, accessModifier, isStatic, isConstant, name) {
+  ClassMethodDeclarationStatement::ClassMethodDeclarationStatement(Base::Position position, Specification::TokenType accessModifier, bool isStatic, Lexer::Token name, std::vector<FunctionParameterExpression*> params, BlockStatement* body): ClassMemberDeclarationStatement(position, accessModifier, isStatic, isConstant, name) {
     this->params = params;
     this->body = body;
   }
@@ -478,14 +481,34 @@ namespace AST {
     return this->body;
   }
 
-  ClassDeclarationStatement::ClassDeclarationStatement(Base::Position position, Lexer::Token name): name(name) {
+  ClassDeclarationStatement::ClassDeclarationStatement(Base::Position position, Lexer::Token name, Expression* extendedExpression, std::vector<ClassMemberDeclarationStatement*> declarations): name(name) {
     this->position = position;
     this->name = name;
+    this->declarations = declarations;
+  }
+  ClassDeclarationStatement::~ClassDeclarationStatement() {
+    for (int i = 0; i < this->declarations.size(); i++) {
+      delete this->declarations[i];
+    }
+
+    delete this->extendedExpression;
   }
   ClassDeclarationStatement* ClassDeclarationStatement::clone() const {
-    return new ClassDeclarationStatement(this->position, this->getName());
+    std::vector<ClassMemberDeclarationStatement*> clonedDeclarations = {};
+
+    for (int i = 0; i < this->declarations.size(); i++) {
+      clonedDeclarations.push_back(this->declarations[i]->clone());
+    }
+
+    return new ClassDeclarationStatement(this->position, this->getName(), this->extendedExpression->clone(), clonedDeclarations);
   }
   Lexer::Token ClassDeclarationStatement::getName() const {
     return this->name;
+  }
+  Expression* ClassDeclarationStatement::getExtendedExpression() const {
+    return this->extendedExpression;
+  }
+  std::vector<ClassMemberDeclarationStatement*> ClassDeclarationStatement::getDeclarations() const {
+    return this->declarations;
   }
 }

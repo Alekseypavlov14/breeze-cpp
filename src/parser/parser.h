@@ -26,14 +26,15 @@ namespace Parser {
       AST::BreakStatement* parseBreakStatement();
       AST::ContinueStatement* parseContinueStatement();
       AST::FunctionDeclarationStatement* parseFunctionDeclarationStatement();
+      std::vector<AST::FunctionParameterExpression*> parseFunctionParameterExpressionList();
       AST::FunctionParameterExpression* parseFunctionParameterExpression();
       AST::ReturnStatement* parseReturnStatement(std::vector<Specification::TokenType> terminators);
-      // TODO: implement class declaration statement
-      AST::ClassDeclarationStatement* parseClassDeclarationStatement();
       AST::ImportStatement* parseImportStatement();
       AST::ExportStatement* parseExportStatement(std::vector<Specification::TokenType> terminators);
       AST::BlockStatement* parseBlockStatement();
       AST::ExpressionStatement* parseExpressionStatement(std::vector<Specification::TokenType> terminators);
+      AST::ClassDeclarationStatement* parseClassDeclarationStatement();
+      AST::ClassMemberDeclarationStatement* parseClassMemberDeclarationStatement();
       AST::NullStatement* parseComment();
 
       // statement matching utils
@@ -78,6 +79,7 @@ namespace Parser {
 
       // analyzing utils
       void requireToken(Specification::TokenType);
+      void requireTokens(std::vector<Specification::TokenType>);
 
       bool matchToken(Specification::TokenType);
       bool matchTokens(std::vector<Specification::TokenType>);

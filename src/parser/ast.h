@@ -360,15 +360,17 @@ namespace AST {
 
   class ClassMemberDeclarationStatement: public Statement {
     protected:
-      Lexer::Token accessModifier;
+      Specification::TokenType accessModifier;
       bool isStatic;
       bool isConstant;
       Lexer::Token name;
 
     public:
-      ClassMemberDeclarationStatement(Base::Position, Lexer::Token, bool, bool, Lexer::Token);
+      ClassMemberDeclarationStatement(Base::Position, Specification::TokenType, bool, bool, Lexer::Token);
 
-      Lexer::Token getAccessModifier() const;
+      ClassMemberDeclarationStatement* clone() const;
+
+      Specification::TokenType getAccessModifier() const;
       bool getIsStatic() const;
       bool getIsConstant() const;
       Lexer::Token getName() const;
@@ -379,7 +381,7 @@ namespace AST {
       Expression* initialization;
 
     public:
-      ClassFieldDeclarationStatement(Base::Position, Lexer::Token, bool, bool, Lexer::Token, Expression*);
+      ClassFieldDeclarationStatement(Base::Position, Specification::TokenType, bool, bool, Lexer::Token, Expression*);
       ~ClassFieldDeclarationStatement();
 
       ClassFieldDeclarationStatement* clone() const;
@@ -393,7 +395,7 @@ namespace AST {
       BlockStatement* body;
 
     public:
-      ClassMethodDeclarationStatement(Base::Position, Lexer::Token, bool, Lexer::Token, std::vector<FunctionParameterExpression*>, BlockStatement*);
+      ClassMethodDeclarationStatement(Base::Position, Specification::TokenType, bool, Lexer::Token, std::vector<FunctionParameterExpression*>, BlockStatement*);
       ~ClassMethodDeclarationStatement();
 
       ClassMethodDeclarationStatement* clone() const;
@@ -405,14 +407,17 @@ namespace AST {
   class ClassDeclarationStatement: public Statement {
     private:
       Lexer::Token name;
+      Expression* extendedExpression;
       std::vector<ClassMemberDeclarationStatement*> declarations;
 
     public:
-      ClassDeclarationStatement(Base::Position position, Lexer::Token name);
+      ClassDeclarationStatement(Base::Position position, Lexer::Token name, Expression* extendedExpression, std::vector<ClassMemberDeclarationStatement*> declarations);
+      ~ClassDeclarationStatement();
 
       ClassDeclarationStatement* clone() const;
 
       Lexer::Token getName() const;
-      std::vector<ClassMemberDeclarationStatement*> getDeclarations();
+      Expression* getExtendedExpression() const;
+      std::vector<ClassMemberDeclarationStatement*> getDeclarations() const;
   };
 }

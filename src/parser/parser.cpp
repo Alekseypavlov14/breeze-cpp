@@ -397,6 +397,20 @@ namespace Parser {
 
     this->skipSingleLineSpaceTokens();
 
+    // parse parameters in parentheses
+    std::vector<AST::FunctionParameterExpression*> parameters = this->parseFunctionParameterExpressionList();
+
+    this->skipMultilineSpaceTokens();
+
+    // parse body
+    AST::BlockStatement* body = this->parseBlockStatement();
+    
+    this->requireNewlineForNextStatement();
+
+    AST::FunctionDeclarationStatement* functionDeclarationStatement = new AST::FunctionDeclarationStatement(functionToken.getPosition(), name, parameters, body); 
+    return functionDeclarationStatement;
+  }
+  std::vector<AST::FunctionParameterExpression*> Parser::parseFunctionParameterExpressionList() {
     this->requireToken(Specification::TokenType::LEFT_PARENTHESES_TOKEN);
     this->consumeCurrentToken();
 
@@ -428,15 +442,7 @@ namespace Parser {
     this->requireToken(Specification::TokenType::RIGHT_PARENTHESES_TOKEN);
     this->consumeCurrentToken();
 
-    this->skipMultilineSpaceTokens();
-
-    // parse body
-    AST::BlockStatement* body = this->parseBlockStatement();
-    
-    this->requireNewlineForNextStatement();
-
-    AST::FunctionDeclarationStatement* functionDeclarationStatement = new AST::FunctionDeclarationStatement(functionToken.getPosition(), name, parameters, body); 
-    return functionDeclarationStatement;
+    return parameters;
   }
   AST::FunctionParameterExpression* Parser::parseFunctionParameterExpression() {
     this->skipMultilineSpaceTokens();
@@ -481,20 +487,6 @@ namespace Parser {
 
     AST::ReturnStatement* returnStatement = new AST::ReturnStatement(returnToken.getPosition(), expression);
     return returnStatement;
-  }
-  // TODO: implement class declaration statement
-  AST::ClassDeclarationStatement* Parser::parseClassDeclarationStatement() {
-    this->requireToken(Specification::TokenType::CLASS_KEYWORD_TOKEN);
-    Lexer::Token classToken = this->consumeCurrentToken();
-
-    this->skipSingleLineSpaceTokens();
-
-    this->requireToken(Specification::TokenType::IDENTIFIER_TOKEN);
-    Lexer::Token className = this->consumeCurrentToken();
-
-    this->requireNewlineForNextStatement();
-
-    return new AST::ClassDeclarationStatement(classToken.getPosition(), className);
   }
   AST::ImportStatement* Parser::parseImportStatement() {
     this->requireToken(Specification::TokenType::IMPORT_KEYWORD_TOKEN);
@@ -611,6 +603,134 @@ namespace Parser {
 
     AST::ExpressionStatement* statement = new AST::ExpressionStatement(expression->getPosition(), expression);
     return statement;
+  }
+  AST::ClassDeclarationStatement* Parser::parseClassDeclarationStatement() {
+    // validate statement type
+    this->requireToken(Specification::TokenType::CLASS_KEYWORD_TOKEN);
+    Lexer::Token classToken = this->consumeCurrentToken();
+
+    this->skipSingleLineSpaceTokens();
+
+    // get class name
+    this->requireToken(Specification::TokenType::IDENTIFIER_TOKEN);
+    Lexer::Token className = this->consumeCurrentToken();
+
+    this->skipSingleLineSpaceTokens();
+
+    // check for extensions
+    AST::Expression* extendedExpression;
+
+    if (this->matchToken(Specification::TokenType::EXTENDS_KEYWORD_TOKEN)) {
+      this->consumeCurrentToken();
+      this->skipSingleLineSpaceTokens();
+
+      std::vector<Specification::TokenType> terminators = {
+        Specification::TokenType::NEWLINE_TOKEN,
+        Specification::TokenType::LEFT_CURLY_BRACE_TOKEN,
+      };
+    
+      extendedExpression = this->parseExpression(NULL, BASE_PRECEDENCE, terminators);
+    }
+    else {
+      extendedExpression = new AST::NullExpression(className.getPosition());
+    }
+
+    this->skipMultilineSpaceTokens();
+
+    // parse class body
+    this->requireToken(Specification::TokenType::LEFT_CURLY_BRACE_TOKEN);
+    Lexer::Token blockToken = this->consumeCurrentToken();
+
+    std::vector<AST::ClassMemberDeclarationStatement*> declarations = {};
+
+    // parse declarations
+    while (!this->isEnd() && !this->matchToken(Specification::TokenType::RIGHT_CURLY_BRACE_TOKEN)) {
+      this->skipMultilineSpaceTokens();
+
+      AST::ClassMemberDeclarationStatement* declaration = this->parseClassMemberDeclarationStatement();
+      declarations.push_back(declaration);
+    }
+
+    this->skipMultilineSpaceTokens();
+
+    this->requireToken(Specification::TokenType::RIGHT_CURLY_BRACE_TOKEN);
+    this->consumeCurrentToken();
+
+    return new AST::ClassDeclarationStatement(classToken.getPosition(), className, extendedExpression, declarations);
+  }
+  AST::ClassMemberDeclarationStatement* Parser::parseClassMemberDeclarationStatement() {
+    // predefine class member properties
+    Specification::TokenType accessModifier;
+    bool isStatic;
+    bool isConstant;
+
+    // special case for constructor
+    if (this->matchToken(Specification::TokenType::CONSTRUCTOR_KEYWORD_TOKEN)) {
+      accessModifier = Specification::TokenType::PUBLIC_KEYWORD_TOKEN;
+      isStatic = true;
+      isConstant = true;
+    } else {
+      // get access modifier
+      if (this->matchTokens(Specification::ACCESS_MODIFIER_TOKENS)) {
+        accessModifier = this->consumeCurrentToken().getType();
+      } else {
+        accessModifier = Specification::TokenType::PRIVATE_KEYWORD_TOKEN;
+      }
+
+      this->skipSingleLineSpaceTokens();
+
+      // get static modifier
+      isStatic = this->matchToken(Specification::TokenType::STATIC_KEYWORD_TOKEN);
+
+      this->skipSingleLineSpaceTokens();
+    
+      // get constant keyword
+      isConstant = this->matchToken(Specification::TokenType::CONSTANT_KEYWORD_TOKEN);
+    }
+
+    this->skipSingleLineSpaceTokens();
+
+    // get field name
+    std::vector<Specification::TokenType> nameTokenOptions = {
+      Specification::TokenType::IDENTIFIER_TOKEN,
+      Specification::TokenType::CONSTRUCTOR_KEYWORD_TOKEN,
+    };
+    this->requireTokens(nameTokenOptions);
+    Lexer::Token nameToken = this->consumeCurrentToken();
+
+    this->skipSingleLineSpaceTokens();
+
+    // if a method is being parsed
+    if (this->matchToken(Specification::TokenType::LEFT_PARENTHESES_TOKEN)) {
+      // get parameters
+      std::vector<AST::FunctionParameterExpression*> parameters = this->parseFunctionParameterExpressionList();
+       
+      this->skipMultilineSpaceTokens();
+
+      AST::BlockStatement* body = this->parseBlockStatement();
+
+      return new AST::ClassMethodDeclarationStatement(nameToken.getPosition(), accessModifier, isStatic, nameToken, parameters, body);
+    }
+  
+    // otherwise it is a field
+    if (this->matchToken(Specification::TokenType::NEWLINE_TOKEN)) {
+      AST::Expression* initialization = new AST::NullExpression(nameToken.getPosition());
+      return new AST::ClassFieldDeclarationStatement(nameToken.getPosition(), accessModifier, isStatic, isConstant, nameToken, initialization);
+    }
+    if (this->matchToken(Specification::TokenType::ASSIGN_TOKEN)) {
+      this->consumeCurrentToken();
+
+      this->skipSingleLineSpaceTokens();
+
+      std::vector<Specification::TokenType> terminators = {
+        Specification::TokenType::NEWLINE_TOKEN
+      };
+
+      AST::Expression* initialization = this->parseExpression(NULL, BASE_PRECEDENCE, terminators);
+      return new AST::ClassFieldDeclarationStatement(nameToken.getPosition(), accessModifier, isStatic, isConstant, nameToken, initialization);
+    }
+
+    throw Exception(nameToken.getPosition(), "Invalid class member is used");
   }
   AST::NullStatement* Parser::parseComment() {
     this->requireToken(Specification::TokenType::COMMENT_TOKEN);
@@ -1047,6 +1167,13 @@ namespace Parser {
       message += Specification::MAP_TOKEN_TYPE_TO_STRING.at(tokenType);
       message += "\"";
 
+      throw Exception(currentToken.getPosition(), message);
+    }
+  }
+  void Parser::requireTokens(std::vector<Specification::TokenType> tokenTypes) {
+    Lexer::Token currentToken = this->getCurrentToken();
+
+    if (!Shared::includes<Specification::TokenType>(tokenTypes, currentToken.getType())) {
       throw Exception(currentToken.getPosition(), "Invalid token");
     }
   }
