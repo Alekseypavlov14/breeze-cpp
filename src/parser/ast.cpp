@@ -390,18 +390,6 @@ namespace AST {
     return this->returns;
   }
 
-  // TODO: implement class declaration statement
-  ClassDeclarationStatement::ClassDeclarationStatement(Base::Position position, Lexer::Token name): name(name) {
-    this->position = position;
-    this->name = name;
-  }
-  ClassDeclarationStatement* ClassDeclarationStatement::clone() const {
-    return new ClassDeclarationStatement(this->position, this->getName());
-  }
-  Lexer::Token ClassDeclarationStatement::getName() const {
-    return this->name;
-  }
-
   ImportStatement::ImportStatement(Base::Position position, Lexer::Token path, std::vector<Lexer::Token> imports): path(path) {
     this->position = position;
     this->path = path;
@@ -429,5 +417,75 @@ namespace AST {
   }
   Statement* ExportStatement::getExports() const {
     return this->exports;
+  }
+
+  ClassMemberDeclarationStatement::ClassMemberDeclarationStatement(Base::Position position, Lexer::Token accessModifier, bool isStatic, bool isConstant, Lexer::Token name): accessModifier(accessModifier), name(name) {
+    this->position = position;
+    this->accessModifier = accessModifier;
+    this->isStatic = isStatic;
+    this->isConstant = isConstant;
+    this->name = name;
+  }
+  Lexer::Token ClassMemberDeclarationStatement::getAccessModifier() const {
+    return this->accessModifier;
+  }
+  bool ClassMemberDeclarationStatement::getIsStatic() const {
+    return this->isStatic;
+  }
+  bool ClassMemberDeclarationStatement::getIsConstant() const {
+    return this->isConstant;
+  }
+  Lexer::Token ClassMemberDeclarationStatement::getName() const {
+    return this->name;
+  }
+
+  ClassFieldDeclarationStatement::ClassFieldDeclarationStatement(Base::Position position, Lexer::Token accessModifier, bool isStatic, bool isConstant, Lexer::Token name, Expression* initialization): ClassMemberDeclarationStatement(position, accessModifier, isStatic, isConstant, name) {
+    this->initialization = initialization;
+  }
+  ClassFieldDeclarationStatement::~ClassFieldDeclarationStatement() {
+    delete this->initialization;
+  }
+  ClassFieldDeclarationStatement* ClassFieldDeclarationStatement::clone() const {
+    return new ClassFieldDeclarationStatement(this->position, this->accessModifier, this->isStatic, this->isConstant, this->name, this->initialization->clone());
+  }
+  Expression* ClassFieldDeclarationStatement::getInitialization() const {
+    return this->initialization;
+  }
+
+  ClassMethodDeclarationStatement::ClassMethodDeclarationStatement(Base::Position position, Lexer::Token accessModifier, bool isStatic, Lexer::Token name, std::vector<FunctionParameterExpression*> params, BlockStatement* body): ClassMemberDeclarationStatement(position, accessModifier, isStatic, isConstant, name) {
+    this->params = params;
+    this->body = body;
+  }
+  ClassMethodDeclarationStatement::~ClassMethodDeclarationStatement() {
+    for (int i = 0; i < this->params.size(); i++) {
+      delete this->params[i];
+    }
+    delete this->body;
+  }
+  ClassMethodDeclarationStatement* ClassMethodDeclarationStatement::clone() const {
+    std::vector<FunctionParameterExpression*> clonedParams = {};
+
+    for (int i = 0; i < this->params.size(); i++) {
+      clonedParams.push_back(this->params[i]->clone());
+    }
+
+    return new ClassMethodDeclarationStatement(this->position, this->accessModifier, this->isStatic, this->name, clonedParams, this->body->clone());
+  }
+  std::vector<FunctionParameterExpression*> ClassMethodDeclarationStatement::getParams() const {
+    return this->params;
+  }
+  BlockStatement* ClassMethodDeclarationStatement::getBody() const {
+    return this->body;
+  }
+
+  ClassDeclarationStatement::ClassDeclarationStatement(Base::Position position, Lexer::Token name): name(name) {
+    this->position = position;
+    this->name = name;
+  }
+  ClassDeclarationStatement* ClassDeclarationStatement::clone() const {
+    return new ClassDeclarationStatement(this->position, this->getName());
+  }
+  Lexer::Token ClassDeclarationStatement::getName() const {
+    return this->name;
   }
 }

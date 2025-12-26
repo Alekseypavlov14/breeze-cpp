@@ -331,19 +331,6 @@ namespace AST {
       Expression* getReturns() const;
   };
 
-  // TODO: implement class declaration statement
-  class ClassDeclarationStatement: public Statement {
-    private:
-      Lexer::Token name;
-
-    public:
-      ClassDeclarationStatement(Base::Position position, Lexer::Token name);
-
-      ClassDeclarationStatement* clone() const;
-
-      Lexer::Token getName() const;
-  };
-
   class ImportStatement: public Statement {
     private:
       Lexer::Token path;
@@ -369,5 +356,63 @@ namespace AST {
       ExportStatement* clone() const;
 
       Statement* getExports() const;
+  };
+
+  class ClassMemberDeclarationStatement: public Statement {
+    protected:
+      Lexer::Token accessModifier;
+      bool isStatic;
+      bool isConstant;
+      Lexer::Token name;
+
+    public:
+      ClassMemberDeclarationStatement(Base::Position, Lexer::Token, bool, bool, Lexer::Token);
+
+      Lexer::Token getAccessModifier() const;
+      bool getIsStatic() const;
+      bool getIsConstant() const;
+      Lexer::Token getName() const;
+  };
+
+  class ClassFieldDeclarationStatement: public ClassMemberDeclarationStatement {
+    private:
+      Expression* initialization;
+
+    public:
+      ClassFieldDeclarationStatement(Base::Position, Lexer::Token, bool, bool, Lexer::Token, Expression*);
+      ~ClassFieldDeclarationStatement();
+
+      ClassFieldDeclarationStatement* clone() const;
+
+      Expression* getInitialization() const;
+  };
+
+  class ClassMethodDeclarationStatement: public ClassMemberDeclarationStatement {
+    protected:
+      std::vector<FunctionParameterExpression*> params;
+      BlockStatement* body;
+
+    public:
+      ClassMethodDeclarationStatement(Base::Position, Lexer::Token, bool, Lexer::Token, std::vector<FunctionParameterExpression*>, BlockStatement*);
+      ~ClassMethodDeclarationStatement();
+
+      ClassMethodDeclarationStatement* clone() const;
+
+      std::vector<FunctionParameterExpression*> getParams() const;
+      AST::BlockStatement* getBody() const;
+  };
+
+  class ClassDeclarationStatement: public Statement {
+    private:
+      Lexer::Token name;
+      std::vector<ClassMemberDeclarationStatement*> declarations;
+
+    public:
+      ClassDeclarationStatement(Base::Position position, Lexer::Token name);
+
+      ClassDeclarationStatement* clone() const;
+
+      Lexer::Token getName() const;
+      std::vector<ClassMemberDeclarationStatement*> getDeclarations();
   };
 }
