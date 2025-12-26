@@ -204,6 +204,12 @@ namespace Parser {
 
     this->skipMultilineSpaceTokens();
 
+    // check if file is finished
+    if (this->isEnd()) {
+      Base::Position position = this->getPreviousToken().getPosition();
+      throw Exception(position, "Invalid condition then branch");
+    }
+
     // parse then statement
     AST::Statement* thenStatement = this->parseStatement(terminators);
 
@@ -308,6 +314,12 @@ namespace Parser {
 
     this->skipMultilineSpaceTokens();
 
+    // check if file is finished
+    if (this->isEnd()) {
+      Base::Position position = this->getPreviousToken().getPosition();
+      throw Exception(position, "Invalid for loop body");
+    }
+
     // parse body loop
     AST::Statement* body = this->parseStatement(terminators);
 
@@ -352,6 +364,12 @@ namespace Parser {
     this->consumeCurrentToken();
 
     this->skipMultilineSpaceTokens();
+
+    // check if file is finished
+    if (this->isEnd()) {
+      Base::Position position = this->getPreviousToken().getPosition();
+      throw Exception(position, "Invalid while loop body");
+    }
 
     // parse body
     AST::Statement* body = this->parseStatement(terminators);
@@ -401,6 +419,12 @@ namespace Parser {
     std::vector<AST::FunctionParameterExpression*> parameters = this->parseFunctionParameterExpressionList();
 
     this->skipMultilineSpaceTokens();
+
+    // check if file is finished
+    if (this->isEnd()) {
+      Base::Position position = this->getPreviousToken().getPosition();
+      throw Exception(position, "Invalid function body");
+    }
 
     // parse body
     AST::BlockStatement* body = this->parseBlockStatement();
