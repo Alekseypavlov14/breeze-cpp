@@ -85,6 +85,7 @@ namespace Runtime {
       ExportsRegistry();
 
       bool addContainer(Container*);
+      std::vector<Container*> getContainers();
       Container* getContainerByName(std::string);
   };
 }

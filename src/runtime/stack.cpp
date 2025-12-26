@@ -109,6 +109,9 @@ namespace Runtime {
     this->containers.push_back(container);
     return true;
   }
+  std::vector<Container*> ExportsRegistry::getContainers() {
+    return this->containers;
+  }
   Container* ExportsRegistry::getContainerByName(std::string name) {
     for (int i = 0; i < this->containers.size(); i++) {
       if (this->containers[i]->getName() == name) {

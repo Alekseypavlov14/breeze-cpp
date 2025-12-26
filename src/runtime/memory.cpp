@@ -110,7 +110,7 @@ namespace Runtime {
       throw Runtime::Exception("No stack available by this index");
     } 
 
-    this->retainContainer(this->getContainerFromStack(name));
+    this->releaseContainer(this->getContainerFromStack(name));
     return this->stacks[this->currentStackIndex].removeContainerByName(name);
   }
   Stack Memory::cloneCurrentStack() {
@@ -129,8 +129,10 @@ namespace Runtime {
       throw Runtime::Exception("No exports available by this index");
     }
 
-    this->retainContainer(container);
     return this->exports[this->currentExportsIndex].addContainer(container);
+  }
+  std::vector<Container*> Memory::getContainersFromExports() {
+    return this->exports[this->currentExportsIndex].getContainers();
   }
   Container* Memory::getContainerFromExports(std::string name) {
     if (this->currentExportsIndex >= this->exports.size()) {
@@ -141,6 +143,7 @@ namespace Runtime {
   }
 
   void Memory::retainContainer(Container* container) {
+    this->excludeTemporaryContainer(container);
     this->containerReferenceCount[container]++;
     this->retainValue(container->getValue());
   }
@@ -184,6 +187,7 @@ namespace Runtime {
 
     // decrement pointer for all releasing values
     for (int i = 0; i < this->processingValues.size(); i++) {
+      this->excludeTemporaryValue(this->processingValues[i]);
       this->valuesReferenceCount[this->processingValues[i]]++;
     }
   }
@@ -221,7 +225,7 @@ namespace Runtime {
     this->temporaryContainers.push_back(container);
   }
   void Memory::excludeTemporaryContainer(Container* container) {
-    Shared::removeAll(this->containers, container);
+    this->temporaryContainers = Shared::removeAll(this->temporaryContainers, container);
   }
   void Memory::clearTemporaryContainers() {
     for (int i = 0; i < this->temporaryContainers.size(); i++) {
@@ -234,7 +238,7 @@ namespace Runtime {
     this->temporaryValues.push_back(value);
   }
   void Memory::excludeTemporaryValue(Value* value) {
-    Shared::removeAll(this->temporaryValues, value);
+    this->temporaryValues = Shared::removeAll(this->temporaryValues, value);
   }
   void Memory::clearTemporaryValues() {
     for (int i = 0; i < this->temporaryValues.size(); i++) {
@@ -273,7 +277,6 @@ namespace Runtime {
   void Memory::recursivelySearchValues(Value* value) {
     // skip already analyzed value
     if (Shared::includes(this->processingValues, value)) return;
-    if (this->valuesReferenceCount[value] <= 0) return;
 
     // analyze current value
     this->processingValues.push_back(value);

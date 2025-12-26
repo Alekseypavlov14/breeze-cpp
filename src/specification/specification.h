@@ -443,5 +443,5 @@ namespace Specification {
     TokenType::PRIVATE_KEYWORD_TOKEN,
     TokenType::PROTECTED_KEYWORD_TOKEN,
     TokenType::PUBLIC_KEYWORD_TOKEN,
-  }
+  };
 }

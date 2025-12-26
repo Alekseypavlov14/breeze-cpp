@@ -85,6 +85,7 @@ namespace Runtime {
       
       // exports usage
       bool addContainerToExports(Container* container);
+      std::vector<Container*> getContainersFromExports();
       Container* getContainerFromExports(std::string);
       
       // control containers usage

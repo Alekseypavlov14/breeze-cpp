@@ -1,2 +1,2 @@
-_builtins_console_input()
-_builtins_console_output(_builtins_types_string(2 + 2) + "\n" + _builtins_types_type(2))
+var a = 2 + 2
+_builtins_console_output("hello")

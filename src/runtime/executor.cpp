@@ -185,16 +185,29 @@ namespace Runtime {
     // put dependency as current exporting module
     this->memory.setCurrentExportsRegistryByIndex(moduleIndex);
 
-    // import each symbol
+    // get exporting tokens
+    std::vector<Specification::TokenType> importTokenTypes = {};
     for (int i = 0; i < statement->getImports().size(); i++) {
-      // TODO: implement asterisk import
+      importTokenTypes.push_back(statement->getImports()[i].getType());
+    }
 
-      Lexer::Token currentImportSymbol = statement->getImports()[i];
-      Container* currentImportContainer = this->memory.getContainerFromExports(currentImportSymbol.getCode());
+    // check for exporting all symbols
+    if (Shared::includes(importTokenTypes, Specification::TokenType::MULTIPLICATION_TOKEN)) {
+      std::vector<Container*> exports = this->memory.getContainersFromExports();
 
-      Container* constantSymbol = new Container(currentImportSymbol.getCode(), currentImportContainer->getValue(), true);
-     
-      this->memory.addContainerToStack(constantSymbol);
+      for (int i = 0; i < exports.size(); i++) {
+        Container* constantSymbol = new Container(exports[i]->getName(), exports[i]->getValue(), true);
+        this->memory.addContainerToStack(constantSymbol);
+      }
+    } else {
+      // otherwise export each symbol
+      for (int i = 0; i < statement->getImports().size(); i++) {
+        Lexer::Token currentImportSymbol = statement->getImports()[i];
+        Container* currentImportContainer = this->memory.getContainerFromExports(currentImportSymbol.getCode());
+  
+        Container* constantSymbol = new Container(currentImportSymbol.getCode(), currentImportContainer->getValue(), true);
+        this->memory.addContainerToStack(constantSymbol);
+      }
     }
 
     // return pointer to current exports
@@ -202,6 +215,7 @@ namespace Runtime {
   }
   void Executor::executeExportStatement(AST::ExportStatement *statement) {
     Container* exportingSymbol = this->executeExportingStatement(statement);
+    this->memory.retainContainer(exportingSymbol);
     this->memory.addContainerToExports(exportingSymbol);
   }
   Container* Executor::executeExportingStatement(AST::Statement* statement) {
