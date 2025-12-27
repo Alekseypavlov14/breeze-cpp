@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 
+#include <iostream>
+
 // this module contains reusable utils
 // no interpreter logic here
 namespace Shared {
@@ -34,10 +36,14 @@ namespace Shared {
   // remove elements from vector
   template<class T>
   std::vector<T> removeAll(std::vector<T> list, T element) {
+    if (!includes(list, element)) return list;
+    
     std::vector<T> newList = {};
 
     for (int i = 0; i < list.size(); i++) {
-      if (element != list[i]) newList.push_back(element);
+      if (list[i] != element) {
+        newList.push_back(list[i]);
+      }
     }
 
     return newList;
