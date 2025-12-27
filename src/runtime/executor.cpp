@@ -449,7 +449,15 @@ namespace Runtime {
 
   // unary expression
   Container* Executor::evaluateNotExpression(AST::UnaryOperationExpression* expression) {
-    throw Exception("Not implemented");
+    Container* originalExpression = this->evaluateExpression(expression->getOperand());
+    
+    BooleanValue* complementedValue = new BooleanValue(!getBoolean(originalExpression->getValue()));
+    this->memory.addTemporaryValue(complementedValue);
+    
+    Container* complementedContainer = this->createConstantContainer(complementedValue);
+    this->memory.addTemporaryContainer(complementedContainer);
+
+    return complementedContainer;
   }
   Container* Executor::evaluateBitNotExpression(AST::UnaryOperationExpression*) {
     throw Exception("Not implemented");
@@ -933,7 +941,9 @@ namespace Runtime {
     BooleanValue* result = new BooleanValue(compareValues(leftContainer->getValue(), rightContainer->getValue()));
     this->memory.addTemporaryValue(result);
     
-    return this->createConstantContainer(result);
+    Container* resultContainer = this->createConstantContainer(result);
+    this->memory.addTemporaryContainer(resultContainer);
+    return resultContainer;
   }
   Container* Executor::evaluateNotEqualExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -942,7 +952,9 @@ namespace Runtime {
     BooleanValue* result = new BooleanValue(!compareValues(leftContainer->getValue(), rightContainer->getValue()));
     this->memory.addTemporaryValue(result);
     
-    return this->createConstantContainer(result);
+    Container* resultContainer = this->createConstantContainer(result);
+    this->memory.addTemporaryContainer(resultContainer);
+    return resultContainer;
   }
   Container* Executor::evaluateGreaterThanExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -955,7 +967,9 @@ namespace Runtime {
       BooleanValue* result = new BooleanValue(left > right);
       this->memory.addTemporaryValue(result);
       
-      return this->createConstantContainer(result);
+      Container* resultContainer = this->createConstantContainer(result);
+      this->memory.addTemporaryContainer(resultContainer);
+      return resultContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \">\" is used with invalid type pair");
@@ -971,7 +985,9 @@ namespace Runtime {
       BooleanValue* result = new BooleanValue(left < right);
       this->memory.addTemporaryValue(result);
       
-      return this->createConstantContainer(result);
+      Container* resultContainer = this->createConstantContainer(result);
+      this->memory.addTemporaryContainer(resultContainer);
+      return resultContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"<\" is used with invalid type pair");
@@ -987,7 +1003,9 @@ namespace Runtime {
       BooleanValue* result = new BooleanValue(left >= right);
       this->memory.addTemporaryValue(result);
       
-      return this->createConstantContainer(result);
+      Container* resultContainer = this->createConstantContainer(result);
+      this->memory.addTemporaryContainer(resultContainer);
+      return resultContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \">=\" is used with invalid type pair");
@@ -1003,7 +1021,9 @@ namespace Runtime {
       BooleanValue* result = new BooleanValue(left <= right);
       this->memory.addTemporaryValue(result);
       
-      return this->createConstantContainer(result);
+      Container* resultContainer = this->createConstantContainer(result);
+      this->memory.addTemporaryContainer(resultContainer);
+      return resultContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"<=\" is used with invalid type pair");
