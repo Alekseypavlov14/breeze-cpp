@@ -167,9 +167,6 @@ namespace Runtime {
   void Executor::executeReturnStatement(AST::ReturnStatement *statement) {
     throw Exception("Not implemented");
   }
-  Container* Executor::executeClassDeclarationStatement(AST::ClassDeclarationStatement* statement) {
-    throw Exception("Not implemented");
-  }
   void Executor::executeImportStatement(AST::ImportStatement *statement) {
     if (!this->isExecutionOnTopLevel()) {
       throw StatementException(statement->getPosition(), "Import statement can be used only on top level");
@@ -231,7 +228,20 @@ namespace Runtime {
 
     throw StatementException(statement->getPosition(), "Invalid exporting statement");
   }
-  void Executor::executeExpressionStatement(AST::ExpressionStatement *statement) {
+  Container* Executor::executeClassDeclarationStatement(AST::ClassDeclarationStatement* statement) {
+    throw Exception("Not implemented");
+  }
+  Container* Executor::executeClassMemberDeclarationStatement(AST::ClassMemberDeclarationStatement *statement) {
+    throw Exception("Not implemented");
+  }
+  Container* Executor::executeClassFieldDeclarationStatement(AST::ClassFieldDeclarationStatement *statement) {
+    throw Exception("Not implemented");
+  }
+  Container* Executor::executeClassMethodDeclarationStatement(AST::ClassMethodDeclarationStatement *statement) {
+    throw Exception("Not implemented");
+  }
+  void Executor::executeExpressionStatement(AST::ExpressionStatement *statement)
+  {
     this->evaluateExpression(statement->getExpression());
   }
 
@@ -459,14 +469,54 @@ namespace Runtime {
 
     return complementedContainer;
   }
-  Container* Executor::evaluateBitNotExpression(AST::UnaryOperationExpression*) {
-    throw Exception("Not implemented");
+  Container* Executor::evaluateBitNotExpression(AST::UnaryOperationExpression* expression) {
+    Container* operandContainer = this->evaluateExpression(expression->getOperand());
+
+    if (Shared::isInstanceOf<Value, NumberValue>(operandContainer->getValue())) {
+      long long operandValue = NumberValue::getDataOf(operandContainer->getValue());
+
+      Value* result = new NumberValue(~operandValue);
+      this->memory.addTemporaryValue(result);
+
+      Container* resultContainer = this->createConstantContainer(result);
+      this->memory.addTemporaryContainer(resultContainer);
+
+      return resultContainer;
+    }
+
+    throw TypeException(expression->getPosition(), "Operator \"~\" is used with invalid type");
   }
-  Container* Executor::evaluateIncrementExpression(AST::UnaryOperationExpression*) {
-    throw Exception("Not implemented");
+  Container* Executor::evaluateIncrementExpression(AST::UnaryOperationExpression* expression) {
+    Container* operandContainer = this->evaluateExpression(expression->getOperand());
+    if (operandContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
+
+    if (Shared::isInstanceOf<Value, NumberValue>(operandContainer->getValue())) {
+      double operandValue = NumberValue::getDataOf(operandContainer->getValue());
+
+      Value* result = new NumberValue(operandValue + 1);
+      this->memory.addTemporaryValue(result);
+
+      this->memory.releaseValue(operandContainer->getValue());
+      operandContainer->setValue(result);
+    }
+
+    throw TypeException(expression->getPosition(), "Operator \"++\" is used with invalid type");
   }
-  Container* Executor::evaluateDecrementExpression(AST::UnaryOperationExpression*) {
-    throw Exception("Not implemented");
+  Container* Executor::evaluateDecrementExpression(AST::UnaryOperationExpression* expression) {
+    Container* operandContainer = this->evaluateExpression(expression->getOperand());
+    if (operandContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
+
+    if (Shared::isInstanceOf<Value, NumberValue>(operandContainer->getValue())) {
+      double operandValue = NumberValue::getDataOf(operandContainer->getValue());
+
+      Value* result = new NumberValue(operandValue - 1);
+      this->memory.addTemporaryValue(result);
+
+      this->memory.releaseValue(operandContainer->getValue());
+      operandContainer->setValue(result);
+    }
+
+    throw TypeException(expression->getPosition(), "Operator \"--\" is used with invalid type");
   }
 
   // binary expressions
@@ -726,6 +776,9 @@ namespace Runtime {
       Value* result = new NumberValue(left + right);
       this->memory.addTemporaryValue(result);
 
+      this->memory.releaseValue(leftContainer->getValue());
+      this->memory.retainValue(rightContainer->getValue());
+
       leftContainer->setValue(result);
     }
     if (Shared::isInstanceOf<Value, StringValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, StringValue>(rightContainer->getValue())) {
@@ -734,6 +787,9 @@ namespace Runtime {
 
       Value* result = new StringValue(left + right);
       this->memory.addTemporaryValue(result);
+
+      this->memory.releaseValue(leftContainer->getValue());
+      this->memory.retainValue(rightContainer->getValue());
 
       leftContainer->setValue(result);
     }
@@ -752,6 +808,9 @@ namespace Runtime {
 
       Value* result = new NumberValue(left - right);
       this->memory.addTemporaryValue(result);
+      
+      this->memory.releaseValue(leftContainer->getValue());
+      this->memory.retainValue(rightContainer->getValue());
 
       leftContainer->setValue(result);
     }
@@ -771,6 +830,9 @@ namespace Runtime {
       Value* result = new NumberValue(left * right);
       this->memory.addTemporaryValue(result);
 
+      this->memory.releaseValue(leftContainer->getValue());
+      this->memory.retainValue(rightContainer->getValue());
+
       leftContainer->setValue(result);
     }
 
@@ -788,6 +850,9 @@ namespace Runtime {
 
       Value* result = new NumberValue(left / right);
       this->memory.addTemporaryValue(result);
+
+      this->memory.releaseValue(leftContainer->getValue());
+      this->memory.retainValue(rightContainer->getValue());
 
       leftContainer->setValue(result);
     }
@@ -807,6 +872,9 @@ namespace Runtime {
       Value* result = new NumberValue(std::pow(left, right));
       this->memory.addTemporaryValue(result);
 
+      this->memory.releaseValue(leftContainer->getValue());
+      this->memory.retainValue(rightContainer->getValue());
+
       leftContainer->setValue(result);
     }
 
@@ -824,6 +892,9 @@ namespace Runtime {
 
       Value* result = new NumberValue(left % right);
       this->memory.addTemporaryValue(result);
+
+      this->memory.releaseValue(leftContainer->getValue());
+      this->memory.retainValue(rightContainer->getValue());
 
       leftContainer->setValue(result);
     }
@@ -843,6 +914,9 @@ namespace Runtime {
       Value* result = new NumberValue(left & right);
       this->memory.addTemporaryValue(result);
 
+      this->memory.releaseValue(leftContainer->getValue());
+      this->memory.retainValue(rightContainer->getValue());
+
       leftContainer->setValue(result);
     }
 
@@ -860,6 +934,9 @@ namespace Runtime {
 
       Value* result = new NumberValue(left | right);
       this->memory.addTemporaryValue(result);
+
+      this->memory.releaseValue(leftContainer->getValue());
+      this->memory.retainValue(rightContainer->getValue());
 
       leftContainer->setValue(result);
     }
@@ -879,6 +956,9 @@ namespace Runtime {
       Value* result = new NumberValue(left ^ right);
       this->memory.addTemporaryValue(result);
 
+      this->memory.releaseValue(leftContainer->getValue());
+      this->memory.retainValue(rightContainer->getValue());
+
       leftContainer->setValue(result);
     }
 
@@ -897,6 +977,9 @@ namespace Runtime {
       Value* result = new NumberValue(left << right);
       this->memory.addTemporaryValue(result);
 
+      this->memory.releaseValue(leftContainer->getValue());
+      this->memory.retainValue(rightContainer->getValue());
+
       leftContainer->setValue(result);
     }
 
@@ -914,6 +997,9 @@ namespace Runtime {
 
       Value* result = new NumberValue(left >> right);
       this->memory.addTemporaryValue(result);
+
+      this->memory.releaseValue(leftContainer->getValue());
+      this->memory.retainValue(rightContainer->getValue());
 
       leftContainer->setValue(result);
     }
@@ -1103,9 +1189,6 @@ namespace Runtime {
     if (Shared::isInstanceOf<Builtins::BuiltinDeclaration, Builtins::FunctionBuiltinDeclaration>(statement)) {
       return this->executeBuiltinFunctionDeclaration(Shared::cast<Builtins::BuiltinDeclaration, Builtins::FunctionBuiltinDeclaration>(statement));
     }
-    if (Shared::isInstanceOf<Builtins::BuiltinDeclaration, Builtins::ClassBuiltinDeclaration>(statement)) {
-      return this->executeBuiltinClassDeclaration(Shared::cast<Builtins::BuiltinDeclaration, Builtins::ClassBuiltinDeclaration>(statement));
-    }
 
     throw Exception("Invalid builtin statement found");
   }
@@ -1135,9 +1218,6 @@ namespace Runtime {
 
     Container* functionContainer = new Container(statement->getName(), functionValue, true);
     return functionContainer;
-  }
-  Container* Executor::executeBuiltinClassDeclaration(Builtins::ClassBuiltinDeclaration* statement) {
-    throw Exception("Not implemented");
   }
 
   // utils

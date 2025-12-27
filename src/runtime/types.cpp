@@ -80,6 +80,11 @@ namespace Runtime {
   void VectorValue::push(Value* value) {
     this->items.push_back(value);
   }
+  Value* VectorValue::pop() {
+    Value* last = this->items[this->items.size() - 1];
+    this->items.pop_back();
+    return last;
+  }
 
   Field::Field(FieldAccess access, FieldType type, FieldMutability mutability, Value* key, Value* value): key(key) {
     this->access = access;

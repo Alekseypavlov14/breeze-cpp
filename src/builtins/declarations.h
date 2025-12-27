@@ -38,10 +38,4 @@ namespace Builtins {
       Runtime::Callable getCallable();
       Runtime::FunctionArgumentsAmount getArgumentsAmount();
   };
-
-  // classes
-  class ClassBuiltinDeclaration: public BuiltinDeclaration {
-    public:
-      ClassBuiltinDeclaration();
-  };
 }

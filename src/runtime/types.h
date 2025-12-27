@@ -118,7 +118,9 @@ namespace Runtime {
       // fundamental methods
       std::vector<Value*> getItems();
       void setItem(int, Value*);
+
       void push(Value*);
+      Value* pop();
   };
 
   // define OOP classes

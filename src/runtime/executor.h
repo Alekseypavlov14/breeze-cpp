@@ -37,10 +37,13 @@ namespace Runtime {
       void executeContinueStatement();
       Container* executeFunctionDeclarationStatement(AST::FunctionDeclarationStatement* statement);
       void executeReturnStatement(AST::ReturnStatement* statement);
-      Container* executeClassDeclarationStatement(AST::ClassDeclarationStatement* statement);
       void executeImportStatement(AST::ImportStatement* statement);
       void executeExportStatement(AST::ExportStatement* statement);
       Container* executeExportingStatement(AST::Statement* statement);
+      Container* executeClassDeclarationStatement(AST::ClassDeclarationStatement* statement);
+      Container* executeClassMemberDeclarationStatement(AST::ClassMemberDeclarationStatement* statement);
+      Container* executeClassFieldDeclarationStatement(AST::ClassFieldDeclarationStatement* statement);
+      Container* executeClassMethodDeclarationStatement(AST::ClassMethodDeclarationStatement* statement);
       void executeExpressionStatement(AST::ExpressionStatement* statement);
 
       // general expression evaluation
@@ -107,7 +110,6 @@ namespace Runtime {
       Container* executeBuiltinDeclaration(Builtins::BuiltinDeclaration* statement);
       Container* executeBuiltinConstantDeclaration(Builtins::ConstantBuiltinDeclaration* statement);
       Container* executeBuiltinFunctionDeclaration(Builtins::FunctionBuiltinDeclaration* statement);
-      Container* executeBuiltinClassDeclaration(Builtins::ClassBuiltinDeclaration* statement);
 
       // utils
       Container* createConstantContainer(Value*);
