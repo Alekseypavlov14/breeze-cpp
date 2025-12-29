@@ -1,5 +1,5 @@
 #include "lexer/token.h"
-#include "shared/utils.h"
+#include "shared/vectors.h"
 
 namespace Lexer {
   Token::Token(const Base::Position position, const Specification::TokenType type, const std::string code) {
@@ -27,6 +27,6 @@ namespace Lexer {
     return tokenType == this->type;
   }
   bool Token::isOfType(std::vector<Specification::TokenType> tokenTypes) {
-    return Shared::includes(tokenTypes, this->type);
+    return Shared::Vectors::includes(tokenTypes, this->type);
   }
 }

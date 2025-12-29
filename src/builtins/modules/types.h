@@ -5,7 +5,7 @@
 #include "runtime/types.h"
 #include "runtime/exceptions.h"
 #include "specification/specification.h"
-#include "shared/utils.h"
+#include "shared/classes.h"
 
 // module to perform types operations
 
@@ -48,18 +48,18 @@ namespace Builtins {
     inline Runtime::NumberValue* numberCallable(std::vector<Runtime::Value*> arguments) {
       Runtime::Value* numberArgument = arguments[0];
       
-      if (Shared::isInstanceOf<Runtime::Value, Runtime::NullValue>(numberArgument)) {
+      if (Shared::Classes::isInstanceOf<Runtime::Value, Runtime::NullValue>(numberArgument)) {
         return new Runtime::NumberValue(0);
       } 
-      if (Shared::isInstanceOf<Runtime::Value, Runtime::BooleanValue>(numberArgument)) {
+      if (Shared::Classes::isInstanceOf<Runtime::Value, Runtime::BooleanValue>(numberArgument)) {
         bool realValue = Runtime::BooleanValue::getDataOf(numberArgument);
         if (realValue) return new Runtime::NumberValue(1);
         else return new Runtime::NumberValue(0);
       }
-      if (Shared::isInstanceOf<Runtime::Value, Runtime::NumberValue>(numberArgument)) {
-        return Shared::cast<Runtime::Value, Runtime::NumberValue>(numberArgument);
+      if (Shared::Classes::isInstanceOf<Runtime::Value, Runtime::NumberValue>(numberArgument)) {
+        return Shared::Classes::cast<Runtime::Value, Runtime::NumberValue>(numberArgument);
       }
-      if (Shared::isInstanceOf<Runtime::Value, Runtime::StringValue>(numberArgument)) {
+      if (Shared::Classes::isInstanceOf<Runtime::Value, Runtime::StringValue>(numberArgument)) {
         std::string realValue = Runtime::StringValue::getDataOf(numberArgument);
         return new Runtime::NumberValue(std::stod(realValue));
       }
@@ -74,20 +74,20 @@ namespace Builtins {
     inline Runtime::StringValue* stringCallable(std::vector<Runtime::Value*> arguments) {
       Runtime::Value* stringValue = arguments[0];
 
-      if (Shared::isInstanceOf<Runtime::Value, Runtime::NullValue>(stringValue)) {
+      if (Shared::Classes::isInstanceOf<Runtime::Value, Runtime::NullValue>(stringValue)) {
         return new Runtime::StringValue(Specification::MAP_TOKEN_TYPE_TO_STRING.at(Specification::TokenType::NULL_KEYWORD_TOKEN));
       } 
-      if (Shared::isInstanceOf<Runtime::Value, Runtime::BooleanValue>(stringValue)) {
+      if (Shared::Classes::isInstanceOf<Runtime::Value, Runtime::BooleanValue>(stringValue)) {
         bool realValue = Runtime::BooleanValue::getDataOf(stringValue);
         if (realValue) return new Runtime::StringValue(Specification::MAP_TOKEN_TYPE_TO_STRING.at(Specification::TokenType::TRUE_KEYWORD_TOKEN));
         else return new Runtime::StringValue(Specification::MAP_TOKEN_TYPE_TO_STRING.at(Specification::TokenType::FALSE_KEYWORD_TOKEN));
       }
-      if (Shared::isInstanceOf<Runtime::Value, Runtime::NumberValue>(stringValue)) {
+      if (Shared::Classes::isInstanceOf<Runtime::Value, Runtime::NumberValue>(stringValue)) {
         double realValue = Runtime::NumberValue::getDataOf(stringValue);
         return new Runtime::StringValue(std::to_string(realValue));
       }
-      if (Shared::isInstanceOf<Runtime::Value, Runtime::StringValue>(stringValue)) {
-        return Shared::cast<Runtime::Value, Runtime::StringValue>(stringValue);
+      if (Shared::Classes::isInstanceOf<Runtime::Value, Runtime::StringValue>(stringValue)) {
+        return Shared::Classes::cast<Runtime::Value, Runtime::StringValue>(stringValue);
       }
 
       throw Runtime::Exception("Invalid type is given");

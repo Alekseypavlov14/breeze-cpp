@@ -161,6 +161,7 @@ namespace AST {
   class FunctionParameterExpression: public Expression {
     private:
       Lexer::Token name;
+      // NULL if no default value
       Expression* defaultValue;
 
     public:

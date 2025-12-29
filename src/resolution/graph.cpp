@@ -1,7 +1,6 @@
 #include "resolution/graph.h"
 #include "resolution/exception.h"
-
-#include "shared/utils.h"
+#include "shared/vectors.h"
 
 namespace Resolution {
   ModulesGraph::ModulesGraph() {
@@ -25,7 +24,7 @@ namespace Resolution {
       int inDegree = 0;
 
       for (int j = 0; j < this->operatingModules.size(); j++) {
-        if (Shared::includes(this->operatingModules[j]->getDependenciesPaths(), this->operatingModules[i]->getAbsolutePath())) {
+        if (Shared::Vectors::includes(this->operatingModules[j]->getDependenciesPaths(), this->operatingModules[i]->getAbsolutePath())) {
           inDegree++;
         }
       }
@@ -50,9 +49,9 @@ namespace Resolution {
 
   void ModulesGraph::depthFirstSearch(Module* module) {
     // skip analyzed nodes
-    if (Shared::includes(this->analyzedModulesPaths, module->getAbsolutePath())) return;
+    if (Shared::Vectors::includes(this->analyzedModulesPaths, module->getAbsolutePath())) return;
 
-    if (Shared::includes(this->discoveredModulesPaths, module->getAbsolutePath())) {
+    if (Shared::Vectors::includes(this->discoveredModulesPaths, module->getAbsolutePath())) {
       std::string message = "Circular dependency includes module: " + module->getAbsolutePath();
       throw Resolution::Exception(message);
     }
@@ -76,7 +75,7 @@ namespace Resolution {
     this->sortedModules.push_back(module);
 
     // analyze node
-    Shared::removeAll(this->discoveredModulesPaths, module->getAbsolutePath());
+    Shared::Vectors::removeAll(this->discoveredModulesPaths, module->getAbsolutePath());
     this->analyzedModulesPaths.push_back(module->getAbsolutePath());
   }
 

@@ -2,7 +2,10 @@
 
 #include "resolution/loader.h"
 #include "resolution/exception.h"
-#include "shared/utils.h"
+#include "shared/classes.h"
+#include "shared/vectors.h"
+#include "shared/strings.h"
+#include "shared/files.h"
 
 namespace Resolution {
   ModulesLoader::ModulesLoader() {
@@ -33,10 +36,10 @@ namespace Resolution {
 
     for (int i = 0; i < statements.size(); i++) {
       // skip non-import statements
-      if (!Shared::isInstanceOf<AST::Statement, AST::ImportStatement>(statements[i])) continue;
+      if (!Shared::Classes::isInstanceOf<AST::Statement, AST::ImportStatement>(statements[i])) continue;
     
       // cast statement type
-      AST::ImportStatement* importStatement = Shared::cast<AST::Statement, AST::ImportStatement>(statements[i]);
+      AST::ImportStatement* importStatement = Shared::Classes::cast<AST::Statement, AST::ImportStatement>(statements[i]);
 
       // get dependency absolute path
       std::string dependencyAbsolutePath = this->resolveAbsolutePath(absolutePath, importStatement->getPath().getCode());
@@ -49,7 +52,7 @@ namespace Resolution {
       }
       
       // skip duplicated imports
-      if (Shared::includes(dependencies, dependencyAbsolutePath)) continue;
+      if (Shared::Vectors::includes(dependencies, dependencyAbsolutePath)) continue;
 
       // add new dependency path
       dependencies.push_back(dependencyAbsolutePath);
@@ -58,7 +61,7 @@ namespace Resolution {
     return dependencies;
   }
   std::string ModulesLoader::readModuleSourceCodeByAbsolutePath(std::string absolutePath) {
-    return Shared::readFileByAbsolutePath(absolutePath);
+    return Shared::Files::readFileByAbsolutePath(absolutePath);
   }
 
   void ModulesLoader::loadPathAliases(std::unordered_map<std::string, std::string> aliases) {
@@ -70,7 +73,7 @@ namespace Resolution {
     if (this->registry.isModuleAddedByPath(path)) return;
     
     // circular dependency found
-    if (Shared::includes(this->loadingModulesPaths, path)) {
+    if (Shared::Vectors::includes(this->loadingModulesPaths, path)) {
       std::string message = "Circular dependency includes module: " + path;
       throw Resolution::Exception(message);
     }
@@ -86,7 +89,7 @@ namespace Resolution {
       this->loadModulesFromEntrypointPath(parsedModule->getDependenciesPaths()[i]);
     }
 
-    Shared::removeAll(this->loadingModulesPaths, parsedModule->getAbsolutePath());
+    Shared::Vectors::removeAll(this->loadingModulesPaths, parsedModule->getAbsolutePath());
   }
 
   std::vector<Module*> ModulesLoader::getModules() {
@@ -122,13 +125,13 @@ namespace Resolution {
     std::filesystem::path fullPath = baseDirectoryPath / dependencyPath;
 
     // check aliases
-    if (Shared::startsWith(dependencyPath, ALIAS_SYMBOL)) {
+    if (Shared::Strings::startsWith(dependencyPath, ALIAS_SYMBOL)) {
       bool isAliasResolved = false;
 
       // iterate through aliases
       for (const auto& [key, value]: this->pathAliases) {
         // skip unmatched aliases
-        if (!Shared::startsWith(dependencyPath, key)) continue;
+        if (!Shared::Strings::startsWith(dependencyPath, key)) continue;
 
         // replace alias with real path
         std::string resolvedDependencyPath = value + dependencyPath.substr(key.size());

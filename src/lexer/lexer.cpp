@@ -2,7 +2,7 @@
 
 #include "lexer/lexer.h"
 #include "lexer/exception.h"
-#include "shared/utils.h"
+#include "shared/strings.h"
 
 namespace Lexer {
   Lexer::Lexer() {
@@ -26,7 +26,7 @@ namespace Lexer {
         Specification::TokenSpecification specification = Specification::TOKEN_SPECIFICATIONS[i];
 
         // slice of code that is not analyzed
-        std::string slice = Shared::slice(this->code, this->position, this->code.size());
+        std::string slice = Shared::Strings::slice(this->code, this->position, this->code.size());
 
         // compose regex 
         std::regex regex = std::regex("^" + specification.regex);

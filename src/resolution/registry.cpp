@@ -1,7 +1,6 @@
 #include "resolution/registry.h"
 #include "resolution/module.h"
-
-#include "shared/utils.h"
+#include "shared/vectors.h"
 
 namespace Resolution {
   ModulesRegistry::ModulesRegistry() {
@@ -19,7 +18,7 @@ namespace Resolution {
   
   void ModulesRegistry::addModule(Module* module) {
     // do not add duplications
-    if (Shared::includes(this->modules, module)) return;
+    if (Shared::Vectors::includes(this->modules, module)) return;
 
     this->modules.push_back(module);
   }

@@ -2,7 +2,8 @@
 #include "parser/exception.h"
 #include "parser/operators.h"
 #include "specification/specification.h"
-#include "shared/utils.h"
+#include "shared/classes.h"
+#include "shared/vectors.h"
 
 namespace Parser {
   // parser class implementation
@@ -114,7 +115,7 @@ namespace Parser {
       AST::Expression* initializer = this->parseExpression(NULL, BASE_PRECEDENCE, newTerminators);
       
       // check if it is not NullExpression
-      if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(initializer)) {
+      if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(initializer)) {
         Base::Position position = this->getCurrentToken().getPosition();
         throw Exception(position, "Invalid variable initialization");
       }
@@ -160,7 +161,7 @@ namespace Parser {
     AST::Expression* initializer = this->parseExpression(NULL, BASE_PRECEDENCE, newTerminators);
     
     // check if it is not NullExpression
-    if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(initializer)) {
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(initializer)) {
       Base::Position position = this->getCurrentToken().getPosition();
       throw Exception(position, "Invalid constant initialization");
     }
@@ -191,7 +192,7 @@ namespace Parser {
     AST::Expression* conditionExpression = this->parseExpression(NULL, BASE_PRECEDENCE, conditionTerminators);
     
     // check if is null expression
-    if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(conditionExpression)) {
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(conditionExpression)) {
       Base::Position position = this->getCurrentToken().getPosition();
       throw Exception(position, "Invalid condition expression");
     } 
@@ -214,7 +215,7 @@ namespace Parser {
     AST::Statement* thenStatement = this->parseStatement(terminators);
 
     // check if null statement
-    if (Shared::isInstanceOf<AST::Statement, AST::NullStatement>(thenStatement)) {
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::NullStatement>(thenStatement)) {
       Base::Position position = this->getCurrentToken().getPosition();
       throw Exception(position, "Invalid condition then branch");
     }
@@ -232,7 +233,7 @@ namespace Parser {
       elseStatement = this->parseStatement(terminators);
 
       // check if null statement
-      if (Shared::isInstanceOf<AST::Statement, AST::NullStatement>(elseStatement)) {
+      if (Shared::Classes::isInstanceOf<AST::Statement, AST::NullStatement>(elseStatement)) {
         Base::Position position = this->getCurrentToken().getPosition();
         throw Exception(position, "Invalid condition else branch");
       }
@@ -264,7 +265,7 @@ namespace Parser {
     // parse loop initializer
     AST::Statement* initializer = this->parseStatement(initializerTerminators);
 
-    if (Shared::isInstanceOf<AST::Statement, AST::NullStatement>(initializer)) {
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::NullStatement>(initializer)) {
       Base::Position position = this->getCurrentToken().getPosition();
       throw Exception(position, "Invalid for loop initializer");
     }
@@ -283,7 +284,7 @@ namespace Parser {
     // parse loop condition
     AST::Expression* condition = this->parseExpression(NULL, BASE_PRECEDENCE, conditionTerminators);
 
-    if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(condition)) {
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(condition)) {
       Base::Position position = this->getCurrentToken().getPosition();
       throw Exception(position, "Invalid for loop condition");
     }
@@ -302,7 +303,7 @@ namespace Parser {
     // parse loop increment
     AST::Expression* increment = this->parseExpression(NULL, BASE_PRECEDENCE, incrementTerminators);
   
-    if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(increment)) {
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(increment)) {
       Base::Position position = this->getCurrentToken().getPosition();
       throw Exception(position, "Invalid for loop increment");
     }
@@ -323,7 +324,7 @@ namespace Parser {
     // parse body loop
     AST::Statement* body = this->parseStatement(terminators);
 
-    if (Shared::isInstanceOf<AST::Statement, AST::NullStatement>(body)) {
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::NullStatement>(body)) {
       Base::Position position = this->getCurrentToken().getPosition();
       throw Exception(position, "Invalid for loop body");
     }
@@ -352,7 +353,7 @@ namespace Parser {
     // parse condition
     AST::Expression* condition = this->parseExpression(NULL, BASE_PRECEDENCE, conditionTerminators);
   
-    if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(condition)) {
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(condition)) {
       Base::Position position = this->getCurrentToken().getPosition();
       throw Exception(position, "Invalid while loop condition");
     }
@@ -374,7 +375,7 @@ namespace Parser {
     // parse body
     AST::Statement* body = this->parseStatement(terminators);
 
-    if (Shared::isInstanceOf<AST::Statement, AST::NullStatement>(body)) {
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::NullStatement>(body)) {
       Base::Position position = this->getCurrentToken().getPosition();
       throw Exception(position, "Invalid while loop body");
     }
@@ -490,8 +491,6 @@ namespace Parser {
     
       // compute default value
       defaultValue = this->parseExpression(NULL, BASE_PRECEDENCE, terminators);
-    } else {
-      defaultValue = new AST::NullExpression(name.getPosition());
     }
 
     AST::FunctionParameterExpression* parameter = new AST::FunctionParameterExpression(name.getPosition(), name, defaultValue);
@@ -584,9 +583,9 @@ namespace Parser {
 
     // validate exports statement type
     if (
-      !Shared::isInstanceOf<AST::Statement, AST::ConstantDeclarationStatement>(exports) &&
-      !Shared::isInstanceOf<AST::Statement, AST::FunctionDeclarationStatement>(exports) &&
-      !Shared::isInstanceOf<AST::Statement, AST::ClassDeclarationStatement>(exports)
+      !Shared::Classes::isInstanceOf<AST::Statement, AST::ConstantDeclarationStatement>(exports) &&
+      !Shared::Classes::isInstanceOf<AST::Statement, AST::FunctionDeclarationStatement>(exports) &&
+      !Shared::Classes::isInstanceOf<AST::Statement, AST::ClassDeclarationStatement>(exports)
     ) {
       Base::Position position = exportToken.getPosition();
       throw Exception(position, "Invalid export statement");
@@ -896,7 +895,7 @@ namespace Parser {
         // compute operand expression
         AST::Expression* operand = this->getExpressionFromBaseExpresionOrPassedTokens(baseExpression, passedTokens);
 
-        if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(operand)) {
+        if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(operand)) {
           Base::Position position = this->getCurrentToken().getPosition();
           throw Exception(position, "Invalid operand");
         }
@@ -917,7 +916,7 @@ namespace Parser {
       // no base expression and no tokens here 
       AST::Expression* operand = this->parseExpression(NULL, BASE_PRECEDENCE, terminators);
 
-      if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(operand)) {
+      if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(operand)) {
         Base::Position position = this->getCurrentToken().getPosition();
         throw Exception(position, "Invalid operand");
       }
@@ -952,7 +951,7 @@ namespace Parser {
       // get left branch
       AST::Expression* leftBranch = this->getExpressionFromBaseExpresionOrPassedTokens(baseExpression, passedTokens);
 
-      if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(leftBranch)) {
+      if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(leftBranch)) {
         Base::Position position = this->getCurrentToken().getPosition();
         throw Exception(position, "Invalid operand");
       }
@@ -960,7 +959,7 @@ namespace Parser {
       // get right branch
       AST::Expression* rightBranch = this->parseExpression(NULL, BASE_PRECEDENCE, terminators);
     
-      if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(leftBranch)) {
+      if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(leftBranch)) {
         Base::Position position = this->getCurrentToken().getPosition();
         throw Exception(position, "Invalid operand");
       }
@@ -995,7 +994,7 @@ namespace Parser {
         // parse expression
         AST::Expression* expression = this->parseExpression(NULL, BASE_PRECEDENCE, groupingItemTerminators);
 
-        if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(expression)) {
+        if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(expression)) {
           Base::Position position = this->getCurrentToken().getPosition();
           throw Exception(position, "Invalid expression");
         }
@@ -1039,7 +1038,7 @@ namespace Parser {
       // otherwise, compute left branch
       AST::Expression* leftBranch = this->getExpressionFromBaseExpresionOrPassedTokens(baseExpression, passedTokens);
 
-      if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(leftBranch)) {
+      if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(leftBranch)) {
         Base::Position position = this->getCurrentToken().getPosition();
         throw Exception(position, "Invalid expression");
       }
@@ -1076,7 +1075,7 @@ namespace Parser {
         // parse key expression
         keyExpression = this->parseExpression(NULL, BASE_PRECEDENCE, keyExpressionTerminators);
 
-        if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(keyExpression)) {
+        if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(keyExpression)) {
           Base::Position position = this->getCurrentToken().getPosition();
           throw Exception(position, "Invalid key expression");
         }
@@ -1096,7 +1095,7 @@ namespace Parser {
 
           valueExpression = this->parseExpression(NULL, BASE_PRECEDENCE, valueExpressionTerminators);
 
-          if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(keyExpression)) {
+          if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(keyExpression)) {
             Base::Position position = this->getCurrentToken().getPosition();
             throw Exception(position, "Invalid value expression");
           }
@@ -1158,7 +1157,7 @@ namespace Parser {
     throw Exception(position, "Invalid tokens combination");
   };
   bool Parser::isLiteralToken(Specification::TokenType type) {
-    return Shared::includes<Specification::TokenType>(Specification::LITERAL_TOKENS, type);
+    return Shared::Vectors::includes<Specification::TokenType>(Specification::LITERAL_TOKENS, type);
   }
   bool Parser::isIdentifierToken(Specification::TokenType type) {
     return type == Specification::TokenType::IDENTIFIER_TOKEN;
@@ -1197,7 +1196,7 @@ namespace Parser {
   void Parser::requireTokens(std::vector<Specification::TokenType> tokenTypes) {
     Lexer::Token currentToken = this->getCurrentToken();
 
-    if (!Shared::includes<Specification::TokenType>(tokenTypes, currentToken.getType())) {
+    if (!Shared::Vectors::includes<Specification::TokenType>(tokenTypes, currentToken.getType())) {
       throw Exception(currentToken.getPosition(), "Invalid token");
     }
   }
