@@ -24,10 +24,74 @@ namespace Runtime {
     Class,
   };
 
+  // predefine classes for data types
+  class Value;
+  class NullValue;
+  class BooleanValue;
+  class NumberValue;
+  class StringValue;
+  class VectorValue;
+  class ObjectValue;
+  class ClassValue;
+  class FunctionValue;
+
   // default values
   inline const bool BOOLEAN_DEFAULT_VALUE = false;
   inline const double NUMBER_DEFAULT_VALUE = 0;
   inline const std::string STRING_DEFAULT_VALUE = "";
+
+  // define OOP classes
+  // used for classes and objects
+  enum class FieldAccess { 
+    PUBLIC, 
+    PROTECTED, 
+    PRIVATE 
+  };
+  enum class FieldType {
+    INSTANCE,
+    STATIC,
+  };
+  enum class FieldMutability {
+    VARIABLE,
+    CONSTANT,
+  };
+
+  class Field {
+    private:
+      FieldAccess access;
+      FieldType type;
+      FieldMutability mutability;
+
+      ClassValue* classOwner;
+      Value* objectOwner;
+
+      Value* key;
+      Value* value;
+
+    public: 
+      Field(
+        FieldAccess access, 
+        FieldType type, 
+        FieldMutability mutability, 
+      
+        ClassValue* classOwner,
+        Value* objectOwner, 
+      
+        Value* key, 
+        Value* value
+      );
+      
+      FieldAccess getAccess();
+      FieldType getType();
+      FieldMutability getMutability();
+
+      ClassValue* getClassOwner();
+      Value* getObjectOwner();
+      
+      Value* getKey();
+      Value* getValue();
+      void setValue(Value*);
+  };
 
   // root for value hierarchy
   class Value {
@@ -36,7 +100,7 @@ namespace Runtime {
       virtual ~Value() = default;
 
       virtual DataType getType() = 0;
-    };
+  };
 
   // define primitive types
   // wraps primitive data and is constant value
@@ -100,11 +164,6 @@ namespace Runtime {
   // compound data types are copied by reference
   class CompoundValue: public Value {};
 
-  class VectorValue;
-  class ObjectValue;
-  class ClassValue;
-  class FunctionValue;
-
   // defines sequence of values
   class VectorValue: public CompoundValue {
     private:
@@ -121,44 +180,6 @@ namespace Runtime {
 
       void push(Value*);
       Value* pop();
-  };
-
-  // define OOP classes
-  // used for classes and objects
-  enum class FieldAccess { 
-    PUBLIC, 
-    PROTECTED, 
-    PRIVATE 
-  };
-  enum class FieldType {
-    INSTANCE,
-    STATIC,
-  };
-  enum class FieldMutability {
-    VARIABLE,
-    CONSTANT,
-  };
-
-  class Field {
-    private:
-      FieldAccess access;
-      FieldType type;
-      FieldMutability mutability;
-
-      Value* key;
-      Value* value;
-
-    public: 
-      Field(FieldAccess access, FieldType type, FieldMutability mutability, Value* key, Value* value);
-      
-      FieldAccess getAccess();
-      FieldType getType();
-      FieldMutability getMutability();
-
-      Value* getKey();
-
-      Value* getValue();
-      void setValue(Value*);
   };
 
   // defines associations or maps
@@ -237,15 +258,19 @@ namespace Runtime {
     private:
       // copy of the stack at the moment of declaration
       Stack closure;
+      // context is used to define this for methods (NULL for functions)
+      Value* context;
       Callable callable;
+      // controls amount of arguments
       FunctionArgumentsAmount argumentsAmount;
 
     public:
-      FunctionValue(Stack, Callable, FunctionArgumentsAmount);
+      FunctionValue(Stack, Value*, Callable, FunctionArgumentsAmount);
 
       DataType getType();
 
       Stack getClosure();
+      Value* getContext();
       Value* execute(std::vector<Value*>); 
       FunctionArgumentsAmount getArgumentsAmount();
   };
@@ -259,4 +284,6 @@ namespace Runtime {
 
   // evaluate value a bool
   bool getBoolean(Value*);
+
+  bool isInstanceOf(Value* superItem, Value* validatingItem);
 } 

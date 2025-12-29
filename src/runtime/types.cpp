@@ -1,6 +1,6 @@
 #include "runtime/stack.h"
 #include "runtime/types.h"
-#include "shared/utils.h"
+#include "shared/classes.h"
 
 namespace Runtime {
   NullValue::NullValue() {}
@@ -24,7 +24,7 @@ namespace Runtime {
     this->data = data;
   }
   bool BooleanValue::getDataOf(Value* value) {
-    return Shared::cast<Value, BooleanValue>(value)->getData();
+    return Shared::Classes::cast<Value, BooleanValue>(value)->getData();
   }
 
   NumberValue::NumberValue(double data) {
@@ -43,7 +43,7 @@ namespace Runtime {
     this->data = data;
   }
   double NumberValue::getDataOf(Value* value) {
-    return Shared::cast<Value, NumberValue>(value)->getData();
+    return Shared::Classes::cast<Value, NumberValue>(value)->getData();
   }
 
   StringValue::StringValue(std::string data) {
@@ -62,7 +62,7 @@ namespace Runtime {
     this->data = data;
   }
   std::string StringValue::getDataOf(Value* value) {
-    return Shared::cast<Value, StringValue>(value)->getData();
+    return Shared::Classes::cast<Value, StringValue>(value)->getData();
   }
 
   VectorValue::VectorValue(std::vector<Value*> items) {
@@ -86,10 +86,12 @@ namespace Runtime {
     return last;
   }
 
-  Field::Field(FieldAccess access, FieldType type, FieldMutability mutability, Value* key, Value* value): key(key) {
+  Field::Field(FieldAccess access, FieldType type, FieldMutability mutability, ClassValue* classOwner, Value* objectOwner, Value* key, Value* value): key(key) {
     this->access = access;
     this->type = type;
     this->mutability = mutability;
+    this->classOwner = classOwner;
+    this->objectOwner = objectOwner;
     this->key = key;
     this->value = value;
   }
@@ -101,6 +103,12 @@ namespace Runtime {
   }
   FieldMutability Field::getMutability() {
     return this->mutability;
+  }
+  ClassValue* Field::getClassOwner() {
+    return this->classOwner;
+  }
+  Value* Field::getObjectOwner() {
+    return this->objectOwner;
   }
   Value* Field::getKey() {
     return this->key;
@@ -159,12 +167,7 @@ namespace Runtime {
     return false;
   }
 
-  ClassValue::ClassValue(
-    std::vector<ClassValue*> parents, 
-    std::vector<Field> fields,
-    FunctionValue* constructor,
-    FunctionValue* destructor
-  ): constructor(constructor), destructor(destructor) {
+  ClassValue::ClassValue(std::vector<ClassValue*> parents, std::vector<Field> fields, FunctionValue* constructor, FunctionValue* destructor): constructor(constructor), destructor(destructor) {
     this->parents = parents;
     this->fields = fields;
     this->constructor = constructor;
@@ -194,8 +197,9 @@ namespace Runtime {
     return this->optionalArguments;
   }
 
-  FunctionValue::FunctionValue(Stack stack, Callable callable, FunctionArgumentsAmount arguments) {
+  FunctionValue::FunctionValue(Stack stack, Value* context, Callable callable, FunctionArgumentsAmount arguments) {
     this->closure = stack;
+    this->context = context;
     this->callable = callable;
     this->argumentsAmount = arguments;
   }
@@ -204,6 +208,9 @@ namespace Runtime {
   }
   Stack FunctionValue::getClosure() {
     return this->closure;
+  }
+  Value* FunctionValue::getContext() {
+    return this->context;
   }
   Value* FunctionValue::execute(std::vector<Value*> values) {
     return this->callable(values);
@@ -215,9 +222,12 @@ namespace Runtime {
   bool compareValues(Value* value1, Value* value2) {
     // check if it is the same value
     if (value1 == value2) return true;
+    
+    // otherwise if one of values is not defined 
+    if (!value1 || !value2) return false;
 
     // check if both are primitives
-    if (Shared::isInstanceOf<Value, PrimitiveValue>(value1) && Shared::isInstanceOf<Value, PrimitiveValue>(value2)) {
+    if (Shared::Classes::isInstanceOf<Value, PrimitiveValue>(value1) && Shared::Classes::isInstanceOf<Value, PrimitiveValue>(value2)) {
       DataType type1 = value1->getType();
       DataType type2 = value2->getType();
 
@@ -248,11 +258,32 @@ namespace Runtime {
   }
 
   bool getBoolean(Value* value) {
-    if (Shared::isInstanceOf<Value, NullValue>(value)) return false;
-    if (Shared::isInstanceOf<Value, BooleanValue>(value)) return BooleanValue::getDataOf(value);
-    if (Shared::isInstanceOf<Value, NumberValue>(value)) return NumberValue::getDataOf(value) != NUMBER_DEFAULT_VALUE;
-    if (Shared::isInstanceOf<Value, StringValue>(value)) return StringValue::getDataOf(value) != STRING_DEFAULT_VALUE;
-    if (Shared::isInstanceOf<Value, CompoundValue>(value)) return true;
+    if (Shared::Classes::isInstanceOf<Value, NullValue>(value)) return false;
+    if (Shared::Classes::isInstanceOf<Value, BooleanValue>(value)) return BooleanValue::getDataOf(value);
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(value)) return NumberValue::getDataOf(value) != NUMBER_DEFAULT_VALUE;
+    if (Shared::Classes::isInstanceOf<Value, StringValue>(value)) return StringValue::getDataOf(value) != STRING_DEFAULT_VALUE;
+    if (Shared::Classes::isInstanceOf<Value, CompoundValue>(value)) return true;
+    return false;
+  }
+
+  bool isInstanceOf(Value* superItem, Value* validatingItem) {
+    if (compareValues(superItem, validatingItem)) return true;
+
+    if (Shared::Classes::isInstanceOf<Value, ClassValue>(validatingItem)) {
+      ClassValue* casted = Shared::Classes::cast<Value, ClassValue>(validatingItem);
+
+      for (int i = 0; i < casted->getParents().size(); i++) {
+        if (isInstanceOf(superItem, casted->getParents()[i])) {
+          return true;
+        }
+      }
+    }
+
+    if (Shared::Classes::isInstanceOf<Value, ObjectValue>(validatingItem)) {
+      ObjectValue* casted = Shared::Classes::cast<Value, ObjectValue>(validatingItem);
+      return isInstanceOf(superItem, casted->getConstructor());
+    }
+
     return false;
   }
 }

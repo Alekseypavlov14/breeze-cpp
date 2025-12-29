@@ -1,5 +1,4 @@
 #include "resolution/resolver.h"
-#include "shared/utils.h"
 
 namespace Resolution {
   Resolver::Resolver() {

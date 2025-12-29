@@ -1,6 +1,7 @@
 #include "executor.h"
 #include "runtime/exceptions.h"
-#include "shared/utils.h"
+#include "shared/classes.h"
+#include "shared/vectors.h"
 
 #include <iostream>
 
@@ -15,23 +16,19 @@ namespace Runtime {
     this->memory.prepareStructuresForModules(this->loader.getModules().size());
   }
   void Executor::registerBuiltins(std::vector<Builtins::BuiltinModuleDeclarations> moduleDeclarations) {
-    std::vector<Container*> containers = {}; 
-    
     // execute declarations
-    for (int i = 0; i < moduleDeclarations.size(); i++) {
-      for (int j = 0; j < moduleDeclarations[i].size(); j++) {
-        containers.push_back(this->executeBuiltinDeclaration(moduleDeclarations[i][j]));
+    for (int m = 0; m < this->loader.getModules().size(); m++) {
+      // create builtin scopes in every stack
+      this->memory.setCurrentStackByIndex(m);
+      this->memory.getCurrentStack()->addScope(Scope());
+
+      // load all declarations
+      for (int i = 0; i < moduleDeclarations.size(); i++) {
+        for (int j = 0; j < moduleDeclarations[i].size(); j++) {
+          this->memory.getCurrentStack()->addContainer(this->executeBuiltinDeclaration(moduleDeclarations[i][j]));
+        }
       }
     }
-
-    // add scope for builtins for each stack
-    for (int i = 0; i < this->loader.getModules().size(); i++) {
-      this->memory.setCurrentStackByIndex(i);
-      this->memory.addScopeToStack();
-    }
-    
-    // load builtins
-    this->memory.loadBuiltinContainers(containers);
   }
   void Executor::execute() {
     for (int i = 0; i < this->loader.getModules().size(); i++) {
@@ -44,56 +41,56 @@ namespace Runtime {
 
   // statements
   void Executor::executeStatement(AST::Statement* statement) {
-    if (Shared::isInstanceOf<AST::Statement, AST::NullStatement>(statement)) return;
-    if (Shared::isInstanceOf<AST::Statement, AST::BlockStatement>(statement)) {
-      return this->executeBlockStatement(Shared::cast<AST::Statement, AST::BlockStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::NullStatement>(statement)) return;
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::BlockStatement>(statement)) {
+      return this->executeBlockStatement(Shared::Classes::cast<AST::Statement, AST::BlockStatement>(statement));
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::VariableDeclarationStatement>(statement)) {
-      this->executeVariableDeclarationStatement(Shared::cast<AST::Statement, AST::VariableDeclarationStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::VariableDeclarationStatement>(statement)) {
+      this->executeVariableDeclarationStatement(Shared::Classes::cast<AST::Statement, AST::VariableDeclarationStatement>(statement));
       return;
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::ConstantDeclarationStatement>(statement)) {
-      this->executeConstantDeclarationStatement(Shared::cast<AST::Statement, AST::ConstantDeclarationStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::ConstantDeclarationStatement>(statement)) {
+      this->executeConstantDeclarationStatement(Shared::Classes::cast<AST::Statement, AST::ConstantDeclarationStatement>(statement));
       return;
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::ConditionStatement>(statement)) {
-      return this->executeConditionStatement(Shared::cast<AST::Statement, AST::ConditionStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::ConditionStatement>(statement)) {
+      return this->executeConditionStatement(Shared::Classes::cast<AST::Statement, AST::ConditionStatement>(statement));
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::WhileStatement>(statement)) {
-      return this->executeWhileStatement(Shared::cast<AST::Statement, AST::WhileStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::WhileStatement>(statement)) {
+      return this->executeWhileStatement(Shared::Classes::cast<AST::Statement, AST::WhileStatement>(statement));
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::BreakStatement>(statement)) {
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::BreakStatement>(statement)) {
       return this->executeBreakStatement();
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::ContinueStatement>(statement)) {
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::ContinueStatement>(statement)) {
       return this->executeContinueStatement();
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::FunctionDeclarationStatement>(statement)) {
-      this->executeFunctionDeclarationStatement(Shared::cast<AST::Statement, AST::FunctionDeclarationStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::FunctionDeclarationStatement>(statement)) {
+      this->executeFunctionDeclarationStatement(Shared::Classes::cast<AST::Statement, AST::FunctionDeclarationStatement>(statement));
       return;
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::ReturnStatement>(statement)) {
-      return this->executeReturnStatement(Shared::cast<AST::Statement, AST::ReturnStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::ReturnStatement>(statement)) {
+      return this->executeReturnStatement(Shared::Classes::cast<AST::Statement, AST::ReturnStatement>(statement));
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::ClassDeclarationStatement>(statement)) {
-      this->executeClassDeclarationStatement(Shared::cast<AST::Statement, AST::ClassDeclarationStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::ClassDeclarationStatement>(statement)) {
+      this->executeClassDeclarationStatement(Shared::Classes::cast<AST::Statement, AST::ClassDeclarationStatement>(statement));
       return;
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::ImportStatement>(statement)) {
-      return this->executeImportStatement(Shared::cast<AST::Statement, AST::ImportStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::ImportStatement>(statement)) {
+      return this->executeImportStatement(Shared::Classes::cast<AST::Statement, AST::ImportStatement>(statement));
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::ExportStatement>(statement)) {
-      return this->executeExportStatement(Shared::cast<AST::Statement, AST::ExportStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::ExportStatement>(statement)) {
+      return this->executeExportStatement(Shared::Classes::cast<AST::Statement, AST::ExportStatement>(statement));
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::ExpressionStatement>(statement)) {
-      this->executeExpressionStatement(Shared::cast<AST::Statement, AST::ExpressionStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::ExpressionStatement>(statement)) {
+      this->executeExpressionStatement(Shared::Classes::cast<AST::Statement, AST::ExpressionStatement>(statement));
       return;
     }
 
     throw StatementException(statement->getPosition(), "Invalid statement");
   }
   void Executor::executeBlockStatement(AST::BlockStatement* statement) {
-    this->memory.addScopeToStack();
+    this->memory.getCurrentStack()->addScope(Scope());
 
     for (int i = 0; i < statement->getStatements().size(); i++) {
       this->executeStatement(statement->getStatements()[i]);
@@ -102,20 +99,25 @@ namespace Runtime {
       this->memory.clearTemporaryValues();
     }
 
-    this->memory.removeScopeFromStack();
+    this->memory.removeUnreachableValues();
+    this->memory.getCurrentStack()->removeScope();
   }
   Container* Executor::executeVariableDeclarationStatement(AST::VariableDeclarationStatement* statement) {
     Container* initialization = this->evaluateExpression(statement->getInitializer());
     Container* variableContainer = new Container(statement->getName().getCode(), initialization->getValue());
     
-    this->memory.addContainerToStack(variableContainer);
+    this->memory.getCurrentStack()->addContainer(variableContainer);
+    this->memory.retainContainer(variableContainer);
+
     return variableContainer;
   }
   Container* Executor::executeConstantDeclarationStatement(AST::ConstantDeclarationStatement* statement) {
     Container* initialization = this->evaluateExpression(statement->getInitializer());
     Container* constantContainer = new Container(statement->getName().getCode(), initialization->getValue(), true);
 
-    this->memory.addContainerToStack(constantContainer);
+    this->memory.getCurrentStack()->addContainer(constantContainer);
+    this->memory.retainContainer(constantContainer);
+
     return constantContainer;
   }
   void Executor::executeConditionStatement(AST::ConditionStatement *statement) {
@@ -139,7 +141,7 @@ namespace Runtime {
     } 
   }
   void Executor::executeForStatement(AST::ForStatement *statement) {
-    this->memory.addScopeToStack();
+    this->memory.getCurrentStack()->addScope(Scope());
 
     this->executeStatement(statement->getInitializer());
 
@@ -153,7 +155,7 @@ namespace Runtime {
       this->evaluateExpression(statement->getIncrement());
     } 
 
-    this->memory.removeScopeFromStack();
+    this->memory.getCurrentStack()->removeScope();
   }
   void Executor::executeBreakStatement() {
     throw Exception("Not implemented");
@@ -162,6 +164,39 @@ namespace Runtime {
     throw Exception("Not implemented");
   }
   Container* Executor::executeFunctionDeclarationStatement(AST::FunctionDeclarationStatement *statement) {
+    // parse arguments amount
+    int totalArgumentsAmount = 0;
+    int optionalArgumentsAmount = 0;
+    bool isOptionalParamReached = false;
+
+    for (int i = 0; i < statement->getParams().size(); i++) {
+      if (statement->getParams()[i]->getDefaultValue() == NULL) {
+        isOptionalParamReached = true;
+        optionalArgumentsAmount++;
+      } else if (isOptionalParamReached) {
+        throw ExpressionException(statement->getParams()[i]->getPosition(), "Required argument goes after optional");
+      }
+      
+      totalArgumentsAmount++;
+    }
+
+    // compose function arguments
+    FunctionArgumentsAmount argumentsAmount(totalArgumentsAmount, optionalArgumentsAmount);
+    
+    // construct callable
+    Callable callable = [this, statement](std::vector<Value*>) -> Value* {
+      return NULL;
+    };
+
+    // retain all containers
+    std::vector<Container*> containersInCurrentStack = this->memory.getCurrentStack()->getContainers();
+    for (int i = 0; i < containersInCurrentStack.size(); i++) {
+      this->memory.retainContainer(containersInCurrentStack[i]);
+    }
+
+    FunctionValue* functionValue = new FunctionValue(*this->memory.getCurrentStack(), this->currentContentObject, callable, argumentsAmount);
+    
+    // TODO: set current context
     throw Exception("Not implemented");
   }
   void Executor::executeReturnStatement(AST::ReturnStatement *statement) {
@@ -189,21 +224,21 @@ namespace Runtime {
     }
 
     // check for exporting all symbols
-    if (Shared::includes(importTokenTypes, Specification::TokenType::MULTIPLICATION_TOKEN)) {
-      std::vector<Container*> exports = this->memory.getContainersFromExports();
+    if (Shared::Vectors::includes(importTokenTypes, Specification::TokenType::MULTIPLICATION_TOKEN)) {
+      std::vector<Container*> exports = this->memory.getCurrentExportsRegistry()->getContainers();
 
       for (int i = 0; i < exports.size(); i++) {
         Container* constantSymbol = new Container(exports[i]->getName(), exports[i]->getValue(), true);
-        this->memory.addContainerToStack(constantSymbol);
+        this->memory.getCurrentStack()->addContainer(constantSymbol);
       }
     } else {
       // otherwise export each symbol
       for (int i = 0; i < statement->getImports().size(); i++) {
         Lexer::Token currentImportSymbol = statement->getImports()[i];
-        Container* currentImportContainer = this->memory.getContainerFromExports(currentImportSymbol.getCode());
+        Container* currentImportContainer = this->memory.getCurrentExportsRegistry()->getContainerByName(currentImportSymbol.getCode());
   
         Container* constantSymbol = new Container(currentImportSymbol.getCode(), currentImportContainer->getValue(), true);
-        this->memory.addContainerToStack(constantSymbol);
+        this->memory.getCurrentStack()->addContainer(constantSymbol);
       }
     }
 
@@ -213,28 +248,30 @@ namespace Runtime {
   void Executor::executeExportStatement(AST::ExportStatement *statement) {
     Container* exportingSymbol = this->executeExportingStatement(statement);
     this->memory.retainContainer(exportingSymbol);
-    this->memory.addContainerToExports(exportingSymbol);
+    this->memory.getCurrentExportsRegistry()->addContainer(exportingSymbol);
   }
   Container* Executor::executeExportingStatement(AST::Statement* statement) {
-    if (Shared::isInstanceOf<AST::Statement, AST::ConstantDeclarationStatement>(statement)) {
-      return this->executeConstantDeclarationStatement(Shared::cast<AST::Statement, AST::ConstantDeclarationStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::ConstantDeclarationStatement>(statement)) {
+      return this->executeConstantDeclarationStatement(Shared::Classes::cast<AST::Statement, AST::ConstantDeclarationStatement>(statement));
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::FunctionDeclarationStatement>(statement)) {
-      return this->executeFunctionDeclarationStatement(Shared::cast<AST::Statement, AST::FunctionDeclarationStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::FunctionDeclarationStatement>(statement)) {
+      return this->executeFunctionDeclarationStatement(Shared::Classes::cast<AST::Statement, AST::FunctionDeclarationStatement>(statement));
     }
-    if (Shared::isInstanceOf<AST::Statement, AST::ClassDeclarationStatement>(statement)) {
-      return this->executeClassDeclarationStatement(Shared::cast<AST::Statement, AST::ClassDeclarationStatement>(statement));
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::ClassDeclarationStatement>(statement)) {
+      return this->executeClassDeclarationStatement(Shared::Classes::cast<AST::Statement, AST::ClassDeclarationStatement>(statement));
     }
 
     throw StatementException(statement->getPosition(), "Invalid exporting statement");
   }
   Container* Executor::executeClassDeclarationStatement(AST::ClassDeclarationStatement* statement) {
+    // TODO: set current context
     throw Exception("Not implemented");
   }
   Container* Executor::executeClassMemberDeclarationStatement(AST::ClassMemberDeclarationStatement *statement) {
     throw Exception("Not implemented");
   }
   Container* Executor::executeClassFieldDeclarationStatement(AST::ClassFieldDeclarationStatement *statement) {
+    // TODO: set current context
     throw Exception("Not implemented");
   }
   Container* Executor::executeClassMethodDeclarationStatement(AST::ClassMethodDeclarationStatement *statement) {
@@ -247,29 +284,29 @@ namespace Runtime {
 
   // expressions
   Container* Executor::evaluateExpression(AST::Expression* expression) {
-    if (Shared::isInstanceOf<AST::Expression, AST::NullExpression>(expression)) {
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(expression)) {
       return this->evaluateNullExpression();
     }
-    if (Shared::isInstanceOf<AST::Expression, AST::LiteralExpression>(expression)) {
-      return this->evaluateLiteralExpression(Shared::cast<AST::Expression, AST::LiteralExpression>(expression));
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::LiteralExpression>(expression)) {
+      return this->evaluateLiteralExpression(Shared::Classes::cast<AST::Expression, AST::LiteralExpression>(expression));
     }
-    if (Shared::isInstanceOf<AST::Expression, AST::IdentifierExpression>(expression)) {
-      return this->evaluateIdentifierExpression(Shared::cast<AST::Expression, AST::IdentifierExpression>(expression));
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::IdentifierExpression>(expression)) {
+      return this->evaluateIdentifierExpression(Shared::Classes::cast<AST::Expression, AST::IdentifierExpression>(expression));
     }
-    if (Shared::isInstanceOf<AST::Expression, AST::UnaryOperationExpression>(expression)) {
-      return this->evaluateUnaryExpression(Shared::cast<AST::Expression, AST::UnaryOperationExpression>(expression));
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::UnaryOperationExpression>(expression)) {
+      return this->evaluateUnaryExpression(Shared::Classes::cast<AST::Expression, AST::UnaryOperationExpression>(expression));
     }
-    if (Shared::isInstanceOf<AST::Expression, AST::BinaryOperationExpression>(expression)) {
-      return this->evaluateBinaryExpression(Shared::cast<AST::Expression, AST::BinaryOperationExpression>(expression));
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::BinaryOperationExpression>(expression)) {
+      return this->evaluateBinaryExpression(Shared::Classes::cast<AST::Expression, AST::BinaryOperationExpression>(expression));
     }
-    if (Shared::isInstanceOf<AST::Expression, AST::GroupingExpression>(expression)) {
-      return this->evaluateGroupingExpression(Shared::cast<AST::Expression, AST::GroupingExpression>(expression));
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::GroupingExpression>(expression)) {
+      return this->evaluateGroupingExpression(Shared::Classes::cast<AST::Expression, AST::GroupingExpression>(expression));
     }
-    if (Shared::isInstanceOf<AST::Expression, AST::GroupingApplicationExpression>(expression)) {
-      return this->evaluateGroupingApplicationExpression(Shared::cast<AST::Expression, AST::GroupingApplicationExpression>(expression));
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::GroupingApplicationExpression>(expression)) {
+      return this->evaluateGroupingApplicationExpression(Shared::Classes::cast<AST::Expression, AST::GroupingApplicationExpression>(expression));
     }
-    if (Shared::isInstanceOf<AST::Expression, AST::AssociationExpression>(expression)) {
-      return this->evaluateAssociationExpression(Shared::cast<AST::Expression, AST::AssociationExpression>(expression));
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::AssociationExpression>(expression)) {
+      return this->evaluateAssociationExpression(Shared::Classes::cast<AST::Expression, AST::AssociationExpression>(expression));
     }
 
     throw ExpressionException(expression->getPosition(), "Invalid expression");
@@ -315,7 +352,7 @@ namespace Runtime {
     return container;
   }
   Container* Executor::evaluateIdentifierExpression(AST::IdentifierExpression* expression) {
-    return this->memory.getContainerFromStack(expression->getName().getCode());
+    return this->memory.getCurrentStack()->getContainerByName(expression->getName().getCode());
   }
   Container* Executor::evaluateUnaryExpression(AST::UnaryOperationExpression* expression) {
     if (expression->getOperator().isOfType(Specification::TokenType::NOT_TOKEN)) {
@@ -457,6 +494,103 @@ namespace Runtime {
     throw Exception("Not implemented");
   }
 
+  // special expression types
+  Container* Executor::evaluateAssignExpression(AST::BinaryOperationExpression* expression) {
+    Container* leftContainer = this->evaluateExpression(expression->getLeft());
+    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
+
+    Container* rightContainer = this->evaluateExpression(expression->getRight());
+
+    this->memory.releaseValue(leftContainer->getValue());
+    this->memory.retainValue(rightContainer->getValue());
+
+    leftContainer->setValue(rightContainer->getValue());
+
+    return leftContainer;
+  }
+  Container* Executor::evaluateMemberAccessExpression(AST::BinaryOperationExpression* expression) {
+    Container* structure = this->evaluateExpression(expression->getLeft());
+    Container* member = this->evaluateExpression(expression->getRight());
+
+    Value* structureValue = structure->getValue();
+    Value* memberValue = member->getValue();
+
+    Container* result = NULL;
+
+    // choose search type
+    if (Shared::Classes::isInstanceOf<Value, ClassValue>(structureValue)) {
+      result = this->evaluateStaticMemberAccessExpression(Shared::Classes::cast<Value, ClassValue>(structureValue), memberValue);
+    } else {
+      result = this->evaluateInstanceMemberAccessExpression(structureValue, memberValue);
+    }
+
+    // if result is found - return it
+    if (result != NULL) return result;
+    
+    throw ExpressionException(expression->getPosition(), "Member cannot be resolved");
+  }
+  Container* Executor::evaluateStaticMemberAccessExpression(ClassValue* structure, Value* member) {
+    // get fields
+    std::vector<Field> fields = structure->getFields();
+
+    // check class fields (static fields)
+    // all the static fields are put to fields list
+    // values of static fields are the pointers for base class fields (same values)
+    for (int i = 0; i < fields.size(); i++) {
+      // only static fields can be accessed through class name
+      if (fields[i].getType() != FieldType::STATIC) continue;
+
+      // check the member identifier
+      if (!compareValues(fields[i].getKey(), member)) continue;
+
+      // private can be used only if the current context is a class
+      if (fields[i].getAccess() == FieldAccess::PRIVATE && !compareValues(fields[i].getClassOwner(), this->currentContextClass)) continue;
+      // protected can be used only if the current context is a super class of a class
+      if (fields[i].getAccess() == FieldAccess::PROTECTED && !isInstanceOf(fields[i].getClassOwner(), this->currentContextClass)) continue;
+
+      // if all the filters are passed 
+      Container* result = this->createConstantContainer(fields[i].getValue());
+      this->memory.addTemporaryContainer(result);
+
+      return result;
+    }
+
+    // TODO: check prototype
+
+    return NULL;
+  }
+  Container* Executor::evaluateInstanceMemberAccessExpression(Value* structure, Value* member) {
+    // check if a structure is object
+    if (Shared::Classes::isInstanceOf<Value, ObjectValue>(structure)) {
+      ObjectValue* castedValue = Shared::Classes::cast<Value, ObjectValue>(structure);
+      std::vector<Field> entries = castedValue->getEntries();
+
+      for (int i = 0; i < entries.size(); i++) {
+        // check the member identifier
+        if (!compareValues(entries[i].getKey(), member)) continue;
+
+        // private fields can be accessed only if the context is a constructor class
+        if (entries[i].getAccess() == FieldAccess::PRIVATE && !compareValues(entries[i].getClassOwner(), this->currentContextClass)) continue;
+        // protected fields can be accessed only if the context is super class of constructor
+        if (entries[i].getAccess() == FieldAccess::PROTECTED && !isInstanceOf(entries[i].getClassOwner(), this->currentContextClass)) continue;
+
+        // if all the filters are passed 
+        Container* result = this->createConstantContainer(entries[i].getValue());
+        this->memory.addTemporaryContainer(result);
+
+        return result;
+      }
+    }
+
+    // otherwise the field is only in prototype
+    // TODO: check prototype
+
+    return NULL;
+  }
+  Container* Executor::evaluatePrototypeMemberAccessExpression(Value* prototype, Value* member) {
+    return NULL;
+  }
+
   // unary expression
   Container* Executor::evaluateNotExpression(AST::UnaryOperationExpression* expression) {
     Container* originalExpression = this->evaluateExpression(expression->getOperand());
@@ -472,7 +606,7 @@ namespace Runtime {
   Container* Executor::evaluateBitNotExpression(AST::UnaryOperationExpression* expression) {
     Container* operandContainer = this->evaluateExpression(expression->getOperand());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(operandContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(operandContainer->getValue())) {
       long long operandValue = NumberValue::getDataOf(operandContainer->getValue());
 
       Value* result = new NumberValue(~operandValue);
@@ -490,7 +624,7 @@ namespace Runtime {
     Container* operandContainer = this->evaluateExpression(expression->getOperand());
     if (operandContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
-    if (Shared::isInstanceOf<Value, NumberValue>(operandContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(operandContainer->getValue())) {
       double operandValue = NumberValue::getDataOf(operandContainer->getValue());
 
       Value* result = new NumberValue(operandValue + 1);
@@ -506,7 +640,7 @@ namespace Runtime {
     Container* operandContainer = this->evaluateExpression(expression->getOperand());
     if (operandContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
-    if (Shared::isInstanceOf<Value, NumberValue>(operandContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(operandContainer->getValue())) {
       double operandValue = NumberValue::getDataOf(operandContainer->getValue());
 
       Value* result = new NumberValue(operandValue - 1);
@@ -520,28 +654,12 @@ namespace Runtime {
   }
 
   // binary expressions
-  Container* Executor::evaluateAssignExpression(AST::BinaryOperationExpression* expression) {
-    Container* leftContainer = this->evaluateExpression(expression->getLeft());
-    if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
-
-    Container* rightContainer = this->evaluateExpression(expression->getRight());
-
-    this->memory.releaseValue(leftContainer->getValue());
-    this->memory.retainValue(rightContainer->getValue());
-
-    leftContainer->setValue(rightContainer->getValue());
-
-    return leftContainer;
-  }
-  Container* Executor::evaluateMemberAccessExpression(AST::BinaryOperationExpression* expression) {
-    throw Exception("Not implemented");
-  }
   Container* Executor::evaluateAdditionExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
     // number + number
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double leftValue = NumberValue::getDataOf(leftContainer->getValue());
       double rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -555,7 +673,7 @@ namespace Runtime {
     }
 
     // string + string
-    if (Shared::isInstanceOf<Value, StringValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, StringValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, StringValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, StringValue>(rightContainer->getValue())) {
       std::string leftValue = StringValue::getDataOf(leftContainer->getValue());
       std::string rightValue = StringValue::getDataOf(rightContainer->getValue());
 
@@ -575,7 +693,7 @@ namespace Runtime {
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
     // number - number
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double leftValue = NumberValue::getDataOf(leftContainer->getValue());
       double rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -595,7 +713,7 @@ namespace Runtime {
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
     // number * number
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double leftValue = NumberValue::getDataOf(leftContainer->getValue());
       double rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -615,7 +733,7 @@ namespace Runtime {
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
     // number / number
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double leftValue = NumberValue::getDataOf(leftContainer->getValue());
       double rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -634,7 +752,7 @@ namespace Runtime {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double leftValue = NumberValue::getDataOf(leftContainer->getValue());
       double rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -653,7 +771,7 @@ namespace Runtime {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       long long leftValue = (long long)NumberValue::getDataOf(leftContainer->getValue());
       long long rightValue = (long long)NumberValue::getDataOf(rightContainer->getValue());
 
@@ -672,7 +790,7 @@ namespace Runtime {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       long long leftValue = NumberValue::getDataOf(leftContainer->getValue());
       long long rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -691,7 +809,7 @@ namespace Runtime {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       long long leftValue = NumberValue::getDataOf(leftContainer->getValue());
       long long rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -710,7 +828,7 @@ namespace Runtime {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       long long leftValue = NumberValue::getDataOf(leftContainer->getValue());
       long long rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -729,7 +847,7 @@ namespace Runtime {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       long long leftValue = NumberValue::getDataOf(leftContainer->getValue());
       long long rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -748,7 +866,7 @@ namespace Runtime {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       long long leftValue = NumberValue::getDataOf(leftContainer->getValue());
       long long rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -769,7 +887,7 @@ namespace Runtime {
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double left = NumberValue::getDataOf(leftContainer->getValue());
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -781,7 +899,7 @@ namespace Runtime {
 
       leftContainer->setValue(result);
     }
-    if (Shared::isInstanceOf<Value, StringValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, StringValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, StringValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, StringValue>(rightContainer->getValue())) {
       std::string left = StringValue::getDataOf(leftContainer->getValue());
       std::string right = StringValue::getDataOf(rightContainer->getValue());
 
@@ -802,7 +920,7 @@ namespace Runtime {
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double left = NumberValue::getDataOf(leftContainer->getValue());
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -823,7 +941,7 @@ namespace Runtime {
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double left = NumberValue::getDataOf(leftContainer->getValue());
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -844,7 +962,7 @@ namespace Runtime {
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double left = NumberValue::getDataOf(leftContainer->getValue());
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -865,7 +983,7 @@ namespace Runtime {
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double left = NumberValue::getDataOf(leftContainer->getValue());
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -886,7 +1004,7 @@ namespace Runtime {
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       long long left = NumberValue::getDataOf(leftContainer->getValue());
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -907,7 +1025,7 @@ namespace Runtime {
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       long long left = NumberValue::getDataOf(leftContainer->getValue());
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -928,7 +1046,7 @@ namespace Runtime {
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       long long left = NumberValue::getDataOf(leftContainer->getValue());
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -949,7 +1067,7 @@ namespace Runtime {
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       long long left = NumberValue::getDataOf(leftContainer->getValue());
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -970,7 +1088,7 @@ namespace Runtime {
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       long long left = NumberValue::getDataOf(leftContainer->getValue());
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -991,7 +1109,7 @@ namespace Runtime {
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       long long left = NumberValue::getDataOf(leftContainer->getValue());
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
@@ -1046,7 +1164,7 @@ namespace Runtime {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double left = NumberValue::getDataOf(leftContainer->getValue());
       double right = NumberValue::getDataOf(rightContainer->getValue());
       
@@ -1064,7 +1182,7 @@ namespace Runtime {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double left = NumberValue::getDataOf(leftContainer->getValue());
       double right = NumberValue::getDataOf(rightContainer->getValue());
       
@@ -1082,7 +1200,7 @@ namespace Runtime {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double left = NumberValue::getDataOf(leftContainer->getValue());
       double right = NumberValue::getDataOf(rightContainer->getValue());
       
@@ -1100,7 +1218,7 @@ namespace Runtime {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
-    if (Shared::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
+    if (Shared::Classes::isInstanceOf<Value, NumberValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, NumberValue>(rightContainer->getValue())) {
       double left = NumberValue::getDataOf(leftContainer->getValue());
       double right = NumberValue::getDataOf(rightContainer->getValue());
       
@@ -1151,10 +1269,14 @@ namespace Runtime {
   Container* Executor::evaluateParenthesesApplicationExpression(AST::GroupingApplicationExpression* expression) {
     // validate function type
     Container* functionContainer = this->evaluateExpression(expression->getLeft());
-    if (!Shared::isInstanceOf<Value, FunctionValue>(functionContainer->getValue())) {
+    if (!Shared::Classes::isInstanceOf<Value, FunctionValue>(functionContainer->getValue())) {
       throw ExpressionException(expression->getPosition(), "Not a function");
     }
-    FunctionValue* functionValue = Shared::cast<Value, FunctionValue>(functionContainer->getValue());
+    FunctionValue* functionValue = Shared::Classes::cast<Value, FunctionValue>(functionContainer->getValue());
+
+    // create new scope level
+    // TODO: set function closure
+    this->memory.getCurrentStack()->addScope(Scope());
 
     // get arguments
     std::vector<AST::Expression*> argumentExpressions = expression->getRight()->getExpressions();
@@ -1174,7 +1296,11 @@ namespace Runtime {
     Value* result = functionValue->execute(arguments);
     Container* resultContainer = this->createConstantContainer(result);
 
-    this->memory.addContainerToStack(resultContainer);
+    // leave function scope
+    this->memory.getCurrentStack()->removeScope();
+    // TODO: set current stack
+
+    this->memory.getCurrentStack()->addContainer(resultContainer);
     return resultContainer;
   }
   Container* Executor::evaluateSquareBracketsApplicationExpression(AST::GroupingApplicationExpression*) {
@@ -1183,11 +1309,11 @@ namespace Runtime {
  
   // builtins
   Container* Executor::executeBuiltinDeclaration(Builtins::BuiltinDeclaration* statement) {
-    if (Shared::isInstanceOf<Builtins::BuiltinDeclaration, Builtins::ConstantBuiltinDeclaration>(statement)) {
-      return this->executeBuiltinConstantDeclaration(Shared::cast<Builtins::BuiltinDeclaration, Builtins::ConstantBuiltinDeclaration>(statement));
+    if (Shared::Classes::isInstanceOf<Builtins::BuiltinDeclaration, Builtins::ConstantBuiltinDeclaration>(statement)) {
+      return this->executeBuiltinConstantDeclaration(Shared::Classes::cast<Builtins::BuiltinDeclaration, Builtins::ConstantBuiltinDeclaration>(statement));
     }
-    if (Shared::isInstanceOf<Builtins::BuiltinDeclaration, Builtins::FunctionBuiltinDeclaration>(statement)) {
-      return this->executeBuiltinFunctionDeclaration(Shared::cast<Builtins::BuiltinDeclaration, Builtins::FunctionBuiltinDeclaration>(statement));
+    if (Shared::Classes::isInstanceOf<Builtins::BuiltinDeclaration, Builtins::FunctionBuiltinDeclaration>(statement)) {
+      return this->executeBuiltinFunctionDeclaration(Shared::Classes::cast<Builtins::BuiltinDeclaration, Builtins::FunctionBuiltinDeclaration>(statement));
     }
 
     throw Exception("Invalid builtin statement found");
@@ -1214,7 +1340,7 @@ namespace Runtime {
       return result;
     };
 
-    FunctionValue* functionValue = new FunctionValue(this->memory.cloneCurrentStack(), callable, statement->getArgumentsAmount());
+    FunctionValue* functionValue = new FunctionValue(*this->memory.getCurrentStack(), NULL, callable, statement->getArgumentsAmount());
 
     Container* functionContainer = new Container(statement->getName(), functionValue, true);
     return functionContainer;
@@ -1225,6 +1351,6 @@ namespace Runtime {
     return new Container("", value, true);
   }
   bool Executor::isExecutionOnTopLevel() {
-    return this->memory.getCurrentStackIndex() <= TOP_LEVEL_STACK_SIZE;
+    return this->memory.getCurrentStack()->getSize() <= TOP_LEVEL_STACK_SIZE;
   }
 }

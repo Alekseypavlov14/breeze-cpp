@@ -7,7 +7,6 @@
 #include "parser/exception.h"
 #include "lexer/lexer.h"
 #include "base/exception.h"
-#include "shared/utils.h"
 
 int main() {
   std::cout << "=== Execution starts ===" << std::endl;

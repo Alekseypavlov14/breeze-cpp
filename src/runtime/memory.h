@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <set>
 
 #include "runtime/stack.h"
 #include "runtime/types.h"
@@ -15,38 +16,50 @@ namespace Runtime {
       // keeps track of modules exports
       // exports contains containers from stacks and scopes
       std::vector<ExportsRegistry> exports;
-      
-      // pointers to current operating entities
+
+      // reference to current stack
+      Stack* currentStack;
+      // reference to current exports
+      ExportsRegistry* currentExports;
+
+      // indexes for processing module (to update current fields)
       int currentStackIndex;
       int currentExportsIndex;
       
       // keeps track of all used variables (containers)
       // containers only point to values, flat structure
       // flat structure -> retain/release is enough
-      std::vector<Container*> containers;
+      std::set<Container*> containers;
       // keeps track of all used values (containers point to value)
       // values can point to other values, cyclic structure
       // cyclic structure -> has to be released recursively and checked for accessibility
-      std::vector<Value*> values;
+      std::set<Value*> values;
       
       // count allocated memory references
       // used to release memory when nobody uses it
       std::unordered_map<Container*, int> containerReferenceCount;
       std::unordered_map<Value*, int> valuesReferenceCount;
+
+      // holds list of pointers to permanent containers
+      // are used for classes and type definitions
+      std::set<Container*> permanentContainers;
+      // holds list of pointers to permanent values
+      // are used for classes and type definitions
+      std::set<Value*> permanentValues;
       
       // holds list of pointers to temporary containers
       // temporary containers are used for expressions
-      std::vector<Container*> temporaryContainers;
+      std::set<Container*> temporaryContainers;
       // holds list of pointers to temporary values 
       // temporary values are used for expression computations
-      std::vector<Value*> temporaryValues;
+      std::set<Value*> temporaryValues;
       
       // utility that optimizes value operations
       // searches value and its children and adds them to this.processingValues
       void recursivelySearchValues(Value*);
       // used during operations to prevent loops
       // particularly used for recursive values releasing
-      std::vector<Value*> processingValues;
+      std::set<Value*> processingValues;
       
       // deletes all containers and counts
       void removeAllContainers();
@@ -60,33 +73,19 @@ namespace Runtime {
       // creates stacks, exports registries for each module
       // is called before module graph executed
       void prepareStructuresForModules(int modulesAmount);
-      void loadBuiltinContainers(std::vector<Container*>);
+
+      // methods to work with stack and exports
+      Stack* getCurrentStack();
+      ExportsRegistry* getCurrentExportsRegistry();
+
+      void setCurrentStack(Stack*);
+      void setCurrentExportsRegistry(ExportsRegistry*);
       
       void setCurrentStackByIndex(int);
       void setCurrentExportsRegistryByIndex(int);
 
       int getCurrentStackIndex();
-      int getCurrentExportsRegistryByIndex();
-
-      // stack usage
-      void addScopeToStack();
-      void removeScopeFromStack();
-      // add container to current stack
-      bool addContainerToStack(Container* container);
-      std::vector<Container*> getContainersFromCurrentScope();
-      // get container by name
-      Container* getContainerFromStack(std::string);
-      // remove container from current stack
-      bool removeContainerFromStack(std::string);
-      // clone current stack to create closure
-      Stack cloneCurrentStack();
-      // current stack size
-      int getCurrentStackSize();
-      
-      // exports usage
-      bool addContainerToExports(Container* container);
-      std::vector<Container*> getContainersFromExports();
-      Container* getContainerFromExports(std::string);
+      int getCurrentExportsRegistryIndex();
       
       // control containers usage
       // increment pointer reference count
@@ -101,11 +100,18 @@ namespace Runtime {
       void retainValue(Value* value);
       // decrement pointer reference count and remove unused values recursively
       void releaseValue(Value* value);
+
+      // methods to work with permanent containers
+      void addPermanentContainer(Container*);
+      // methods to work with permanent values
+      void addPermanentValue(Value*);
       
+      // methods to work with temp containers
       void addTemporaryContainer(Container*);
       void excludeTemporaryContainer(Container*);
       void clearTemporaryContainers();
 
+      // methods to work with temp values
       void addTemporaryValue(Value*);
       void excludeTemporaryValue(Value*);
       void clearTemporaryValues();

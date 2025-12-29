@@ -24,26 +24,37 @@ namespace Runtime {
       Resolution::ModulesLoader loader;
       Memory memory;
 
+      // used to validate members access
+      ClassValue* currentContextClass;
+      Value* currentContentObject;
+
       // general statement execution
       void executeStatement(AST::Statement*);
 
+      // control statements
       void executeBlockStatement(AST::BlockStatement* statement);
+      // declarative statements
       Container* executeVariableDeclarationStatement(AST::VariableDeclarationStatement* statement);
       Container* executeConstantDeclarationStatement(AST::ConstantDeclarationStatement* statement);
+      // loops statements
       void executeConditionStatement(AST::ConditionStatement* statement);
       void executeWhileStatement(AST::WhileStatement* statement);
       void executeForStatement(AST::ForStatement* statement);
       void executeBreakStatement();
       void executeContinueStatement();
+      // functional statements
       Container* executeFunctionDeclarationStatement(AST::FunctionDeclarationStatement* statement);
       void executeReturnStatement(AST::ReturnStatement* statement);
+      // import/export statements
       void executeImportStatement(AST::ImportStatement* statement);
       void executeExportStatement(AST::ExportStatement* statement);
       Container* executeExportingStatement(AST::Statement* statement);
+      // OOP statements
       Container* executeClassDeclarationStatement(AST::ClassDeclarationStatement* statement);
       Container* executeClassMemberDeclarationStatement(AST::ClassMemberDeclarationStatement* statement);
       Container* executeClassFieldDeclarationStatement(AST::ClassFieldDeclarationStatement* statement);
       Container* executeClassMethodDeclarationStatement(AST::ClassMethodDeclarationStatement* statement);
+      // expression statement
       void executeExpressionStatement(AST::ExpressionStatement* statement);
 
       // general expression evaluation
@@ -58,15 +69,20 @@ namespace Runtime {
       Container* evaluateGroupingApplicationExpression(AST::GroupingApplicationExpression*);
       Container* evaluateAssociationExpression(AST::AssociationExpression*);
 
+      // special expression types
+      Container* evaluateAssignExpression(AST::BinaryOperationExpression*);
+      Container* evaluateMemberAccessExpression(AST::BinaryOperationExpression*);
+      Container* evaluateStaticMemberAccessExpression(ClassValue*, Value*);
+      Container* evaluateInstanceMemberAccessExpression(Value*, Value*);
+      Container* evaluatePrototypeMemberAccessExpression(Value*, Value*);
+
       // unary expressions
       Container* evaluateNotExpression(AST::UnaryOperationExpression*);
       Container* evaluateBitNotExpression(AST::UnaryOperationExpression*);
       Container* evaluateIncrementExpression(AST::UnaryOperationExpression*);
       Container* evaluateDecrementExpression(AST::UnaryOperationExpression*);
-
+      
       // binary expressions
-      Container* evaluateAssignExpression(AST::BinaryOperationExpression*);
-      Container* evaluateMemberAccessExpression(AST::BinaryOperationExpression*);
       Container* evaluateAdditionExpression(AST::BinaryOperationExpression*);
       Container* evaluateSubtractionExpression(AST::BinaryOperationExpression*);
       Container* evaluateMultiplicationExpression(AST::BinaryOperationExpression*);

@@ -64,6 +64,9 @@ namespace Runtime {
       // returns flag if the container is added successfully
       bool addContainer(Container*);
 
+      // get all stack containers
+      std::vector<Container*> getContainers();
+
       // returns containers from upper scope
       std::vector<Container*> getContainersFromCurrentScope();
 

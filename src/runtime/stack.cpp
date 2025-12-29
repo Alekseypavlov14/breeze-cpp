@@ -82,6 +82,17 @@ namespace Runtime {
     if (this->scopes.size() == 0) return false;
     return this->scopes[this->scopes.size() - 1].addContainer(container);
   }
+  std::vector<Container*> Stack::getContainers() {
+    std::vector<Container*> containers = {};
+
+    for (int i = 0; i < this->scopes.size(); i++) {
+      for (int j = 0; j < this->scopes[i].getContainers().size(); j++) {
+        containers.push_back(this->scopes[i].getContainers()[j]);
+      }
+    }
+
+    return containers;
+  }
   std::vector<Container*> Stack::getContainersFromCurrentScope() {
     if (this->scopes.size() == 0) return {};
     return this->scopes[this->scopes.size() - 1].getContainers();
