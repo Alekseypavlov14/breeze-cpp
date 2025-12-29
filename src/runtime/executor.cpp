@@ -20,12 +20,12 @@ namespace Runtime {
     for (int m = 0; m < this->loader.getModules().size(); m++) {
       // create builtin scopes in every stack
       this->memory.setCurrentStackByIndex(m);
-      this->memory.getCurrentStack()->addScope(Scope());
+      this->addScopeInCurrentStack();
 
       // load all declarations
       for (int i = 0; i < moduleDeclarations.size(); i++) {
         for (int j = 0; j < moduleDeclarations[i].size(); j++) {
-          this->memory.getCurrentStack()->addContainer(this->executeBuiltinDeclaration(moduleDeclarations[i][j]));
+          this->addContainerToCurrentStack(this->executeBuiltinDeclaration(moduleDeclarations[i][j]));
         }
       }
     }
@@ -90,7 +90,7 @@ namespace Runtime {
     throw StatementException(statement->getPosition(), "Invalid statement");
   }
   void Executor::executeBlockStatement(AST::BlockStatement* statement) {
-    this->memory.getCurrentStack()->addScope(Scope());
+    this->addScopeInCurrentStack();
 
     for (int i = 0; i < statement->getStatements().size(); i++) {
       this->executeStatement(statement->getStatements()[i]);
@@ -98,26 +98,22 @@ namespace Runtime {
       this->memory.clearTemporaryContainers();
       this->memory.clearTemporaryValues();
     }
-
+    
     this->memory.removeUnreachableValues();
-    this->memory.getCurrentStack()->removeScope();
+    this->removeScopeFromCurrentStack();
   }
   Container* Executor::executeVariableDeclarationStatement(AST::VariableDeclarationStatement* statement) {
     Container* initialization = this->evaluateExpression(statement->getInitializer());
     Container* variableContainer = new Container(statement->getName().getCode(), initialization->getValue());
     
-    this->memory.getCurrentStack()->addContainer(variableContainer);
-    this->memory.retainContainer(variableContainer);
-
+    this->addContainerToCurrentStack(variableContainer);
     return variableContainer;
   }
   Container* Executor::executeConstantDeclarationStatement(AST::ConstantDeclarationStatement* statement) {
     Container* initialization = this->evaluateExpression(statement->getInitializer());
     Container* constantContainer = new Container(statement->getName().getCode(), initialization->getValue(), true);
 
-    this->memory.getCurrentStack()->addContainer(constantContainer);
-    this->memory.retainContainer(constantContainer);
-
+    this->addContainerToCurrentStack(constantContainer);
     return constantContainer;
   }
   void Executor::executeConditionStatement(AST::ConditionStatement *statement) {
@@ -141,7 +137,7 @@ namespace Runtime {
     } 
   }
   void Executor::executeForStatement(AST::ForStatement *statement) {
-    this->memory.getCurrentStack()->addScope(Scope());
+    this->addScopeInCurrentStack();
 
     this->executeStatement(statement->getInitializer());
 
@@ -155,7 +151,7 @@ namespace Runtime {
       this->evaluateExpression(statement->getIncrement());
     } 
 
-    this->memory.getCurrentStack()->removeScope();
+    this->removeScopeFromCurrentStack();
   }
   void Executor::executeBreakStatement() {
     throw Exception("Not implemented");
@@ -194,7 +190,7 @@ namespace Runtime {
       this->memory.retainContainer(containersInCurrentStack[i]);
     }
 
-    FunctionValue* functionValue = new FunctionValue(*this->memory.getCurrentStack(), this->currentContentObject, callable, argumentsAmount);
+    FunctionValue* functionValue = new FunctionValue(this->copyCurrentStack(), this->currentContentObject, callable, argumentsAmount);
     
     // TODO: set current context
     throw Exception("Not implemented");
@@ -229,26 +225,27 @@ namespace Runtime {
 
       for (int i = 0; i < exports.size(); i++) {
         Container* constantSymbol = new Container(exports[i]->getName(), exports[i]->getValue(), true);
-        this->memory.getCurrentStack()->addContainer(constantSymbol);
+        this->addContainerToCurrentStack(constantSymbol);
       }
-    } else {
-      // otherwise export each symbol
+    } 
+    // otherwise export each symbol
+    else {
       for (int i = 0; i < statement->getImports().size(); i++) {
         Lexer::Token currentImportSymbol = statement->getImports()[i];
         Container* currentImportContainer = this->memory.getCurrentExportsRegistry()->getContainerByName(currentImportSymbol.getCode());
   
         Container* constantSymbol = new Container(currentImportSymbol.getCode(), currentImportContainer->getValue(), true);
-        this->memory.getCurrentStack()->addContainer(constantSymbol);
+        this->addContainerToCurrentStack(constantSymbol);
       }
     }
 
     // return pointer to current exports
-    this->memory.setCurrentStackByIndex(this->memory.getCurrentStackIndex());
+    this->memory.setCurrentExportsRegistryByIndex(this->memory.getCurrentStackIndex());
   }
   void Executor::executeExportStatement(AST::ExportStatement *statement) {
     Container* exportingSymbol = this->executeExportingStatement(statement);
-    this->memory.retainContainer(exportingSymbol);
     this->memory.getCurrentExportsRegistry()->addContainer(exportingSymbol);
+    this->memory.retainContainer(exportingSymbol);
   }
   Container* Executor::executeExportingStatement(AST::Statement* statement) {
     if (Shared::Classes::isInstanceOf<AST::Statement, AST::ConstantDeclarationStatement>(statement)) {
@@ -277,8 +274,7 @@ namespace Runtime {
   Container* Executor::executeClassMethodDeclarationStatement(AST::ClassMethodDeclarationStatement *statement) {
     throw Exception("Not implemented");
   }
-  void Executor::executeExpressionStatement(AST::ExpressionStatement *statement)
-  {
+  void Executor::executeExpressionStatement(AST::ExpressionStatement *statement) {
     this->evaluateExpression(statement->getExpression());
   }
 
@@ -316,9 +312,7 @@ namespace Runtime {
     NullValue* nullValue = new NullValue();
     this->memory.addTemporaryValue(nullValue);
 
-    Container* container = this->createConstantContainer(nullValue);
-    this->memory.addTemporaryContainer(container);
-
+    Container* container = this->createTemporaryConstantContainer(nullValue);
     return container;
   }
   Container* Executor::evaluateLiteralExpression(AST::LiteralExpression* expression) {
@@ -346,9 +340,7 @@ namespace Runtime {
 
     this->memory.addTemporaryValue(value);
 
-    Container* container = this->createConstantContainer(value);
-    this->memory.addTemporaryContainer(container);
-
+    Container* container = this->createTemporaryConstantContainer(value);
     return container;
   }
   Container* Executor::evaluateIdentifierExpression(AST::IdentifierExpression* expression) {
@@ -549,9 +541,7 @@ namespace Runtime {
       if (fields[i].getAccess() == FieldAccess::PROTECTED && !isInstanceOf(fields[i].getClassOwner(), this->currentContextClass)) continue;
 
       // if all the filters are passed 
-      Container* result = this->createConstantContainer(fields[i].getValue());
-      this->memory.addTemporaryContainer(result);
-
+      Container* result = this->createTemporaryConstantContainer(fields[i].getValue());
       return result;
     }
 
@@ -575,9 +565,7 @@ namespace Runtime {
         if (entries[i].getAccess() == FieldAccess::PROTECTED && !isInstanceOf(entries[i].getClassOwner(), this->currentContextClass)) continue;
 
         // if all the filters are passed 
-        Container* result = this->createConstantContainer(entries[i].getValue());
-        this->memory.addTemporaryContainer(result);
-
+        Container* result = this->createTemporaryConstantContainer(entries[i].getValue());
         return result;
       }
     }
@@ -598,9 +586,7 @@ namespace Runtime {
     BooleanValue* complementedValue = new BooleanValue(!getBoolean(originalExpression->getValue()));
     this->memory.addTemporaryValue(complementedValue);
     
-    Container* complementedContainer = this->createConstantContainer(complementedValue);
-    this->memory.addTemporaryContainer(complementedContainer);
-
+    Container* complementedContainer = this->createTemporaryConstantContainer(complementedValue);
     return complementedContainer;
   }
   Container* Executor::evaluateBitNotExpression(AST::UnaryOperationExpression* expression) {
@@ -612,9 +598,7 @@ namespace Runtime {
       Value* result = new NumberValue(~operandValue);
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -628,7 +612,7 @@ namespace Runtime {
       double operandValue = NumberValue::getDataOf(operandContainer->getValue());
 
       Value* result = new NumberValue(operandValue + 1);
-      this->memory.addTemporaryValue(result);
+      this->memory.retainValue(result);
 
       this->memory.releaseValue(operandContainer->getValue());
       operandContainer->setValue(result);
@@ -644,7 +628,7 @@ namespace Runtime {
       double operandValue = NumberValue::getDataOf(operandContainer->getValue());
 
       Value* result = new NumberValue(operandValue - 1);
-      this->memory.addTemporaryValue(result);
+      this->memory.retainValue(result);
 
       this->memory.releaseValue(operandContainer->getValue());
       operandContainer->setValue(result);
@@ -666,9 +650,7 @@ namespace Runtime {
       NumberValue* result = new NumberValue(leftValue + rightValue);
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -680,9 +662,7 @@ namespace Runtime {
       StringValue* result = new StringValue(leftValue + rightValue);
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -700,9 +680,7 @@ namespace Runtime {
       NumberValue* result = new NumberValue(leftValue - rightValue);
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -720,9 +698,7 @@ namespace Runtime {
       NumberValue* result = new NumberValue(leftValue * rightValue);
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -740,9 +716,7 @@ namespace Runtime {
       NumberValue* result = new NumberValue(leftValue / rightValue);
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -759,9 +733,7 @@ namespace Runtime {
       NumberValue* result = new NumberValue(std::pow(leftValue, rightValue));
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -778,9 +750,7 @@ namespace Runtime {
       NumberValue* result = new NumberValue(leftValue % rightValue);
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -797,9 +767,7 @@ namespace Runtime {
       NumberValue* result = new NumberValue(leftValue & rightValue);
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -816,9 +784,7 @@ namespace Runtime {
       NumberValue* result = new NumberValue(leftValue | rightValue);
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -835,9 +801,7 @@ namespace Runtime {
       NumberValue* result = new NumberValue(leftValue ^ rightValue);
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -854,9 +818,7 @@ namespace Runtime {
       NumberValue* result = new NumberValue(leftValue << rightValue);
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -873,9 +835,7 @@ namespace Runtime {
       NumberValue* result = new NumberValue(leftValue >> rightValue);
       this->memory.addTemporaryValue(result);
 
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
-
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -892,10 +852,9 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left + right);
-      this->memory.addTemporaryValue(result);
 
       this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(rightContainer->getValue());
+      this->memory.retainValue(result);
 
       leftContainer->setValue(result);
     }
@@ -904,10 +863,9 @@ namespace Runtime {
       std::string right = StringValue::getDataOf(rightContainer->getValue());
 
       Value* result = new StringValue(left + right);
-      this->memory.addTemporaryValue(result);
 
       this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(rightContainer->getValue());
+      this->memory.retainValue(result);
 
       leftContainer->setValue(result);
     }
@@ -925,10 +883,9 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left - right);
-      this->memory.addTemporaryValue(result);
       
       this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(rightContainer->getValue());
+      this->memory.retainValue(result);
 
       leftContainer->setValue(result);
     }
@@ -946,10 +903,9 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left * right);
-      this->memory.addTemporaryValue(result);
 
       this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(rightContainer->getValue());
+      this->memory.retainValue(result);
 
       leftContainer->setValue(result);
     }
@@ -967,10 +923,9 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left / right);
-      this->memory.addTemporaryValue(result);
 
       this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(rightContainer->getValue());
+      this->memory.retainValue(result);
 
       leftContainer->setValue(result);
     }
@@ -988,10 +943,9 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(std::pow(left, right));
-      this->memory.addTemporaryValue(result);
 
       this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(rightContainer->getValue());
+      this->memory.retainValue(result);
 
       leftContainer->setValue(result);
     }
@@ -1009,10 +963,9 @@ namespace Runtime {
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left % right);
-      this->memory.addTemporaryValue(result);
 
       this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(rightContainer->getValue());
+      this->memory.retainValue(result);
 
       leftContainer->setValue(result);
     }
@@ -1030,10 +983,9 @@ namespace Runtime {
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left & right);
-      this->memory.addTemporaryValue(result);
 
       this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(rightContainer->getValue());
+      this->memory.retainValue(result);
 
       leftContainer->setValue(result);
     }
@@ -1051,10 +1003,9 @@ namespace Runtime {
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left | right);
-      this->memory.addTemporaryValue(result);
 
       this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(rightContainer->getValue());
+      this->memory.retainValue(result);
 
       leftContainer->setValue(result);
     }
@@ -1072,10 +1023,9 @@ namespace Runtime {
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left ^ right);
-      this->memory.addTemporaryValue(result);
 
       this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(rightContainer->getValue());
+      this->memory.retainValue(result);
 
       leftContainer->setValue(result);
     }
@@ -1093,10 +1043,9 @@ namespace Runtime {
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left << right);
-      this->memory.addTemporaryValue(result);
 
       this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(rightContainer->getValue());
+      this->memory.retainValue(result);
 
       leftContainer->setValue(result);
     }
@@ -1114,10 +1063,9 @@ namespace Runtime {
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left >> right);
-      this->memory.addTemporaryValue(result);
 
       this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(rightContainer->getValue());
+      this->memory.retainValue(result);
 
       leftContainer->setValue(result);
     }
@@ -1145,8 +1093,7 @@ namespace Runtime {
     BooleanValue* result = new BooleanValue(compareValues(leftContainer->getValue(), rightContainer->getValue()));
     this->memory.addTemporaryValue(result);
     
-    Container* resultContainer = this->createConstantContainer(result);
-    this->memory.addTemporaryContainer(resultContainer);
+    Container* resultContainer = this->createTemporaryConstantContainer(result);
     return resultContainer;
   }
   Container* Executor::evaluateNotEqualExpression(AST::BinaryOperationExpression* expression) {
@@ -1156,8 +1103,7 @@ namespace Runtime {
     BooleanValue* result = new BooleanValue(!compareValues(leftContainer->getValue(), rightContainer->getValue()));
     this->memory.addTemporaryValue(result);
     
-    Container* resultContainer = this->createConstantContainer(result);
-    this->memory.addTemporaryContainer(resultContainer);
+    Container* resultContainer = this->createTemporaryConstantContainer(result);
     return resultContainer;
   }
   Container* Executor::evaluateGreaterThanExpression(AST::BinaryOperationExpression* expression) {
@@ -1171,8 +1117,7 @@ namespace Runtime {
       BooleanValue* result = new BooleanValue(left > right);
       this->memory.addTemporaryValue(result);
       
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -1189,8 +1134,7 @@ namespace Runtime {
       BooleanValue* result = new BooleanValue(left < right);
       this->memory.addTemporaryValue(result);
       
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -1207,8 +1151,7 @@ namespace Runtime {
       BooleanValue* result = new BooleanValue(left >= right);
       this->memory.addTemporaryValue(result);
       
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -1225,8 +1168,7 @@ namespace Runtime {
       BooleanValue* result = new BooleanValue(left <= right);
       this->memory.addTemporaryValue(result);
       
-      Container* resultContainer = this->createConstantContainer(result);
-      this->memory.addTemporaryContainer(resultContainer);
+      Container* resultContainer = this->createTemporaryConstantContainer(result);
       return resultContainer;
     }
 
@@ -1239,7 +1181,7 @@ namespace Runtime {
       NullValue* value = new NullValue();
       this->memory.addTemporaryValue(value);
 
-      return this->createConstantContainer(value);
+      return this->createTemporaryConstantContainer(value);
     }
 
     Container* result = nullptr;
@@ -1259,9 +1201,7 @@ namespace Runtime {
       list->push(this->evaluateExpression(expression->getExpressions()[i])->getValue());
     }
 
-    Container* result = this->createConstantContainer(list);
-    this->memory.addTemporaryContainer(result);
-
+    Container* result = this->createTemporaryConstantContainer(list);
     return result;
   }
 
@@ -1273,34 +1213,42 @@ namespace Runtime {
       throw ExpressionException(expression->getPosition(), "Not a function");
     }
     FunctionValue* functionValue = Shared::Classes::cast<Value, FunctionValue>(functionContainer->getValue());
-
-    // create new scope level
-    // TODO: set function closure
-    this->memory.getCurrentStack()->addScope(Scope());
-
+    
     // get arguments
     std::vector<AST::Expression*> argumentExpressions = expression->getRight()->getExpressions();
     std::vector<Value*> arguments = {};
-
+    
     for (int i = 0; i < argumentExpressions.size(); i++) {
       arguments.push_back(this->evaluateExpression(argumentExpressions[i])->getValue());
     }
-
+    
     // validate arguments amount
     FunctionArgumentsAmount functionArgumentsAmount = functionValue->getArgumentsAmount();
     if (arguments.size() < functionArgumentsAmount.getRequiredArgumentsAmount() || arguments.size() > functionArgumentsAmount.getTotalArgumentsAmount()) {
       throw ExpressionException(expression->getPosition(), "Invalid arguments amount");
     }
 
+    // create stable stack 
+    Stack* stableFunctionStack = new Stack(functionValue->getClosure());
+    
+    // create new scope level
+    this->memory.setCurrentStack(stableFunctionStack);
+    this->addScopeInCurrentStack();
+
     // execute function
     Value* result = functionValue->execute(arguments);
-    Container* resultContainer = this->createConstantContainer(result);
+    this->memory.addTemporaryValue(result);
+
+    Container* resultContainer = this->createTemporaryConstantContainer(result);
 
     // leave function scope
-    this->memory.getCurrentStack()->removeScope();
-    // TODO: set current stack
+    this->removeScopeFromCurrentStack();
+    this->memory.setCurrentStackByIndex(this->memory.getCurrentStackIndex());
 
-    this->memory.getCurrentStack()->addContainer(resultContainer);
+    // remove stable function stack
+    delete stableFunctionStack;
+
+    this->addContainerToCurrentStack(resultContainer);
     return resultContainer;
   }
   Container* Executor::evaluateSquareBracketsApplicationExpression(AST::GroupingApplicationExpression*) {
@@ -1340,16 +1288,33 @@ namespace Runtime {
       return result;
     };
 
-    FunctionValue* functionValue = new FunctionValue(*this->memory.getCurrentStack(), NULL, callable, statement->getArgumentsAmount());
+    FunctionValue* functionValue = new FunctionValue(this->copyCurrentStack(), NULL, callable, statement->getArgumentsAmount());
 
     Container* functionContainer = new Container(statement->getName(), functionValue, true);
     return functionContainer;
   }
 
-  // utils
-  Container* Executor::createConstantContainer(Value* value) {
-    return new Container("", value, true);
+  // memory management
+  Stack Executor::copyCurrentStack() {
+    return Stack(*this->memory.getCurrentStack());
   }
+  void Executor::addScopeInCurrentStack() {
+    this->memory.getCurrentStack()->addScope(Scope());
+  }
+  void Executor::removeScopeFromCurrentStack() {
+    this->memory.getCurrentStack()->removeScope();
+  }
+  void Executor::addContainerToCurrentStack(Container* container) {
+    this->memory.getCurrentStack()->addContainer(container);
+    this->memory.retainContainer(container);
+  }
+  Container* Executor::createTemporaryConstantContainer(Value* value) {
+    Container* container = new Container("", value, true);
+    this->memory.addTemporaryContainer(container);
+    return container;
+  }
+  
+  // utils
   bool Executor::isExecutionOnTopLevel() {
     return this->memory.getCurrentStack()->getSize() <= TOP_LEVEL_STACK_SIZE;
   }

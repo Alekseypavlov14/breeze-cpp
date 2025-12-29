@@ -127,8 +127,14 @@ namespace Runtime {
       Container* executeBuiltinConstantDeclaration(Builtins::ConstantBuiltinDeclaration* statement);
       Container* executeBuiltinFunctionDeclaration(Builtins::FunctionBuiltinDeclaration* statement);
 
+      // memory management
+      Stack copyCurrentStack();
+      void addScopeInCurrentStack();
+      void removeScopeFromCurrentStack();
+      void addContainerToCurrentStack(Container*);
+      Container* createTemporaryConstantContainer(Value*);
+      
       // utils
-      Container* createConstantContainer(Value*);
       bool isExecutionOnTopLevel();
   };
 }
