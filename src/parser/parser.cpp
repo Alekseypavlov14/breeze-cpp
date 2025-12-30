@@ -638,8 +638,9 @@ namespace Parser {
     this->skipSingleLineSpaceTokens();
 
     // check for extensions
-    AST::Expression* extendedExpression;
+    AST::Expression* extendedExpression = NULL;
 
+    // TODO: implement multiple extension
     if (this->matchToken(Specification::TokenType::EXTENDS_KEYWORD_TOKEN)) {
       this->consumeCurrentToken();
       this->skipSingleLineSpaceTokens();
@@ -651,9 +652,6 @@ namespace Parser {
     
       extendedExpression = this->parseExpression(NULL, BASE_PRECEDENCE, terminators);
     }
-    else {
-      extendedExpression = new AST::NullExpression(className.getPosition());
-    }
 
     this->skipMultilineSpaceTokens();
 
@@ -662,6 +660,8 @@ namespace Parser {
     Lexer::Token blockToken = this->consumeCurrentToken();
 
     std::vector<AST::ClassMemberDeclarationStatement*> declarations = {};
+
+    this->skipMultilineSpaceTokens();
 
     // parse declarations
     while (!this->isEnd() && !this->matchToken(Specification::TokenType::RIGHT_CURLY_BRACE_TOKEN)) {
@@ -675,6 +675,8 @@ namespace Parser {
 
     this->requireToken(Specification::TokenType::RIGHT_CURLY_BRACE_TOKEN);
     this->consumeCurrentToken();
+
+    this->requireNewlineForNextStatement();
 
     return new AST::ClassDeclarationStatement(classToken.getPosition(), className, extendedExpression, declarations);
   }

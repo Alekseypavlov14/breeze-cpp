@@ -1,0 +1,23 @@
+// empty class
+class Car {}
+
+// class with derivation
+class MercedesCar extends Car {}
+
+// members
+class MyClass {
+  // fields
+  field1
+  const field2
+  static field3
+  static const field4
+
+  field5 = 5
+  const field6 = 6
+  static field7 = 7
+  static const field8 = 8
+
+  // methods
+  method1() {}
+  static method2() {}
+}
