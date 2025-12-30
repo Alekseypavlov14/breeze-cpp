@@ -10,5 +10,8 @@ namespace Shared {
 
       // checks if a string starts with a certain substring
       static bool startsWith(std::string, std::string);
+
+      // unescape special characters
+      static std::string unescape(std::string);
   };
 }

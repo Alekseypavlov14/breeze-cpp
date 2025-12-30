@@ -40,11 +40,17 @@ namespace Lexer {
 
         // extract the smallest group (used to extract strings content)
         std::string smallestMatch = match[0].str();
+
         // check other groups if they contain smaller groups
         for (int i = 1; i < match.size(); i++) {
-          if (match[i].str().length() < smallestMatch.length() && match[i].str().size() > 0) {
+          if (match[i].str().size() < smallestMatch.size() && match[i].matched) {
             smallestMatch = match[i].str();
           }
+        }
+
+        // check if a string is parsed
+        if (Specification::TOKEN_SPECIFICATIONS[i].type == Specification::TokenType::STRING_TOKEN) {
+          smallestMatch = Shared::Strings::unescape(smallestMatch);
         }
 
         // initialize token type

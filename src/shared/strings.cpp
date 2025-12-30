@@ -19,4 +19,27 @@ namespace Shared {
 
     return true;
   }
+
+  std::string Strings::unescape(std::string source) {
+    std::string result;
+
+    for (int i = 0; i < source.size(); ++i) {
+      if (source[i] == '\\' && (i + 1) < source.size()) {
+        switch (source[i + 1]) {
+          case 'n':  result.push_back('\n'); ++i; break;
+          case 't':  result.push_back('\t'); ++i; break;
+          case 'r':  result.push_back('\r'); ++i; break;
+          case '\\': result.push_back('\\'); ++i; break;
+          case '\'': result.push_back('\''); ++i; break;
+          case '\"': result.push_back('\"'); ++i; break;
+          case '0':  result.push_back('\0'); ++i; break;
+          default:   result.push_back(source[i]); break;
+        }
+      } else {
+        result.push_back(source[i]);
+      }
+    }
+
+    return result;
+  }
 }

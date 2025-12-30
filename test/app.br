@@ -1,2 +1,1 @@
-var a = 2 + 2
-_builtins_console_output(_builtins_types_string(a))
+_builtins_console_output("hello world\n")
