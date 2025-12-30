@@ -197,16 +197,19 @@ namespace Runtime {
     return this->optionalArguments;
   }
 
-  FunctionValue::FunctionValue(Stack stack, Value* context, Callable callable, FunctionArgumentsAmount arguments) {
+  FunctionValue::FunctionValue(Stack* stack, Value* context, Callable callable, FunctionArgumentsAmount arguments) {
     this->closure = stack;
     this->context = context;
     this->callable = callable;
     this->argumentsAmount = arguments;
   }
+  FunctionValue::~FunctionValue() {
+    delete this->closure;
+  }
   DataType FunctionValue::getType() {
     return DataType::Function;
   }
-  Stack FunctionValue::getClosure() {
+  Stack* FunctionValue::getClosure() {
     return this->closure;
   }
   Value* FunctionValue::getContext() {

@@ -257,7 +257,7 @@ namespace Runtime {
   class FunctionValue: public CompoundValue {
     private:
       // copy of the stack at the moment of declaration
-      Stack closure;
+      Stack* closure;
       // context is used to define this for methods (NULL for functions)
       Value* context;
       Callable callable;
@@ -265,11 +265,12 @@ namespace Runtime {
       FunctionArgumentsAmount argumentsAmount;
 
     public:
-      FunctionValue(Stack, Value*, Callable, FunctionArgumentsAmount);
+      FunctionValue(Stack*, Value*, Callable, FunctionArgumentsAmount);
+      ~FunctionValue();
 
       DataType getType();
 
-      Stack getClosure();
+      Stack* getClosure();
       Value* getContext();
       Value* execute(std::vector<Value*>); 
       FunctionArgumentsAmount getArgumentsAmount();

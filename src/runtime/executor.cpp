@@ -1,5 +1,6 @@
 #include "executor.h"
 #include "runtime/exceptions.h"
+#include "runtime/signals.h"
 #include "shared/classes.h"
 #include "shared/vectors.h"
 
@@ -63,10 +64,10 @@ namespace Runtime {
       return this->executeForStatement(Shared::Classes::cast<AST::Statement, AST::ForStatement>(statement));
     }
     if (Shared::Classes::isInstanceOf<AST::Statement, AST::BreakStatement>(statement)) {
-      return this->executeBreakStatement();
+      return this->executeBreakStatement(Shared::Classes::cast<AST::Statement, AST::BreakStatement>(statement));
     }
     if (Shared::Classes::isInstanceOf<AST::Statement, AST::ContinueStatement>(statement)) {
-      return this->executeContinueStatement();
+      return this->executeContinueStatement(Shared::Classes::cast<AST::Statement, AST::ContinueStatement>(statement));
     }
     if (Shared::Classes::isInstanceOf<AST::Statement, AST::FunctionDeclarationStatement>(statement)) {
       this->executeFunctionDeclarationStatement(Shared::Classes::cast<AST::Statement, AST::FunctionDeclarationStatement>(statement));
@@ -156,20 +157,26 @@ namespace Runtime {
 
     this->removeScopeFromCurrentStack();
   }
-  void Executor::executeBreakStatement() {
-    throw Exception("Not implemented");
+  void Executor::executeBreakStatement(AST::BreakStatement* statement) {
+    throw BreakSignal(statement);
   }
-  void Executor::executeContinueStatement() {
-    throw Exception("Not implemented");
+  void Executor::executeContinueStatement(AST::ContinueStatement* statement) {
+    throw ContinueSignal(statement);
   }
   Container* Executor::executeFunctionDeclarationStatement(AST::FunctionDeclarationStatement *statement) {
+    // retain all containers
+    std::vector<Container*> containersInCurrentStack = this->memory.getCurrentStack()->getContainers();
+    for (int i = 0; i < containersInCurrentStack.size(); i++) {
+      this->memory.retainContainer(containersInCurrentStack[i]);
+    }
+    
     // parse arguments amount
     int totalArgumentsAmount = 0;
     int optionalArgumentsAmount = 0;
     bool isOptionalParamReached = false;
 
     for (int i = 0; i < statement->getParams().size(); i++) {
-      if (statement->getParams()[i]->getDefaultValue() == NULL) {
+      if (statement->getParams()[i]->getDefaultValue() != NULL) {
         isOptionalParamReached = true;
         optionalArgumentsAmount++;
       } else if (isOptionalParamReached) {
@@ -182,48 +189,71 @@ namespace Runtime {
     // compose function arguments
     FunctionArgumentsAmount argumentsAmount(totalArgumentsAmount, optionalArgumentsAmount);
     
+    // create closure
+    Stack* functionClosure = new Stack(this->copyCurrentStack());
+
     // construct callable
-    Callable callable = [this, statement](std::vector<Value*> arguments) -> Value* {
+    Callable callable = [this, functionClosure, statement](std::vector<Value*> arguments) -> Value* {
       // TODO: set current context
       
       // assign context
       // TODO: assign "this" value
 
-      // assign arguments
+      // get arguments values
+      std::vector<Value*> argumentValues = {};
+      // assign argument values
       for (int i = 0; i < statement->getParams().size(); i++) {
-        Value* argumentValue = NULL;
-
         // if an argument is passed: use it
         if (i < arguments.size()) {
-          argumentValue = arguments[i];
+          argumentValues.push_back(arguments[i]);
         }
         // otherwise check default ones 
         else {
-          argumentValue = this->evaluateExpression(statement->getParams()[i]->getDefaultValue())->getValue();
-        }
-        
-        Container* argument = new Container(statement->getParams()[i]->getName().getCode(), arguments[i]);
-        this->addContainerToCurrentStack(argument);
+          argumentValues.push_back(this->evaluateExpression(statement->getParams()[i]->getDefaultValue())->getValue());
+        }  
+      }
+      
+      // go to function stack
+      this->memory.setCurrentStack(functionClosure);
+      this->addScopeInCurrentStack();
+      
+      // add argument containers to function stack
+      for (int i = 0; i < argumentValues.size(); i++) {
+        Container* argumentContainer = new Container(statement->getParams()[i]->getName().getCode(), argumentValues[i]);
+        this->addContainerToCurrentStack(argumentContainer);
       }
 
-      this->executeStatement(statement->getBody());
-      // TODO: handle return
+      // execute function body
+      try {
+        this->executeStatement(statement->getBody());
+      }
+      catch(ReturnSignal returnSignal) {
+        // leave function stack
+        this->removeScopeFromCurrentStack();
+        this->memory.setCurrentStackByIndex(this->memory.getCurrentStackIndex());
+
+        return returnSignal.getValue();
+      }
+
+      // leave function stack
+      this->removeScopeFromCurrentStack();
+      this->memory.setCurrentStackByIndex(this->memory.getCurrentStackIndex());
+      
+      // default return
+      return new NullValue;
     };
 
-    // retain all containers
-    std::vector<Container*> containersInCurrentStack = this->memory.getCurrentStack()->getContainers();
-    for (int i = 0; i < containersInCurrentStack.size(); i++) {
-      this->memory.retainContainer(containersInCurrentStack[i]);
-    }
-
-    FunctionValue* functionValue = new FunctionValue(this->copyCurrentStack(), this->currentContentObject, callable, argumentsAmount);
+    FunctionValue* functionValue = new FunctionValue(functionClosure, this->currentContentObject, callable, argumentsAmount);
     Container* functionContainer = new Container(statement->getName().getCode(), functionValue, true);
     this->addContainerToCurrentStack(functionContainer);
 
     return functionContainer;
   }
   void Executor::executeReturnStatement(AST::ReturnStatement *statement) {
-    throw Exception("Not implemented");
+    Container* returnContainer = this->evaluateExpression(statement->getReturns());
+    this->addContainerToCurrentStack(returnContainer);
+
+    throw ReturnSignal(statement, returnContainer->getValue());
   }
   void Executor::executeImportStatement(AST::ImportStatement *statement) {
     if (!this->isExecutionOnTopLevel()) {
@@ -1259,27 +1289,11 @@ namespace Runtime {
       throw ExpressionException(expression->getPosition(), "Invalid arguments amount");
     }
 
-    // create stable stack 
-    Stack* stableFunctionStack = new Stack(functionValue->getClosure());
-    
-    // create new scope level
-    this->memory.setCurrentStack(stableFunctionStack);
-    this->addScopeInCurrentStack();
-
     // execute function
     Value* result = functionValue->execute(arguments);
     this->memory.addTemporaryValue(result);
-
+    
     Container* resultContainer = this->createTemporaryConstantContainer(result);
-
-    // leave function scope
-    this->removeScopeFromCurrentStack();
-    this->memory.setCurrentStackByIndex(this->memory.getCurrentStackIndex());
-
-    // remove stable function stack
-    delete stableFunctionStack;
-
-    this->addContainerToCurrentStack(resultContainer);
     return resultContainer;
   }
   Container* Executor::evaluateSquareBracketsApplicationExpression(AST::GroupingApplicationExpression*) {
@@ -1319,7 +1333,8 @@ namespace Runtime {
       return result;
     };
 
-    FunctionValue* functionValue = new FunctionValue(this->copyCurrentStack(), NULL, callable, statement->getArgumentsAmount());
+    Stack* functionClosure = new Stack(this->copyCurrentStack());
+    FunctionValue* functionValue = new FunctionValue(functionClosure, NULL, callable, statement->getArgumentsAmount());
 
     Container* functionContainer = new Container(statement->getName(), functionValue, true);
     return functionContainer;
@@ -1333,6 +1348,12 @@ namespace Runtime {
     this->memory.getCurrentStack()->addScope(Scope());
   }
   void Executor::removeScopeFromCurrentStack() {
+    std::vector<Container*> containers = this->memory.getCurrentStack()->getContainersFromCurrentScope();
+    
+    for (int i = 0; i < containers.size(); i++) {
+      this->memory.releaseContainer(containers[i]);
+    }
+    
     this->memory.getCurrentStack()->removeScope();
   }
   void Executor::addContainerToCurrentStack(Container* container) {

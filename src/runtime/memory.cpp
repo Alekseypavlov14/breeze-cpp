@@ -253,7 +253,7 @@ namespace Runtime {
       FunctionValue* functionValue = Shared::Classes::cast<Value, FunctionValue>(value);
       this->recursivelySearchValues(functionValue);
 
-      std::vector<Container*> containers = functionValue->getClosure().getContainers();
+      std::vector<Container*> containers = functionValue->getClosure()->getContainers();
       for (int i = 0; i < containers.size(); i++) {
         this->recursivelySearchValues(containers[i]->getValue());        
       } 

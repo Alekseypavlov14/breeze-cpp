@@ -40,8 +40,8 @@ namespace Runtime {
       void executeConditionStatement(AST::ConditionStatement* statement);
       void executeWhileStatement(AST::WhileStatement* statement);
       void executeForStatement(AST::ForStatement* statement);
-      void executeBreakStatement();
-      void executeContinueStatement();
+      void executeBreakStatement(AST::BreakStatement* statement);
+      void executeContinueStatement(AST::ContinueStatement* statement);
       // functional statements
       Container* executeFunctionDeclarationStatement(AST::FunctionDeclarationStatement* statement);
       void executeReturnStatement(AST::ReturnStatement* statement);

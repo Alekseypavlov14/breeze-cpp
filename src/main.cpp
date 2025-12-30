@@ -14,7 +14,7 @@ int main() {
   try {
     Runtime::Executor executor;
   
-    executor.loadModulesFromEntrypoint("C:/Users/User/Desktop/programming-language/cpp/test/functions-declarations.br");
+    executor.loadModulesFromEntrypoint("C:/Users/User/Desktop/programming-language/cpp/test/control-flow.br");
     executor.registerBuiltins(Builtins::declarations);
 
     executor.execute();

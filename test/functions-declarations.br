@@ -4,3 +4,17 @@ function greet(name) {
 }
 
 greet("Hello")
+
+// default parameters
+function say(phrase = "Hi") {
+  _builtins_console_output(phrase)
+}
+
+say()
+
+// returns
+function add(a, b) {
+  return a + b
+}
+
+_builtins_console_output(_builtins_types_string(add(2, 2)))
