@@ -25,6 +25,8 @@ for (var i = 0; i < 10; i++) {
 
 // general statements block
 {
-  a = 1
-  b = 2
+  const a = 1
+  const b = 2
 }
+
+_builtins_console_output(_builtins_types_string(counter))

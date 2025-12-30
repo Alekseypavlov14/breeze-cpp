@@ -199,9 +199,8 @@ namespace Runtime {
       // assign context
       // TODO: assign "this" value
 
-      // get arguments values
+      // initialize argument values
       std::vector<Value*> argumentValues = {};
-      // assign argument values
       for (int i = 0; i < statement->getParams().size(); i++) {
         // if an argument is passed: use it
         if (i < arguments.size()) {
