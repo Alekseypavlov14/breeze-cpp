@@ -137,7 +137,15 @@ namespace Runtime {
 
       if (!getBoolean(conditionValue)) break;
 
-      this->executeStatement(statement->getBody());
+      try {
+        this->executeStatement(statement->getBody());
+      }
+      catch (BreakSignal signal) {
+        break;
+      }
+      catch (ContinueSignal signal) {
+        continue;
+      }
     } 
   }
   void Executor::executeForStatement(AST::ForStatement *statement) {
@@ -151,7 +159,17 @@ namespace Runtime {
 
       if (!getBoolean(conditionValue)) break;
 
-      this->executeStatement(statement->getBody());
+      try {
+        this->executeStatement(statement->getBody());
+      }
+      catch (BreakSignal signal) {
+        break;
+      }
+      catch (ContinueSignal signal) {
+        this->evaluateExpression(statement->getIncrement());
+        continue;
+      }
+
       this->evaluateExpression(statement->getIncrement());
     } 
 
