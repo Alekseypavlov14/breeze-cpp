@@ -1,0 +1,4 @@
+// definition of constants
+const name = "Alex"
+// definition of variables
+var age = 19

@@ -59,6 +59,9 @@ namespace Runtime {
     if (Shared::Classes::isInstanceOf<AST::Statement, AST::WhileStatement>(statement)) {
       return this->executeWhileStatement(Shared::Classes::cast<AST::Statement, AST::WhileStatement>(statement));
     }
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::ForStatement>(statement)) {
+      return this->executeForStatement(Shared::Classes::cast<AST::Statement, AST::ForStatement>(statement));
+    }
     if (Shared::Classes::isInstanceOf<AST::Statement, AST::BreakStatement>(statement)) {
       return this->executeBreakStatement();
     }
@@ -105,7 +108,7 @@ namespace Runtime {
   Container* Executor::executeVariableDeclarationStatement(AST::VariableDeclarationStatement* statement) {
     Container* initialization = this->evaluateExpression(statement->getInitializer());
     Container* variableContainer = new Container(statement->getName().getCode(), initialization->getValue());
-    
+
     this->addContainerToCurrentStack(variableContainer);
     return variableContainer;
   }
@@ -180,8 +183,31 @@ namespace Runtime {
     FunctionArgumentsAmount argumentsAmount(totalArgumentsAmount, optionalArgumentsAmount);
     
     // construct callable
-    Callable callable = [this, statement](std::vector<Value*>) -> Value* {
-      return NULL;
+    Callable callable = [this, statement](std::vector<Value*> arguments) -> Value* {
+      // TODO: set current context
+      
+      // assign context
+      // TODO: assign "this" value
+
+      // assign arguments
+      for (int i = 0; i < statement->getParams().size(); i++) {
+        Value* argumentValue = NULL;
+
+        // if an argument is passed: use it
+        if (i < arguments.size()) {
+          argumentValue = arguments[i];
+        }
+        // otherwise check default ones 
+        else {
+          argumentValue = this->evaluateExpression(statement->getParams()[i]->getDefaultValue())->getValue();
+        }
+        
+        Container* argument = new Container(statement->getParams()[i]->getName().getCode(), arguments[i]);
+        this->addContainerToCurrentStack(argument);
+      }
+
+      this->executeStatement(statement->getBody());
+      // TODO: handle return
     };
 
     // retain all containers
@@ -191,9 +217,10 @@ namespace Runtime {
     }
 
     FunctionValue* functionValue = new FunctionValue(this->copyCurrentStack(), this->currentContentObject, callable, argumentsAmount);
-    
-    // TODO: set current context
-    throw Exception("Not implemented");
+    Container* functionContainer = new Container(statement->getName().getCode(), functionValue, true);
+    this->addContainerToCurrentStack(functionContainer);
+
+    return functionContainer;
   }
   void Executor::executeReturnStatement(AST::ReturnStatement *statement) {
     throw Exception("Not implemented");
@@ -616,6 +643,8 @@ namespace Runtime {
 
       this->memory.releaseValue(operandContainer->getValue());
       operandContainer->setValue(result);
+
+      return operandContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"++\" is used with invalid type");
@@ -632,6 +661,8 @@ namespace Runtime {
 
       this->memory.releaseValue(operandContainer->getValue());
       operandContainer->setValue(result);
+
+      return operandContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"--\" is used with invalid type");

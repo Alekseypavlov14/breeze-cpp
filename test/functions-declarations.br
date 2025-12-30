@@ -1,0 +1,6 @@
+// function declaration
+function greet(name) {
+  _builtins_console_output(name)
+}
+
+greet("Hello")

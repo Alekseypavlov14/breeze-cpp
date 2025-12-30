@@ -1,0 +1,24 @@
+// // condition statement
+// const condition = true
+
+// if (condition) {
+//   // some operations
+// }
+// else {
+//   // some operations
+// }
+
+
+// // while statement
+// var counter = 0
+
+// while (counter < 10) {
+//   // do some operations
+
+//   counter++
+// }
+
+// for statement
+for (var i = 0; i < 10; i++) {
+  // do some operations
+}

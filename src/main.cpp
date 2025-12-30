@@ -14,7 +14,7 @@ int main() {
   try {
     Runtime::Executor executor;
   
-    executor.loadModulesFromEntrypoint("C:/Users/User/Desktop/programming-language/cpp/test/app.br");
+    executor.loadModulesFromEntrypoint("C:/Users/User/Desktop/programming-language/cpp/test/functions-declarations.br");
     executor.registerBuiltins(Builtins::declarations);
 
     executor.execute();
@@ -22,15 +22,7 @@ int main() {
     std::cout << "ParserException: " << e.getMessage() << e.getPosition().serialize() << std::endl;
   } catch(Base::Exception e) {
     std::cout << "Message: " << e.getMessage() << std::endl;
-  } catch(Base::SourceCodeException e) {
-    std::cout << "Message: " << e.getMessage() << ", position: " << e.getPosition().serialize() << std::endl;
-  } catch(Runtime::Exception e) {
-    std::cout << "Runtime exception" << std::endl;
-  } catch(Resolution::Exception e) {
-    std::cout << "Resolution exception" << std::endl;
-  } catch(std::exception e) {
-    std::cout << "Oops" << e.what() << std::endl;
-  }
+  } 
 
   std::cout << "=== Execution ends ===" << std::endl;
 

@@ -21,8 +21,8 @@ namespace Parser {
       AST::VariableDeclarationStatement* parseVariableDeclaration(std::vector<Specification::TokenType> terminators);
       AST::ConstantDeclarationStatement* parseConstantDeclaration(std::vector<Specification::TokenType> terminators);
       AST::ConditionStatement* parseConditionStatement(std::vector<Specification::TokenType> terminators);
-      AST::ForStatement* parseForStatement(std::vector<Specification::TokenType> terminators);
       AST::WhileStatement* parseWhileStatement(std::vector<Specification::TokenType> terminators);
+      AST::ForStatement* parseForStatement(std::vector<Specification::TokenType> terminators);
       AST::BreakStatement* parseBreakStatement();
       AST::ContinueStatement* parseContinueStatement();
       AST::FunctionDeclarationStatement* parseFunctionDeclarationStatement();

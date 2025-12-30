@@ -1,0 +1,73 @@
+// variable declarations
+var a = 1
+var b = 2
+var c = 3
+
+// assignment operators
+a = b
+a += b
+a -= b
+a *= b
+a /= b
+a %= b
+a **= b
+a &= b
+a |= b
+a ^= b
+a <<= b
+a >>= b
+
+// logical operators
+var l1 = a && b
+var l2 = a || b
+var l3 = !a
+
+// bitwise operators
+var bw1 = a & b
+var bw2 = a | b
+var bw3 = a ^ b
+var bw4 = ~a
+var bw5 = a << b
+var bw6 = a >> b
+
+// comparison operators
+var c1 = a == b
+var c2 = a != b
+var c3 = a > b
+var c4 = a >= b
+var c5 = a < b
+var c6 = a <= b
+
+// arithmetic operators
+var m1 = a + b
+var m2 = a - b
+var m3 = a * b
+var m4 = a / b
+var m5 = a % b
+var m6 = a ** b
+
+// increment / decrement
+a++
+b--
+
+// grouping
+var g1 = (a + b) * c
+var g2 = a * (b + c)
+var g3 = [1, 2, 3]
+
+// dot operator
+// obj.field
+// obj.method(a, b)
+
+// new keyword
+// var obj2 = new MyClass()
+
+// lambda
+var f = (x, y) => x + y
+var r = f(a, b)
+
+// association / block
+{
+  var inner = a + b
+  inner++
+}

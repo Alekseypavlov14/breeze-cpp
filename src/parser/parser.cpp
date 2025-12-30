@@ -5,6 +5,8 @@
 #include "shared/classes.h"
 #include "shared/vectors.h"
 
+#include <iostream>
+
 namespace Parser {
   // parser class implementation
   Parser::Parser() {
@@ -120,7 +122,7 @@ namespace Parser {
         throw Exception(position, "Invalid variable initialization");
       }
 
-      this->requireNewlineForNextStatement();
+      this->skipMultilineSpaceTokens();
 
       // compose variable declaration statement
       AST::VariableDeclarationStatement* variableDeclarationStatement = new AST::VariableDeclarationStatement(variableToken.getPosition(), identifier, initializer);
@@ -152,21 +154,23 @@ namespace Parser {
 
     // consume assign token
     this->requireToken(Specification::TokenType::ASSIGN_TOKEN);
-    this->skipToken(Specification::TokenType::SPACE_TOKEN);
+    this->consumeCurrentToken();
+
+    this->skipSingleLineSpaceTokens();
 
     // update terminators list
     std::vector<Specification::TokenType> newTerminators = terminators;
     newTerminators.push_back(Specification::TokenType::NEWLINE_TOKEN);
 
     AST::Expression* initializer = this->parseExpression(NULL, BASE_PRECEDENCE, newTerminators);
-    
+
     // check if it is not NullExpression
     if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(initializer)) {
       Base::Position position = this->getCurrentToken().getPosition();
       throw Exception(position, "Invalid constant initialization");
     }
 
-    this->requireNewlineForNextStatement();
+    this->skipMultilineSpaceTokens();
 
     // compose declaration statement
     AST::ConstantDeclarationStatement* constantDeclarationStatement = new AST::ConstantDeclarationStatement(constantToken.getPosition(), identifier, initializer);
@@ -245,6 +249,56 @@ namespace Parser {
 
     AST::ConditionStatement* conditionStatement = new AST::ConditionStatement(ifToken.getPosition(), conditionExpression, thenStatement, elseStatement);
     return conditionStatement;
+  }
+  AST::WhileStatement* Parser::parseWhileStatement(std::vector<Specification::TokenType> terminators) {
+    // require while keyword
+    this->requireToken(Specification::TokenType::WHILE_KEYWORD_TOKEN);
+    Lexer::Token whileToken = this->consumeCurrentToken();
+  
+    this->skipSingleLineSpaceTokens();
+
+    this->requireToken(Specification::TokenType::LEFT_PARENTHESES_TOKEN);
+    this->consumeCurrentToken();
+
+    this->skipMultilineSpaceTokens();
+
+    std::vector<Specification::TokenType> conditionTerminators = {};
+    conditionTerminators.push_back(Specification::TokenType::RIGHT_PARENTHESES_TOKEN);
+
+    // parse condition
+    AST::Expression* condition = this->parseExpression(NULL, BASE_PRECEDENCE, conditionTerminators);
+  
+    if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(condition)) {
+      Base::Position position = this->getCurrentToken().getPosition();
+      throw Exception(position, "Invalid while loop condition");
+    }
+
+    this->skipMultilineSpaceTokens();
+
+    // require right parentheses
+    this->requireToken(Specification::TokenType::RIGHT_PARENTHESES_TOKEN);
+    this->consumeCurrentToken();
+
+    this->skipMultilineSpaceTokens();
+
+    // check if file is finished
+    if (this->isEnd()) {
+      Base::Position position = this->getPreviousToken().getPosition();
+      throw Exception(position, "Invalid while loop body");
+    }
+
+    // parse body
+    AST::Statement* body = this->parseStatement(terminators);
+
+    if (Shared::Classes::isInstanceOf<AST::Statement, AST::NullStatement>(body)) {
+      Base::Position position = this->getCurrentToken().getPosition();
+      throw Exception(position, "Invalid while loop body");
+    }
+
+    this->requireNewlineForNextStatement();
+
+    AST::WhileStatement* whileStatement = new AST::WhileStatement(whileToken.getPosition(), condition, body);
+    return whileStatement;
   }
   AST::ForStatement* Parser::parseForStatement(std::vector<Specification::TokenType> terminators) {
     // require FOR keyword
@@ -334,56 +388,6 @@ namespace Parser {
     // compose for loop
     AST::ForStatement* forStatement = new AST::ForStatement(forToken.getPosition(), initializer, condition, increment, body);
     return forStatement;
-  }
-  AST::WhileStatement* Parser::parseWhileStatement(std::vector<Specification::TokenType> terminators) {
-    // require while keyword
-    this->requireToken(Specification::TokenType::WHILE_KEYWORD_TOKEN);
-    Lexer::Token whileToken = this->consumeCurrentToken();
-  
-    this->skipSingleLineSpaceTokens();
-
-    this->requireToken(Specification::TokenType::LEFT_PARENTHESES_TOKEN);
-    this->consumeCurrentToken();
-
-    this->skipMultilineSpaceTokens();
-
-    std::vector<Specification::TokenType> conditionTerminators = {};
-    conditionTerminators.push_back(Specification::TokenType::RIGHT_PARENTHESES_TOKEN);
-
-    // parse condition
-    AST::Expression* condition = this->parseExpression(NULL, BASE_PRECEDENCE, conditionTerminators);
-  
-    if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(condition)) {
-      Base::Position position = this->getCurrentToken().getPosition();
-      throw Exception(position, "Invalid while loop condition");
-    }
-
-    this->skipMultilineSpaceTokens();
-
-    // require right parentheses
-    this->requireToken(Specification::TokenType::RIGHT_PARENTHESES_TOKEN);
-    this->consumeCurrentToken();
-
-    this->skipMultilineSpaceTokens();
-
-    // check if file is finished
-    if (this->isEnd()) {
-      Base::Position position = this->getPreviousToken().getPosition();
-      throw Exception(position, "Invalid while loop body");
-    }
-
-    // parse body
-    AST::Statement* body = this->parseStatement(terminators);
-
-    if (Shared::Classes::isInstanceOf<AST::Statement, AST::NullStatement>(body)) {
-      Base::Position position = this->getCurrentToken().getPosition();
-      throw Exception(position, "Invalid while loop body");
-    }
-
-    this->requireNewlineForNextStatement();
-
-    AST::WhileStatement* whileStatement = new AST::WhileStatement(whileToken.getPosition(), condition, body);
-    return whileStatement;
   }
   AST::BreakStatement* Parser::parseBreakStatement() {
     this->requireToken(Specification::TokenType::BREAK_KEYWORD_TOKEN);
