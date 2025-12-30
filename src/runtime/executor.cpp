@@ -102,7 +102,7 @@ namespace Runtime {
       this->memory.clearTemporaryContainers();
       this->memory.clearTemporaryValues();
     }
-    
+
     this->memory.removeUnreachableValues();
     this->removeScopeFromCurrentStack();
   }
@@ -366,10 +366,7 @@ namespace Runtime {
 
   Container* Executor::evaluateNullExpression() {
     NullValue* nullValue = new NullValue();
-    this->memory.addTemporaryValue(nullValue);
-
-    Container* container = this->createTemporaryConstantContainer(nullValue);
-    return container;
+    return this->createExpressionEvaluationContainer(nullValue);
   }
   Container* Executor::evaluateLiteralExpression(AST::LiteralExpression* expression) {
     Value* value = nullptr;
@@ -394,10 +391,7 @@ namespace Runtime {
       throw TypeException(expression->getPosition(), "Invalid literal expression");
     }
 
-    this->memory.addTemporaryValue(value);
-
-    Container* container = this->createTemporaryConstantContainer(value);
-    return container;
+    return this->createExpressionEvaluationContainer(value);
   }
   Container* Executor::evaluateIdentifierExpression(AST::IdentifierExpression* expression) {
     return this->memory.getCurrentStack()->getContainerByName(expression->getName().getCode());
@@ -548,11 +542,7 @@ namespace Runtime {
     if (leftContainer->getIsConstant()) throw ExpressionException(expression->getPosition(), "Assignment to constant");
 
     Container* rightContainer = this->evaluateExpression(expression->getRight());
-
-    this->memory.releaseValue(leftContainer->getValue());
-    this->memory.retainValue(rightContainer->getValue());
-
-    leftContainer->setValue(rightContainer->getValue());
+    this->handleContainerValueReassignment(leftContainer, rightContainer->getValue());
 
     return leftContainer;
   }
@@ -640,10 +630,7 @@ namespace Runtime {
     Container* originalExpression = this->evaluateExpression(expression->getOperand());
     
     BooleanValue* complementedValue = new BooleanValue(!getBoolean(originalExpression->getValue()));
-    this->memory.addTemporaryValue(complementedValue);
-    
-    Container* complementedContainer = this->createTemporaryConstantContainer(complementedValue);
-    return complementedContainer;
+    return this->createExpressionEvaluationContainer(complementedValue);
   }
   Container* Executor::evaluateBitNotExpression(AST::UnaryOperationExpression* expression) {
     Container* operandContainer = this->evaluateExpression(expression->getOperand());
@@ -652,10 +639,7 @@ namespace Runtime {
       long long operandValue = NumberValue::getDataOf(operandContainer->getValue());
 
       Value* result = new NumberValue(~operandValue);
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"~\" is used with invalid type");
@@ -668,10 +652,7 @@ namespace Runtime {
       double operandValue = NumberValue::getDataOf(operandContainer->getValue());
 
       Value* result = new NumberValue(operandValue + 1);
-      this->memory.retainValue(result);
-
-      this->memory.releaseValue(operandContainer->getValue());
-      operandContainer->setValue(result);
+      this->handleContainerValueReassignment(operandContainer, result);
 
       return operandContainer;
     }
@@ -686,10 +667,7 @@ namespace Runtime {
       double operandValue = NumberValue::getDataOf(operandContainer->getValue());
 
       Value* result = new NumberValue(operandValue - 1);
-      this->memory.retainValue(result);
-
-      this->memory.releaseValue(operandContainer->getValue());
-      operandContainer->setValue(result);
+      this->handleContainerValueReassignment(operandContainer, result);
 
       return operandContainer;
     }
@@ -708,10 +686,7 @@ namespace Runtime {
       double rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
       NumberValue* result = new NumberValue(leftValue + rightValue);
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     // string + string
@@ -720,10 +695,7 @@ namespace Runtime {
       std::string rightValue = StringValue::getDataOf(rightContainer->getValue());
 
       StringValue* result = new StringValue(leftValue + rightValue);
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"+\" is used with invalid type pair");
@@ -738,10 +710,7 @@ namespace Runtime {
       double rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
       NumberValue* result = new NumberValue(leftValue - rightValue);
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"-\" is used with invalid type pair");
@@ -756,10 +725,7 @@ namespace Runtime {
       double rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
       NumberValue* result = new NumberValue(leftValue * rightValue);
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"*\" is used with invalid type pair");
@@ -774,10 +740,7 @@ namespace Runtime {
       double rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
       NumberValue* result = new NumberValue(leftValue / rightValue);
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"/\" is used with invalid type pair");
@@ -791,10 +754,7 @@ namespace Runtime {
       double rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
       NumberValue* result = new NumberValue(std::pow(leftValue, rightValue));
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"**\" is used with invalid type pair");
@@ -808,10 +768,7 @@ namespace Runtime {
       long long rightValue = (long long)NumberValue::getDataOf(rightContainer->getValue());
 
       NumberValue* result = new NumberValue(leftValue % rightValue);
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"%\" is used with invalid type pair");
@@ -825,10 +782,7 @@ namespace Runtime {
       long long rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
       NumberValue* result = new NumberValue(leftValue & rightValue);
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"&\" is used with invalid type pair");
@@ -842,10 +796,7 @@ namespace Runtime {
       long long rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
       NumberValue* result = new NumberValue(leftValue | rightValue);
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"|\" is used with invalid type pair");
@@ -859,10 +810,7 @@ namespace Runtime {
       long long rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
       NumberValue* result = new NumberValue(leftValue ^ rightValue);
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"^\" is used with invalid type pair");
@@ -876,10 +824,7 @@ namespace Runtime {
       long long rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
       NumberValue* result = new NumberValue(leftValue << rightValue);
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"<<\" is used with invalid type pair");
@@ -893,10 +838,7 @@ namespace Runtime {
       long long rightValue = NumberValue::getDataOf(rightContainer->getValue());
 
       NumberValue* result = new NumberValue(leftValue >> rightValue);
-      this->memory.addTemporaryValue(result);
-
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \">>\" is used with invalid type pair");
@@ -912,22 +854,18 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left + right);
+      this->handleContainerValueReassignment(leftContainer, result);
 
-      this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(result);
-
-      leftContainer->setValue(result);
+      return leftContainer;
     }
     if (Shared::Classes::isInstanceOf<Value, StringValue>(leftContainer->getValue()) && Shared::Classes::isInstanceOf<Value, StringValue>(rightContainer->getValue())) {
       std::string left = StringValue::getDataOf(leftContainer->getValue());
       std::string right = StringValue::getDataOf(rightContainer->getValue());
 
       Value* result = new StringValue(left + right);
+      this->handleContainerValueReassignment(leftContainer, result);
 
-      this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(result);
-
-      leftContainer->setValue(result);
+      return leftContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"+=\" is used with invalid type pair");
@@ -943,11 +881,9 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left - right);
-      
-      this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(result);
+      this->handleContainerValueReassignment(leftContainer, result);
 
-      leftContainer->setValue(result);
+      return leftContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"-=\" is used with invalid type pair");
@@ -963,11 +899,9 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left * right);
+      this->handleContainerValueReassignment(leftContainer, result);
 
-      this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(result);
-
-      leftContainer->setValue(result);
+      return leftContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"*=\" is used with invalid type pair");
@@ -983,11 +917,9 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left / right);
+      this->handleContainerValueReassignment(leftContainer, result);
 
-      this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(result);
-
-      leftContainer->setValue(result);
+      return leftContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"/=\" is used with invalid type pair");
@@ -1003,11 +935,9 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(std::pow(left, right));
+      this->handleContainerValueReassignment(leftContainer, result);
 
-      this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(result);
-
-      leftContainer->setValue(result);
+      return leftContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"**=\" is used with invalid type pair");
@@ -1023,11 +953,9 @@ namespace Runtime {
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left % right);
+      this->handleContainerValueReassignment(leftContainer, result);
 
-      this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(result);
-
-      leftContainer->setValue(result);
+      return leftContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"%=\" is used with invalid type pair");
@@ -1043,11 +971,9 @@ namespace Runtime {
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left & right);
+      this->handleContainerValueReassignment(leftContainer, result);
 
-      this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(result);
-
-      leftContainer->setValue(result);
+      return leftContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"&=\" is used with invalid type pair");
@@ -1063,11 +989,9 @@ namespace Runtime {
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left | right);
+      this->handleContainerValueReassignment(leftContainer, result);
 
-      this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(result);
-
-      leftContainer->setValue(result);
+      return leftContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"|=\" is used with invalid type pair");
@@ -1083,11 +1007,9 @@ namespace Runtime {
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left ^ right);
+      this->handleContainerValueReassignment(leftContainer, result);
 
-      this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(result);
-
-      leftContainer->setValue(result);
+      return leftContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"^=\" is used with invalid type pair");
@@ -1103,11 +1025,9 @@ namespace Runtime {
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left << right);
+      this->handleContainerValueReassignment(leftContainer, result);
 
-      this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(result);
-
-      leftContainer->setValue(result);
+      return leftContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \"<<=\" is used with invalid type pair");
@@ -1123,11 +1043,9 @@ namespace Runtime {
       long long right = NumberValue::getDataOf(rightContainer->getValue());
 
       Value* result = new NumberValue(left >> right);
+      this->handleContainerValueReassignment(leftContainer, result);
 
-      this->memory.releaseValue(leftContainer->getValue());
-      this->memory.retainValue(result);
-
-      leftContainer->setValue(result);
+      return leftContainer;
     }
 
     throw TypeException(expression->getPosition(), "Operator \">>=\" is used with invalid type pair");
@@ -1151,20 +1069,14 @@ namespace Runtime {
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
     BooleanValue* result = new BooleanValue(compareValues(leftContainer->getValue(), rightContainer->getValue()));
-    this->memory.addTemporaryValue(result);
-    
-    Container* resultContainer = this->createTemporaryConstantContainer(result);
-    return resultContainer;
+    return this->createExpressionEvaluationContainer(result);
   }
   Container* Executor::evaluateNotEqualExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
     Container* rightContainer = this->evaluateExpression(expression->getRight());
 
     BooleanValue* result = new BooleanValue(!compareValues(leftContainer->getValue(), rightContainer->getValue()));
-    this->memory.addTemporaryValue(result);
-    
-    Container* resultContainer = this->createTemporaryConstantContainer(result);
-    return resultContainer;
+    return this->createExpressionEvaluationContainer(result);
   }
   Container* Executor::evaluateGreaterThanExpression(AST::BinaryOperationExpression* expression) {
     Container* leftContainer = this->evaluateExpression(expression->getLeft());
@@ -1175,10 +1087,7 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
       
       BooleanValue* result = new BooleanValue(left > right);
-      this->memory.addTemporaryValue(result);
-      
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \">\" is used with invalid type pair");
@@ -1192,10 +1101,7 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
       
       BooleanValue* result = new BooleanValue(left < right);
-      this->memory.addTemporaryValue(result);
-      
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"<\" is used with invalid type pair");
@@ -1209,10 +1115,7 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
       
       BooleanValue* result = new BooleanValue(left >= right);
-      this->memory.addTemporaryValue(result);
-      
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \">=\" is used with invalid type pair");
@@ -1226,10 +1129,7 @@ namespace Runtime {
       double right = NumberValue::getDataOf(rightContainer->getValue());
       
       BooleanValue* result = new BooleanValue(left <= right);
-      this->memory.addTemporaryValue(result);
-      
-      Container* resultContainer = this->createTemporaryConstantContainer(result);
-      return resultContainer;
+      return this->createExpressionEvaluationContainer(result);
     }
 
     throw TypeException(expression->getPosition(), "Operator \"<=\" is used with invalid type pair");
@@ -1239,9 +1139,7 @@ namespace Runtime {
   Container* Executor::evaluateParenthesesExpression(AST::GroupingExpression* expression) {
     if (!expression->getExpressions().size()) {
       NullValue* value = new NullValue();
-      this->memory.addTemporaryValue(value);
-
-      return this->createTemporaryConstantContainer(value);
+      return this->createExpressionEvaluationContainer(value);
     }
 
     Container* result = nullptr;
@@ -1255,14 +1153,12 @@ namespace Runtime {
   }
   Container* Executor::evaluateSquareBracketsExpression(AST::GroupingExpression* expression) {
     VectorValue* list = new VectorValue({});
-    this->memory.addTemporaryValue(list);
 
     for (int i = 0; i < expression->getExpressions().size(); i++) {
       list->push(this->evaluateExpression(expression->getExpressions()[i])->getValue());
     }
 
-    Container* result = this->createTemporaryConstantContainer(list);
-    return result;
+    return this->createExpressionEvaluationContainer(list);
   }
 
   // grouping application expressions
@@ -1290,10 +1186,7 @@ namespace Runtime {
 
     // execute function
     Value* result = functionValue->execute(arguments);
-    this->memory.addTemporaryValue(result);
-    
-    Container* resultContainer = this->createTemporaryConstantContainer(result);
-    return resultContainer;
+    return this->createExpressionEvaluationContainer(result);
   }
   Container* Executor::evaluateSquareBracketsApplicationExpression(AST::GroupingApplicationExpression*) {
     throw Exception("Not implemented");
@@ -1359,10 +1252,19 @@ namespace Runtime {
     this->memory.getCurrentStack()->addContainer(container);
     this->memory.retainContainer(container);
   }
+  Container* Executor::createExpressionEvaluationContainer(Value* value) {
+    this->memory.addTemporaryValue(value);
+    return this->createTemporaryConstantContainer(value);
+  }
   Container* Executor::createTemporaryConstantContainer(Value* value) {
     Container* container = new Container("", value, true);
     this->memory.addTemporaryContainer(container);
     return container;
+  }
+  void Executor::handleContainerValueReassignment(Container* container, Value* newValue) {
+    this->memory.retainValue(newValue);
+    this->memory.releaseValue(container->getValue());
+    container->setValue(newValue);
   }
   
   // utils

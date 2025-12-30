@@ -132,7 +132,9 @@ namespace Runtime {
       void addScopeInCurrentStack();
       void removeScopeFromCurrentStack();
       void addContainerToCurrentStack(Container*);
+      Container* createExpressionEvaluationContainer(Value*);
       Container* createTemporaryConstantContainer(Value*);
+      void handleContainerValueReassignment(Container*, Value*);
       
       // utils
       bool isExecutionOnTopLevel();
