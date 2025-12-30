@@ -76,7 +76,9 @@ namespace Runtime {
 
   void Memory::retainContainer(Container* container) {
     this->excludeTemporaryContainer(container);
+    this->containers.insert(container);
     this->containerReferenceCount[container]++;
+
     this->retainValue(container->getValue());
   }
   void Memory::releaseContainer(Container* container) {
@@ -87,7 +89,7 @@ namespace Runtime {
     this->releaseValue(container->getValue());
 
     // clean if nobody refers to this container
-    if (containerCount <= 0) {
+    if (containerCount <= 0 && !Shared::Sets::includes(this->permanentContainers, container)) {
       this->removeContainer(container);
     }
   }
@@ -120,6 +122,7 @@ namespace Runtime {
     // decrement pointer for all releasing values
     for (Value* value: this->processingValues) {
       this->excludeTemporaryValue(value);
+      this->values.insert(value);
       this->valuesReferenceCount[value]++;
     }
   }
@@ -140,7 +143,7 @@ namespace Runtime {
 
     // save only values that are still in use
     for (Value* value: this->values) {
-      if (this->valuesReferenceCount[value] > 0) {
+      if (this->valuesReferenceCount[value] > 0 && !Shared::Sets::includes(this->permanentValues, value)) {
         newValues.insert(value);
       } else {
         // remove unused value
