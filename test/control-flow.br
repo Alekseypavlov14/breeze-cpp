@@ -23,6 +23,14 @@ for (var i = 0; i < 10; i++) {
   // do some operations
 }
 
+// example of continue and break
+for (var i = 0; i < 10; i++) {
+  if (i % 2) continue
+  if (i == 6) break
+
+  _builtins_console_output(_builtins_types_string(i))
+}
+
 // general statements block
 {
   const a = 1

@@ -218,20 +218,19 @@ namespace Parser {
     // parse then statement
     AST::Statement* thenStatement = this->parseStatement(terminators);
 
+    this->skipMultilineSpaceTokens();
+
     // check if null statement
     if (Shared::Classes::isInstanceOf<AST::Statement, AST::NullStatement>(thenStatement)) {
       Base::Position position = this->getCurrentToken().getPosition();
       throw Exception(position, "Invalid condition then branch");
     }
-
-    this->skipMultilineSpaceTokens();
-
+    
     // parse else statement
     AST::Statement* elseStatement = NULL;
 
     if (this->matchToken(Specification::TokenType::ELSE_KEYWORD_TOKEN)) {
       this->consumeCurrentToken();
-
       this->skipSingleLineSpaceTokens();
 
       elseStatement = this->parseStatement(terminators);
@@ -244,8 +243,6 @@ namespace Parser {
     } else {
       elseStatement = new AST::NullStatement(this->getCurrentToken().getPosition());
     }
-
-    this->requireNewlineForNextStatement();
 
     AST::ConditionStatement* conditionStatement = new AST::ConditionStatement(ifToken.getPosition(), conditionExpression, thenStatement, elseStatement);
     return conditionStatement;
@@ -294,8 +291,6 @@ namespace Parser {
       Base::Position position = this->getCurrentToken().getPosition();
       throw Exception(position, "Invalid while loop body");
     }
-
-    this->requireNewlineForNextStatement();
 
     AST::WhileStatement* whileStatement = new AST::WhileStatement(whileToken.getPosition(), condition, body);
     return whileStatement;
@@ -383,8 +378,6 @@ namespace Parser {
       throw Exception(position, "Invalid for loop body");
     }
 
-    this->requireNewlineForNextStatement();
-
     // compose for loop
     AST::ForStatement* forStatement = new AST::ForStatement(forToken.getPosition(), initializer, condition, increment, body);
     return forStatement;
@@ -434,8 +427,6 @@ namespace Parser {
     // parse body
     AST::BlockStatement* body = this->parseBlockStatement();
     
-    this->requireNewlineForNextStatement();
-
     AST::FunctionDeclarationStatement* functionDeclarationStatement = new AST::FunctionDeclarationStatement(functionToken.getPosition(), name, parameters, body); 
     return functionDeclarationStatement;
   }
@@ -618,6 +609,8 @@ namespace Parser {
 
     this->requireToken(Specification::TokenType::RIGHT_CURLY_BRACE_TOKEN);
     this->consumeCurrentToken();
+
+    this->requireNewlineForNextStatement();
    
     AST::BlockStatement* blockStatement = new AST::BlockStatement(blockToken.getPosition(), statements);
     return blockStatement;
