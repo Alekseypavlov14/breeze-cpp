@@ -638,19 +638,45 @@ namespace Parser {
     this->skipSingleLineSpaceTokens();
 
     // check for extensions
-    AST::Expression* extendedExpression = NULL;
+    std::vector<AST::Expression*> extendedExpressions = {};
 
-    // TODO: implement multiple extension
     if (this->matchToken(Specification::TokenType::EXTENDS_KEYWORD_TOKEN)) {
       this->consumeCurrentToken();
       this->skipSingleLineSpaceTokens();
 
       std::vector<Specification::TokenType> terminators = {
+        Specification::TokenType::COMMA_TOKEN,
         Specification::TokenType::NEWLINE_TOKEN,
         Specification::TokenType::LEFT_CURLY_BRACE_TOKEN,
       };
+
+      while (!this->isEnd() && !this->matchToken(Specification::TokenType::LEFT_CURLY_BRACE_TOKEN)) {
+        this->skipSingleLineSpaceTokens();
+        
+        // parse extends expression
+        AST::Expression* extensionExpression = this->parseExpression(NULL, BASE_PRECEDENCE, terminators);
+      
+        if (Shared::Classes::isInstanceOf<AST::Expression, AST::NullExpression>(extensionExpression)) {
+          Base::Position position = this->getCurrentToken().getPosition();
+          throw Exception(position, "Invalid extends expression");
+        }
+
+        extendedExpressions.push_back(extensionExpression);
+        this->skipSingleLineSpaceTokens();
+
+        // consume comma token for multiple extensions
+        if (this->matchToken(Specification::TokenType::COMMA_TOKEN)) {
+          this->consumeCurrentToken();
+        } 
+        // if no more more extensions - finish
+        else break;
+      }
     
-      extendedExpression = this->parseExpression(NULL, BASE_PRECEDENCE, terminators);
+      // validate extensions list
+      if (extendedExpressions.size() <= 0) {
+        Base::Position position = this->getCurrentToken().getPosition();
+        throw Exception(position, "Invalid extends expression");
+      }
     }
 
     this->skipMultilineSpaceTokens();
@@ -678,7 +704,7 @@ namespace Parser {
 
     this->requireNewlineForNextStatement();
 
-    return new AST::ClassDeclarationStatement(classToken.getPosition(), className, extendedExpression, declarations);
+    return new AST::ClassDeclarationStatement(classToken.getPosition(), className, extendedExpressions, declarations);
   }
   AST::ClassMemberDeclarationStatement* Parser::parseClassMemberDeclarationStatement() {
     // predefine class member properties

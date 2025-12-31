@@ -408,17 +408,17 @@ namespace AST {
   class ClassDeclarationStatement: public Statement {
     private:
       Lexer::Token name;
-      Expression* extendedExpression;
+      std::vector<Expression*> extensionExpressions;
       std::vector<ClassMemberDeclarationStatement*> declarations;
 
     public:
-      ClassDeclarationStatement(Base::Position position, Lexer::Token name, Expression* extendedExpression, std::vector<ClassMemberDeclarationStatement*> declarations);
+      ClassDeclarationStatement(Base::Position position, Lexer::Token name, std::vector<Expression*> extensionExpressions, std::vector<ClassMemberDeclarationStatement*> declarations);
       ~ClassDeclarationStatement();
 
       ClassDeclarationStatement* clone() const;
 
       Lexer::Token getName() const;
-      Expression* getExtendedExpression() const;
+      std::vector<Expression*> getExtensionExpressions() const;
       std::vector<ClassMemberDeclarationStatement*> getDeclarations() const;
   };
 }

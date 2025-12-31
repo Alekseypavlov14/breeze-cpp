@@ -481,32 +481,38 @@ namespace AST {
     return this->body;
   }
 
-  ClassDeclarationStatement::ClassDeclarationStatement(Base::Position position, Lexer::Token name, Expression* extendedExpression, std::vector<ClassMemberDeclarationStatement*> declarations): name(name) {
+  ClassDeclarationStatement::ClassDeclarationStatement(Base::Position position, Lexer::Token name, std::vector<Expression*> extensionExpressions, std::vector<ClassMemberDeclarationStatement*> declarations): name(name) {
     this->position = position;
     this->name = name;
+    this->extensionExpressions = extensionExpressions;
     this->declarations = declarations;
   }
   ClassDeclarationStatement::~ClassDeclarationStatement() {
     for (int i = 0; i < this->declarations.size(); i++) {
       delete this->declarations[i];
     }
-
-    delete this->extendedExpression;
+    for (int i = 0; i < this->extensionExpressions.size(); i++) {
+      delete this->extensionExpressions[i];
+    }
   }
   ClassDeclarationStatement* ClassDeclarationStatement::clone() const {
-    std::vector<ClassMemberDeclarationStatement*> clonedDeclarations = {};
-
+    std::vector<ClassMemberDeclarationStatement*> clonedDeclarations = {};    
     for (int i = 0; i < this->declarations.size(); i++) {
       clonedDeclarations.push_back(this->declarations[i]->clone());
     }
 
-    return new ClassDeclarationStatement(this->position, this->getName(), this->extendedExpression->clone(), clonedDeclarations);
+    std::vector<Expression*> clonedExtensionExpressions = {};
+    for (int i = 0; i < this->extensionExpressions.size(); i++) {
+      clonedExtensionExpressions.push_back(this->extensionExpressions[i]->clone());
+    }
+
+    return new ClassDeclarationStatement(this->position, this->getName(), clonedExtensionExpressions, clonedDeclarations);
   }
   Lexer::Token ClassDeclarationStatement::getName() const {
     return this->name;
   }
-  Expression* ClassDeclarationStatement::getExtendedExpression() const {
-    return this->extendedExpression;
+  std::vector<Expression*> ClassDeclarationStatement::getExtensionExpressions() const {
+    return this->extensionExpressions;
   }
   std::vector<ClassMemberDeclarationStatement*> ClassDeclarationStatement::getDeclarations() const {
     return this->declarations;

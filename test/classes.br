@@ -1,8 +1,11 @@
 // empty class
 class Car {}
 
+// another empty class
+class Vehicle {}
+
 // class with derivation
-class MercedesCar extends Car {}
+class MercedesCar extends Car, Vehicle {}
 
 // members
 class MyClass {
