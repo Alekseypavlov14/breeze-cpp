@@ -1,20 +1,50 @@
 // function declaration
 function greet(name) {
-  _builtins_console_output(name)
+  _builtins_console_output(name + "\n")
 }
 
-greet("Hello")
+_builtins_console_output("Test function declaration: \n")
+greet("Works")
 
-// default parameters
-function say(phrase = "Hi") {
-  _builtins_console_output(phrase)
+// default parameter values
+function say(phrase = "Works") {
+  _builtins_console_output(phrase + "\n")
 }
 
+_builtins_console_output("Test function default parameter values: \n")
 say()
 
-// returns
+// return statements
 function add(a, b) {
   return a + b
 }
 
-_builtins_console_output(_builtins_types_string(add(2, 2)))
+_builtins_console_output("Test function return statement: \n")
+_builtins_console_output("Works: " + _builtins_types_string(add(2, 2)) + "\n")
+
+// functions as values
+function run(func) {
+  func()
+}
+
+_builtins_console_output("Test function as values: \n")
+run(say)
+
+// closures
+function createCounter() {
+  var counter = 0
+
+  function increment() {
+    counter++
+    
+    _builtins_console_output(_builtins_types_string(counter) + "\n")
+  }
+
+  return increment
+}
+
+const increment = createCounter()
+
+_builtins_console_output("Test function closures: \n")
+increment()
+increment()

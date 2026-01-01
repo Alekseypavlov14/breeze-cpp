@@ -97,7 +97,7 @@ namespace Runtime {
     std::set<Container*> newContainers = {};
 
     for (Container* container: this->containers) {
-      if (container == removingContainer) {
+      if (container == removingContainer && !Shared::Sets::includes(this->permanentContainers, container)) {
         // delete reference count
         this->containerReferenceCount.erase(container);
         // release allocated memory
@@ -119,7 +119,7 @@ namespace Runtime {
     // search all retaining values
     this->recursivelySearchValues(value);
 
-    // decrement pointer for all releasing values
+    // decrement pointer for all retaining values
     for (Value* value: this->processingValues) {
       this->excludeTemporaryValue(value);
       this->values.insert(value);
@@ -143,7 +143,7 @@ namespace Runtime {
 
     // save only values that are still in use
     for (Value* value: this->values) {
-      if (this->valuesReferenceCount[value] > 0 && !Shared::Sets::includes(this->permanentValues, value)) {
+      if (this->valuesReferenceCount[value] > 0 || Shared::Sets::includes(this->permanentValues, value)) {
         newValues.insert(value);
       } else {
         // remove unused value
@@ -161,11 +161,22 @@ namespace Runtime {
     this->addPermanentValue(container->getValue());
   }
   void Memory::addPermanentValue(Value* value) {
-    this->permanentValues.insert(value);
+    // clear processing values
+    this->processingValues = {};
+
+    // search all retaining values
+    this->recursivelySearchValues(value);
+
+    // decrement pointer for all permanent values
+    for (Value* value: this->processingValues) {
+      this->permanentValues.insert(value);
+    }
   }
 
   void Memory::addTemporaryContainer(Container* container) {
-    this->temporaryContainers.insert(container);
+    if (!Shared::Sets::includes(this->containers, container)) {
+      this->temporaryContainers.insert(container);
+    }
   }
   void Memory::excludeTemporaryContainer(Container* container) {
     this->temporaryContainers.erase(container);
@@ -178,7 +189,9 @@ namespace Runtime {
   }
 
   void Memory::addTemporaryValue(Value* value) {
-    this->temporaryValues.insert(value);
+    if (!Shared::Sets::includes(this->values, value)) {
+      this->temporaryValues.insert(value);
+    }
   }
   void Memory::excludeTemporaryValue(Value* value) {
     this->temporaryValues.erase(value);

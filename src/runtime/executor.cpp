@@ -187,7 +187,7 @@ namespace Runtime {
     for (int i = 0; i < containersInCurrentStack.size(); i++) {
       this->memory.retainContainer(containersInCurrentStack[i]);
     }
-    
+
     // parse arguments amount
     int totalArgumentsAmount = 0;
     int optionalArgumentsAmount = 0;
@@ -212,6 +212,9 @@ namespace Runtime {
 
     // construct callable
     Callable callable = [this, functionClosure, statement](std::vector<Value*> arguments) -> Value* {
+      // remember stack from where the function was called
+      Stack* callingStack = this->memory.getCurrentStack();
+
       // TODO: set current context
       
       // assign context
@@ -245,16 +248,18 @@ namespace Runtime {
         this->executeStatement(statement->getBody());
       }
       catch(ReturnSignal returnSignal) {
+        this->memory.retainValue(returnSignal.getValue());
+
         // leave function stack
         this->removeScopeFromCurrentStack();
-        this->memory.setCurrentStackByIndex(this->memory.getCurrentStackIndex());
+        this->memory.setCurrentStack(callingStack);
 
         return returnSignal.getValue();
       }
 
       // leave function stack
       this->removeScopeFromCurrentStack();
-      this->memory.setCurrentStackByIndex(this->memory.getCurrentStackIndex());
+      this->memory.setCurrentStack(callingStack);
       
       // default return
       return new NullValue;
@@ -268,8 +273,6 @@ namespace Runtime {
   }
   void Executor::executeReturnStatement(AST::ReturnStatement *statement) {
     Container* returnContainer = this->evaluateExpression(statement->getReturns());
-    this->addContainerToCurrentStack(returnContainer);
-
     throw ReturnSignal(statement, returnContainer->getValue());
   }
   void Executor::executeImportStatement(AST::ImportStatement *statement) {
@@ -640,7 +643,7 @@ namespace Runtime {
     return NULL;
   }
   Container* Executor::evaluatePrototypeMemberAccessExpression(Value* prototype, Value* member) {
-    return NULL;
+    throw Exception("Not implemented");
   }
 
   // unary expression
