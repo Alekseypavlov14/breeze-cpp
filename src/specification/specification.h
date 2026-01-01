@@ -214,7 +214,7 @@ namespace Specification {
   // definition of token specifications
   // keywords are obtained from identifiers
   inline const TokenSpecification IDENTIFIER_TOKEN_SPECIFICATION = { TokenType::IDENTIFIER_TOKEN, "[a-zA-Z_][a-zA-Z0-9_]*" };
-  inline const TokenSpecification COMMENT_TOKEN_SPECIFICATION = { TokenType::COMMENT_TOKEN, R"(//)" };
+  inline const TokenSpecification COMMENT_TOKEN_SPECIFICATION = { TokenType::COMMENT_TOKEN, R"(//[^\n\r]*)" };
   inline const TokenSpecification NEWLINE_TOKEN_SPECIFICATION = { TokenType::NEWLINE_TOKEN, R"(\n)" };
   inline const TokenSpecification SPACE_TOKEN_SPECIFICATION = { TokenType::SPACE_TOKEN, R"(\s)" };
 

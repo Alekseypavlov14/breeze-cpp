@@ -37,6 +37,12 @@ namespace Lexer {
         
         // shift position by whole match length
         this->movePositionByDelta(match[0].str().size());
+        
+        // do not add comment to tokens list
+        if (Specification::TOKEN_SPECIFICATIONS[i].type == Specification::TokenType::COMMENT_TOKEN) {
+          isTokenSpecificationFound = true;
+          break;
+        }
 
         // extract the smallest group (used to extract strings content)
         std::string smallestMatch = match[0].str();
@@ -73,7 +79,6 @@ namespace Lexer {
 
         // update flags
         isTokenSpecificationFound = true;
-
         // stop analyzing code on this position
         break;
       }

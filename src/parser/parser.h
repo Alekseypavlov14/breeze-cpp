@@ -31,11 +31,10 @@ namespace Parser {
       AST::ReturnStatement* parseReturnStatement(std::vector<Specification::TokenType> terminators);
       AST::ImportStatement* parseImportStatement();
       AST::ExportStatement* parseExportStatement(std::vector<Specification::TokenType> terminators);
-      AST::BlockStatement* parseBlockStatement();
       AST::ExpressionStatement* parseExpressionStatement(std::vector<Specification::TokenType> terminators);
       AST::ClassDeclarationStatement* parseClassDeclarationStatement();
       AST::ClassMemberDeclarationStatement* parseClassMemberDeclarationStatement();
-      AST::NullStatement* parseComment();
+      AST::BlockStatement* parseBlockStatement();
 
       // statement matching utils
       bool matchVariableDeclarationStatement();
@@ -51,7 +50,6 @@ namespace Parser {
       bool matchImportStatement();
       bool matchExportStatement();
       bool matchBlockStatement();
-      bool matchComment();
 
       // parses expression methods
       // these methods implement parsing of Token list to AST using recursion

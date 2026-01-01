@@ -71,9 +71,6 @@ namespace Parser {
     if (this->matchBlockStatement()) {
       return this->parseBlockStatement();
     }
-    if (this->matchComment()) {
-      return this->parseComment();
-    }
 
     // by default, parse expression statement
     return this->parseExpressionStatement(terminators);
@@ -780,21 +777,6 @@ namespace Parser {
 
     throw Exception(nameToken.getPosition(), "Invalid class member is used");
   }
-  AST::NullStatement* Parser::parseComment() {
-    this->requireToken(Specification::TokenType::COMMENT_TOKEN);
-    Lexer::Token commentToken = this->consumeCurrentToken();
-
-    while (!this->isEnd() && !this->matchToken(Specification::TokenType::NEWLINE_TOKEN)) {
-      this->consumeCurrentToken();
-    }
-
-    if (this->matchToken(Specification::TokenType::NEWLINE_TOKEN)) {
-      this->consumeCurrentToken();
-    } 
-    
-    AST::NullStatement* nullStatement = new AST::NullStatement(commentToken.getPosition());
-    return nullStatement;
-  }
 
   bool Parser::matchVariableDeclarationStatement() {
     return this->matchToken(Specification::TokenType::VARIABLE_KEYWORD_TOKEN);
@@ -834,9 +816,6 @@ namespace Parser {
   }
   bool Parser::matchBlockStatement() {
     return this->matchToken(Specification::TokenType::LEFT_CURLY_BRACE_TOKEN);
-  }
-  bool Parser::matchComment() {
-    return this->matchToken(Specification::TokenType::COMMENT_TOKEN);    
   }
 
   AST::Expression* Parser::parseExpression(AST::Expression* baseExpression, int basePrecedence, std::vector<Specification::TokenType> terminators) {
